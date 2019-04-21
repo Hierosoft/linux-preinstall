@@ -500,7 +500,7 @@ Changes:
 ```
 
 
-## Therefore you must
+...therefore you must switch to the python2 version of the package:
 
 ```
 sudo pacman -Syu python2-pip
