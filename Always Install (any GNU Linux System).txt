@@ -440,7 +440,8 @@ Set clock to 12hr format
 '
 
 ## Development
-git config --global user.name "expertmm"
+#replace $1 with your git username:
+#git config --global user.name "$1"
 
 ## Laptop Only
 #sign into freesound.org and download battery low sound such as http://freesound.org/people/eggtimer/sounds/103057/ to /home/owner/ownCloud/Samples
@@ -948,7 +949,8 @@ Set clock to 12hr format
 '
 
 ## Development
-git config --global user.name "expertmm"
+#replace $1 with your git username:
+#git config --global user.name "$1"
 
 ## Laptop Only
 #sign into freesound.org and download battery low sound such as http://freesound.org/people/eggtimer/sounds/103057/ to /home/owner/ownCloud/Samples
