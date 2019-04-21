@@ -1,0 +1,13 @@
+[Desktop Entry]
+Encoding=UTF-8
+Type=Application
+Name=Minecraft
+Categories=Games
+Name[en_US]=Minecraft
+Exec=java -jar /home/mitchd/Desktop/Minecraft.jar
+Comment=Minecraft
+Comment[en_US]=Minecraft
+StartupNotify=false
+Terminal=false
+StartupWMClass=OracleJavaJar
+Icon=/home/mitchd/Pictures/Icons/minecraft--planetminecraft.png

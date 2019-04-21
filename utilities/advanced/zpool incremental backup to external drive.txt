@@ -1,0 +1,28 @@
+zpool incremental backup to external drive
+
+answered by Dusan at https://forums.freenas.org/index.php?threads/zfs-send-to-external-backup-drive.17850/
+
+You should read the documentation on zfs send & receive: http://www.freebsd.org/cgi/man.cgi?query=zfs
+You are missing the snapshot names in the commands -- the part after the @ sign.
+You also need to add the -F switch to zfs receive so that it doesn't complain that the target filesystem already exists. However, even if you fix these problems it would still only work the first time. The second time it would complain that the destination already contains a snapshot. Of course you could destroy it, but that's far from optimal -- you would need to copy the entire pool every time. What you are looking for is incremental replication.
+
+This should work:
+Initial copy:
+[panel]zfs snapshot -r main_pool@backup # create a snapshot
+zfs send -R main_pool@backup | zfs receive -vF USB_pool # transfer it over [/panel]Now the USB_pool contains a replica of your main_pool as it appeared at the moment when you took the snapshot.
+
+To update it later you can do this:
+[panel]zfs rename -r main_pool@backup main_pool@previous_backup # rename the "old" snapshot
+zfs snapshot main_pool@backup # take a new snapshot
+zfs send -Ri main_pool@previous_backup main_pool@backup | zfs receive -v USB_pool # incremental replication
+zfs destroy -r main_pool@previous_backup # get rid of the previous snapshot[/panel]This will only transfer the blocks that changed since the last replication. Of course if you already have some snapshot schedule you can use those snapshots. You also do not need to rename the snapshots, but the example I gave you works nicely in a script as the names of the snapshots are always the same.
+zfs send -i snapshot1 snapshot2 will send the difference between those two snapshots, or you can use zfs send -I snapshot1 snapshot2 to also send all intermediary snapshots. In both cases (-i and -I) the destination pool contains complete replica of the main_pool at the time you took the @backup snapshot. However, if you for example take daily snapshots and only do the replication weekly, with -I you will also be able to go back to any of the daily snapshots when you do a restore.
+In 9.2.1 you won't even need to keep the previous snapshot as it will include a new ZFS feature -- zfs bookmarks. The incremental replication currently (9.2.0) needs at lest two snapshots. With bookmarks you can take a snapshot, transfer it, bookmark it and destroy it. You can later use the bookmark as a source reference for incremental replication -- you take a new snapshot and ask zfs send to create a stream containing the difference between the bookmark and the current snapshot.
+when i attach the USB again (the next week) will it mount / attach automatically? or should i use "auto import"?
+Yes, you need to auto import.
+Restoring in the event of catastrophe
+. . .
+zfs send -R UB_pool@backup | zfs receive -vF NEWmain_pool
+
+Will the underlying datasets be created on the NEW main_pool or do i need to create them prior to starting the recovery?
+Yes, the -R option will recursively create all child datasets. The same happens when you take the initial backup -- you start with an empty pool and after the first replication in will contain a copy of all your datasets. If you later add a new dataset the incremental recursive replication will also create it on the destination.

@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=LICENSE.LGPL
+Exec=env WINEPREFIX="/home/owner/.wine" wine C:\\\\windows\\\\command\\\\start.exe /Unix /home/owner/.wine/dosdevices/c:/users/Public/Start\\ Menu/Programs/Solveig\\ Multimedia/SolveigMM\\ Video\\ Splitter\\ Home\\ Edition/LICENSE.LGPL.lnk
+Type=Application
+StartupNotify=true
+Icon=B817_LICENSE.0

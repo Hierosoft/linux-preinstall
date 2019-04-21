@@ -1,0 +1,51 @@
+# see also https://github.com/kivy/kivy/issues/5228
+if [ ! -d "$HOME/kivyinstall" ]; then
+  sudo dnf install -y https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm 
+  sudo dnf install -y python3-devel ffmpeg-libs SDL2-devel SDL2_image-devel SDL2_mixer-devel SDL2_ttf-devel portmidi-devel libavdevice libavc1394-devel zlibrary-devel ccache mesa-libGL mesa-libGL-devel
+
+  # may need android-opengl-api (a khronos package comparable to the one kivy.org says to install--khrplatform-devel isn't in Fedora or rpmfusion)
+  # may also need: redhat-rpm-config python3-pygal python2-scour python3-scour
+
+  # only python2: python-devel python-pygal
+  # not needed since only certain versions work (use pip istead): python2-Cython python3-Cython
+  # not needed since included by default in python 3.4 or later: python3-pip
+  # NOTE: venv (python3 -m venv replaces pyvenv) is included with python3 (not 2), but many projects still use virtualenv <https://stackoverflow.com/questions/41573587/what-is-the-difference-between-venv-pyvenv-pyenv-virtualenv-virtualenvwrappe>
+
+  # The following steps are based on <https://kivy.org/docs/installation/installation-linux.html#installation-in-a-virtual-environment>
+  # but modified for python3:
+
+  # Make sure Pip, Virtualenv and Setuptools are updated
+  sudo pip3 install --upgrade pip virtualenv setuptools
+  
+  cd "$HOME"
+
+  # Then create a virtualenv named "kivyinstall":
+  virtualenv --no-site-packages -p /usr/bin/python3 kivyinstall
+  # OR to use your default python omit `-p /usr/bin/python3` so instead run:
+  # virtualenv --no-site-packages kivyinstall
+
+  # Enter the virtualenv
+  . kivyinstall/bin/activate
+  
+  # Use correct Cython version here (0.28.2 is for 1.10.1
+  # --a table for choosing correct Cython version according to kivy version can be found at
+  # <https://kivy.org/docs/installation/installation-linux.html#installation-in-a-virtual-environment>)
+  pip install Cython==0.28.2
+  # if already installed, force version:
+  # pip install -U --force-reinstall Cython==0.28.2
+  
+  # Install stable version of Kivy into the virtualenv
+  pip install kivy
+  deactivate
+fi
+# if you want a terminal back after finished installing things to the virtualenv, run `deactivate` (an alias created by activate)
+# to run the instance in one line or from an icon (without activating), use: ~/kivyinstall/bin/python
+# Geany execute command for py files can be changed (while a py file is open) to: ~/kivyinstall/bin/python "%f"
+
+# NOTE: From now on, pip is ensured to refer to pip3
+# How to choose Cython version:
+#* Kivy 1.11.0.dev0 -> Cython==0.28.3
+#* Kivy 1.10.1 -> Cython==0.28.2
+#* Kivy 1.10.0 -> Cython==0.25.2
+#* Kivy 1.9.1 -> Cython==0.23.1
+#* Kivy 1.9.0 -> Cython==0.21.2

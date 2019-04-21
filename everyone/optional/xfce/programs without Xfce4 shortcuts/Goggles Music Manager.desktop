@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=Goggles Music Manager
+Exec=gogglesmm
+Type=Application
+StartupNotify=true
+Path=
+Icon=gogglesmm

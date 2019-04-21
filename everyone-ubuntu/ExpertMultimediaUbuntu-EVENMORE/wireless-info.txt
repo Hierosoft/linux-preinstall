@@ -1,0 +1,303 @@
+
+########## wireless info START ##########
+
+##### release #####
+
+Distributor ID:	Ubuntu
+Description:	Ubuntu 14.04 LTS
+Release:	14.04
+Codename:	trusty
+
+##### kernel #####
+
+Linux LT2022u 3.13.0-24-generic #46-Ubuntu SMP Thu Apr 10 19:08:14 UTC 2014 i686 i686 i686 GNU/Linux
+
+##### lspci #####
+
+01:00.0 Network controller [0280]: Broadcom Corporation BCM4312 802.11b/g LP-PHY [14e4:4315] (rev 01)
+	Subsystem: Foxconn International, Inc. T77H106.00 Wireless Half-size Mini PCIe Card [105b:e01b]
+	Kernel driver in use: b43-pci-bridge
+03:00.0 Ethernet controller [0200]: Qualcomm Atheros AR8132 Fast Ethernet [1969:1062] (rev c0)
+	Subsystem: Acer Incorporated [ALI] Device [1025:0241]
+	Kernel driver in use: atl1c
+
+##### lsusb #####
+
+Bus 001 Device 002: ID 064e:a102 Suyin Corp. Acer/Lenovo Webcam [CN0316]
+Bus 001 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+Bus 005 Device 001: ID 1d6b:0001 Linux Foundation 1.1 root hub
+Bus 004 Device 001: ID 1d6b:0001 Linux Foundation 1.1 root hub
+Bus 003 Device 001: ID 1d6b:0001 Linux Foundation 1.1 root hub
+Bus 002 Device 001: ID 1d6b:0001 Linux Foundation 1.1 root hub
+
+##### PCMCIA Card Info #####
+
+##### rfkill #####
+
+0: acer-wireless: Wireless LAN
+	Soft blocked: no
+	Hard blocked: no
+
+##### iw reg get #####
+
+##### interfaces #####
+
+# interfaces(5) file used by ifup(8) and ifdown(8)
+auto lo
+iface lo inet loopback
+
+##### iwconfig #####
+
+##### route #####
+
+Kernel IP routing table
+Destination     Gateway         Genmask         Flags Metric Ref    Use Iface
+0.0.0.0         192.168.1.1     0.0.0.0         UG    0      0        0 eth0
+192.168.1.0     0.0.0.0         255.255.255.0   U     1      0        0 eth0
+
+##### resolv.conf #####
+
+nameserver 127.0.1.1
+
+##### nm-tool #####
+
+NetworkManager Tool
+
+State: connected (global)
+
+- Device: eth0  [Wired connection 1] -------------------------------------------
+  Type:              Wired
+  Driver:            atl1c
+  State:             connected
+  Default:           yes
+  HW Address:        <MAC address removed>
+
+  Capabilities:
+    Carrier Detect:  yes
+    Speed:           100 Mb/s
+
+  Wired Properties
+    Carrier:         on
+
+  IPv4 Settings:
+    Address:         192.168.1.3
+    Prefix:          24 (255.255.255.0)
+    Gateway:         192.168.1.1
+
+    DNS:             192.168.1.1
+
+##### NetworkManager.state #####
+
+[main]
+NetworkingEnabled=true
+WirelessEnabled=true
+WWANEnabled=true
+WimaxEnabled=true
+
+##### NetworkManager.conf #####
+
+[main]
+plugins=ifupdown,keyfile,ofono
+dns=dnsmasq
+
+[ifupdown]
+managed=false
+
+##### iwlist #####
+
+##### iwlist channel #####
+
+##### lsmod #####
+
+b43                   356470  0 
+bcma                   42043  1 b43
+mac80211              545990  1 b43
+cfg80211              409394  2 b43,mac80211
+ssb                    51854  1 b43
+
+##### modinfo #####
+
+filename:       /lib/modules/3.13.0-24-generic/kernel/drivers/net/wireless/b43/b43.ko
+firmware:       b43/ucode9.fw
+firmware:       b43/ucode5.fw
+firmware:       b43/ucode16_mimo.fw
+firmware:       b43/ucode15.fw
+firmware:       b43/ucode14.fw
+firmware:       b43/ucode13.fw
+firmware:       b43/ucode11.fw
+license:        GPL
+author:         Rafał Miłecki
+author:         Gábor Stefanik
+author:         Michael Buesch
+author:         Stefano Brivio
+author:         Martin Langer
+description:    Broadcom B43 wireless driver
+srcversion:     BED87D210887FFC71A4BDE0
+alias:          bcma:m04BFid0812rev1Dcl*
+alias:          bcma:m04BFid0812rev18cl*
+alias:          bcma:m04BFid0812rev17cl*
+alias:          bcma:m04BFid0812rev11cl*
+alias:          ssb:v4243id0812rev10*
+alias:          ssb:v4243id0812rev0F*
+alias:          ssb:v4243id0812rev0D*
+alias:          ssb:v4243id0812rev0C*
+alias:          ssb:v4243id0812rev0B*
+alias:          ssb:v4243id0812rev0A*
+alias:          ssb:v4243id0812rev09*
+alias:          ssb:v4243id0812rev07*
+alias:          ssb:v4243id0812rev06*
+alias:          ssb:v4243id0812rev05*
+depends:        bcma,ssb,mac80211,cfg80211
+intree:         Y
+vermagic:       3.13.0-24-generic SMP mod_unload modversions 686 
+signer:         Magrathea: Glacier signing key
+sig_key:        <MAC address removed>:96:DC:92:B0:1D:75:9D:3E:85:62:EA:32:A1:C7
+sig_hashalgo:   sha512
+parm:           bad_frames_preempt:enable(1) / disable(0) Bad Frames Preemption (int)
+parm:           fwpostfix:Postfix for the .fw files to load. (string)
+parm:           hwpctl:Enable hardware-side power control (default off) (int)
+parm:           nohwcrypt:Disable hardware encryption. (int)
+parm:           hwtkip:Enable hardware tkip. (int)
+parm:           qos:Enable QOS support (default on) (int)
+parm:           btcoex:Enable Bluetooth coexistence (default on) (int)
+parm:           verbose:Log message verbosity: 0=error, 1=warn, 2=info(default), 3=debug (int)
+parm:           pio:Use PIO accesses by default: 0=DMA, 1=PIO (int)
+parm:           allhwsupport:Enable support for all hardware (even it if overlaps with the brcmsmac driver) (int)
+
+filename:       /lib/modules/3.13.0-24-generic/kernel/drivers/bcma/bcma.ko
+license:        GPL
+description:    Broadcom's specific AMBA driver
+srcversion:     E41B811D88783DD5BC38565
+alias:          pci:v000014E4d00004727sv*sd*bc*sc*i*
+alias:          pci:v000014E4d00004365sv*sd*bc*sc*i*
+alias:          pci:v000014E4d00004359sv*sd*bc*sc*i*
+alias:          pci:v000014E4d00004358sv*sd*bc*sc*i*
+alias:          pci:v000014E4d00004357sv*sd*bc*sc*i*
+alias:          pci:v000014E4d00004353sv*sd*bc*sc*i*
+alias:          pci:v000014E4d00004331sv*sd*bc*sc*i*
+alias:          pci:v000014E4d0000A8D8sv*sd*bc*sc*i*
+alias:          pci:v000014E4d00004313sv*sd*bc*sc*i*
+alias:          pci:v000014E4d00000576sv*sd*bc*sc*i*
+depends:        
+intree:         Y
+vermagic:       3.13.0-24-generic SMP mod_unload modversions 686 
+signer:         Magrathea: Glacier signing key
+sig_key:        <MAC address removed>:96:DC:92:B0:1D:75:9D:3E:85:62:EA:32:A1:C7
+sig_hashalgo:   sha512
+
+filename:       /lib/modules/3.13.0-24-generic/kernel/drivers/ssb/ssb.ko
+license:        GPL
+description:    Sonics Silicon Backplane driver
+srcversion:     3DE188310F77C566C2E8CB3
+alias:          pci:v000014E4d00004350sv*sd*bc*sc*i*
+alias:          pci:v000014E4d0000432Csv*sd*bc*sc*i*
+alias:          pci:v000014E4d0000432Bsv*sd*bc*sc*i*
+alias:          pci:v000014E4d00004329sv*sd*bc*sc*i*
+alias:          pci:v000014E4d00004328sv*sd*bc*sc*i*
+alias:          pci:v000014E4d00004325sv*sd*bc*sc*i*
+alias:          pci:v000014E4d00004324sv*sd*bc*sc*i*
+alias:          pci:v000014E4d0000A8D6sv*sd*bc*sc*i*
+alias:          pci:v000014E4d00004322sv*sd*bc*sc*i*
+alias:          pci:v000014E4d00004321sv*sd*bc*sc*i*
+alias:          pci:v000014E4d00004320sv*sd*bc*sc*i*
+alias:          pci:v000014E4d00004319sv*sd*bc*sc*i*
+alias:          pci:v000014A4d00004318sv*sd*bc*sc*i*
+alias:          pci:v000014E4d00004318sv*sd*bc*sc*i*
+alias:          pci:v000014E4d00004315sv*sd*bc*sc*i*
+alias:          pci:v000014E4d00004312sv*sd*bc*sc*i*
+alias:          pci:v000014E4d00004311sv*sd*bc*sc*i*
+alias:          pci:v000014E4d00004307sv*sd*bc*sc*i*
+alias:          pci:v000014E4d00004306sv*sd*bc*sc*i*
+alias:          pci:v000014E4d00004301sv*sd*bc*sc*i*
+depends:        
+intree:         Y
+vermagic:       3.13.0-24-generic SMP mod_unload modversions 686 
+signer:         Magrathea: Glacier signing key
+sig_key:        <MAC address removed>:96:DC:92:B0:1D:75:9D:3E:85:62:EA:32:A1:C7
+sig_hashalgo:   sha512
+
+##### modules #####
+
+lp
+
+##### blacklist #####
+
+[/etc/modprobe.d/blacklist-ath_pci.conf]
+blacklist ath_pci
+
+[/etc/modprobe.d/blacklist.conf]
+blacklist evbug
+blacklist usbmouse
+blacklist usbkbd
+blacklist eepro100
+blacklist de4x5
+blacklist eth1394
+blacklist snd_intel8x0m
+blacklist snd_aw2
+blacklist i2c_i801
+blacklist prism54
+blacklist bcm43xx
+blacklist garmin_gps
+blacklist asus_acpi
+blacklist snd_pcsp
+blacklist pcspkr
+blacklist amd76x_edac
+
+[/etc/modprobe.d/fbdev-blacklist.conf]
+blacklist arkfb
+blacklist aty128fb
+blacklist atyfb
+blacklist radeonfb
+blacklist cirrusfb
+blacklist cyber2000fb
+blacklist gx1fb
+blacklist gxfb
+blacklist kyrofb
+blacklist matroxfb_base
+blacklist mb862xxfb
+blacklist neofb
+blacklist nvidiafb
+blacklist pm2fb
+blacklist pm3fb
+blacklist s3fb
+blacklist savagefb
+blacklist sisfb
+blacklist tdfxfb
+blacklist tridentfb
+blacklist viafb
+blacklist vt8623fb
+
+[/etc/modprobe.d/libpisock9.conf]
+blacklist visor
+
+##### udev rules #####
+
+# PCI device 0x1969:0x1062 (atl1c)
+SUBSYSTEM=="net", ACTION=="add", DRIVERS=="?*", ATTR{address}=="<MAC address removed>", ATTR{dev_id}=="0x0", ATTR{type}=="1", KERNEL=="eth*", NAME="eth0"
+
+# PCI device 0x14e4:0x4315 (wl)
+SUBSYSTEM=="net", ACTION=="add", DRIVERS=="?*", ATTR{address}=="<MAC address removed>", ATTR{dev_id}=="0x0", ATTR{type}=="1", KERNEL=="wlan*", NAME="wlan0"
+
+##### dmesg #####
+
+[    2.720189] ssb: Found chip with id 0x4312, rev 0x01 and package 0x00
+[    2.720220] ssb: Core 0 found: ChipCommon (cc 0x800, rev 0x16, vendor 0x4243)
+[    2.720246] ssb: Core 1 found: IEEE 802.11 (cc 0x812, rev 0x0F, vendor 0x4243)
+[    2.720272] ssb: Core 2 found: PCMCIA (cc 0x80D, rev 0x0A, vendor 0x4243)
+[    2.720297] ssb: Core 3 found: PCI-E (cc 0x820, rev 0x09, vendor 0x4243)
+[    2.784360] ssb: Sonics Silicon Backplane found on PCI device 0000:01:00.0
+[   14.703305] b43-phy0: Broadcom 4312 WLAN found (core revision 15)
+[   14.761361] b43-phy0: Found PHY: Analog 6, Type 5 (LP), Revision 1
+[   14.834910] b43 ssb0:0: Direct firmware load failed with error -2
+[   14.834922] b43 ssb0:0: Falling back to user helper
+[   15.117623] b43 ssb0:0: Direct firmware load failed with error -2
+[   15.117634] b43 ssb0:0: Falling back to user helper
+[   15.185929] b43 ssb0:0: Direct firmware load failed with error -2
+[   15.185942] b43 ssb0:0: Falling back to user helper
+[   15.189058] b43 ssb0:0: Direct firmware load failed with error -2
+[   15.189070] b43 ssb0:0: Falling back to user helper
+[   15.210111] b43-phy0 ERROR: Firmware file "b43/ucode15.fw" not found
+[   15.210308] b43-phy0 ERROR: Firmware file "b43-open/ucode15.fw" not found
+[   15.210505] b43-phy0 ERROR: You must go to http://wireless.kernel.org/en/users/Drivers/b43#devicefirmware and download the correct firmware for this driver version. Please carefully read all instructions on this website.
+
+########## wireless info END ############

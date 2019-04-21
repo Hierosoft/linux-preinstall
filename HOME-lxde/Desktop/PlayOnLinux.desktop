@@ -1,0 +1,9 @@
+[Desktop Entry]
+Encoding=UTF-8
+Type=Application
+Name=PlayOnLinux
+Name[en_US]=PlayOnLinux
+Exec=/home/mitchd/playonlinux/playonlinux
+Comment[en_US]=PlayOnLinux
+StartupNotify=true
+Icon=/home/mitchd/Pictures/Icons/playonlinux-logo48.png

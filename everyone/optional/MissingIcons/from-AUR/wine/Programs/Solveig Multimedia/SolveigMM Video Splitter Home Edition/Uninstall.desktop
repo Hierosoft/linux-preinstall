@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=Uninstall
+Exec=env WINEPREFIX="/home/owner/.wine" wine C:\\\\windows\\\\command\\\\start.exe /Unix /home/owner/.wine/dosdevices/c:/users/Public/Start\\ Menu/Programs/Solveig\\ Multimedia/SolveigMM\\ Video\\ Splitter\\ Home\\ Edition/Uninstall.lnk
+Type=Application
+StartupNotify=true
+Icon=452B_Uninstall.6

@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=Mixcraft 5
+Exec=env WINEPREFIX="/home/owner/.wine" wine C:\\\\windows\\\\command\\\\start.exe /Unix /home/owner/.wine/dosdevices/c:/users/Public/Start\\ Menu/Programs/Acoustica\\ Mixcraft\\ 5/Mixcraft\\ 5.lnk
+Type=Application
+StartupNotify=true
+Icon=F3BD_mixcraft5.0

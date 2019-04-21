@@ -1,0 +1,63 @@
+# Compiling PySide2 fails
+in AUR, 2017-06-13
+freecad-qt5-git couldn't compile
+freecad-qt5-git couldn't compile since qt5 couldn't compile, so added the following lines before "make" to fix error:
+export CC="gcc -fpermissive"
+export CXX="g++ -fpermissive"
+   * python-shiboken2-git (required by pyside2) won't compile due to missing LLVM version 3.9 unless you installed it earlier (unasked dependency)
+(llvm-libs was installed, but CMakeLists.txt error says needs llvm-config command)
+still says qAsConst doesn't exist so at beginning noticed AUR comment:
+sheinz commented on 2017-05-31 09:13:
+If you encounter error:‘qAsConst’ was not declared in this scope
+You should switch to "5.6" branch of shiboken. Edit PKGBUILD:
+source=("$pkgbase::git+https://code.qt.io/pyside/shiboken.git#branch=5.6"
+"sphinx-build2.patch")
+... commented on ...:
+If you get error "install: cannot stat 'Shiboken2Config-python2.7.cmake': No such file or directory"
+Add option -DPYTHON_EXTENSION_SUFFIX="-python2.7" for cmake build for python2
+
+-- see also https://aur.archlinux.org/packages/shiboken2-git/
+and https://aur.archlinux.org/packages/python-shiboken2-git/
+Still fails building python2-pyside2-git:
+qt.shiboken: writeMinimalConstructorExpression: Could not find a minimal constructor for type 'QGenericReturnArgument'. 
+...
+aur-python2-pyside2-git/src/pyside2-git/build-py2/PySide2/QtCore/PySide2/QtCore/qabstractanimation_wrapper.cpp:389:60: error: no ‘const QMetaObject* QAbstractAnimationWrapper::metaObject() const’ member function declared in class ‘QAbstractAnimationWrapper’
+const QMetaObject* QAbstractAnimationWrapper::metaObject() const
+                                                            ^~~~~
+make[2]: *** [PySide2/QtCore/CMakeFiles/QtCore.dir/build.make:479: PySide2/QtCore/CMakeFiles/QtCore.dir/PySide2/QtCore/qabstractanimation_wrapper.cpp.o] Error 1
+make[1]: *** [CMakeFiles/Makefile2:356: PySide2/QtCore/CMakeFiles/QtCore.dir/all] Error 2
+* so edit PKGBUILD and apply solution from https://aur.archlinux.org/packages/python2-pyside2-git/ (force 5.6 branch by putting #branch=5.6 after python-pyside2.git)
+still has many warnings like:
+...function definition:QtPrivate::IsMetaTypePair<T,true>::registerConverter
+definition *ignored*
+Generating class model...                    [OK]
+Generating enum model...                     qt.shiboken: enum 'QML_HAS_ATTACHED_PROPERTIES' does not have a type entry or is not an enum
+[WARNING]
+qt.shiboken: enum 'QmlCurrentSingletonTypeRegistrationVersion' does not have a type entry or is not an enum
+Generating namespace model...                [WARNING]
+Resolving typedefs...                        [OK]
+qt.shiboken: skipping field 'QSysInfo::WindowsVersion' with unmatched type 'QSysInfo::WinVersion'
+Fixing class inheritance...                  [WARNING]
+Detecting inconsistencies in class model...  [OK]
+[OK]
+qt.shiboken: signature 'parent()const' for function modification in 'QSortFilterProxyModel' not found. Possible candidates: parent(QModelIndex)const in QSortFilterProxyModel
+. . . AND . . .
+** WARNING scope not found for function definition:QtPrivate::IsMetaTypePair<T,true>::registerConverter
+definition *ignored*
+... AND error still prevents build:
+Continue installing pyside2-git ? [Y/n]
+loading packages...
+resolving dependencies...
+looking for conflicting packages...
+Packages (3) pyside2-common-git-2.0.0.r2135.315a9ce2-1
+            python-pyside2-git-2.0.0.r2135.315a9ce2-1
+        python2-pyside2-git-2.0.0.r2135.315a9ce2-1
+Total Installed Size:  48.35 MiB
+:: Proceed with installation? [Y/n] y
+(3/3) checking keys in keyring                     [######################] 100%
+(3/3) checking package integrity                   [######################] 100%
+(3/3) loading package files                        [######################] 100%
+(3/3) checking for file conflicts                  [######################] 100%
+error: failed to commit transaction (conflicting files)
+/usr/lib/cmake/PySide2-2.0.0/PySide2Config.cpython-36m-x86_64-linux-gnu.cmake exists in both 'python2-pyside2-git' and 'python-pyside2-git'
+/usr/lib/libpyside2.cpython-36m-x86_64-linux-gnu.so exists in both 'python2-pyside2-git' and 'python-pyside2-git'

@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=LogMeIn Ignition
+Exec=env WINEPREFIX="/home/owner/.wine" wine "C:\\\\Program Files (x86)\\\\LogMeIn Ignition\\\\LMIIgnition.exe"
+Type=Application
+StartupNotify=true
+Path=/home/owner/.wine/dosdevices/c:/Program Files (x86)/LogMeIn Ignition
+Icon=applications-internet
+Name[en_US.UTF-8]=LogMeIn Ignition

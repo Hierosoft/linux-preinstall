@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=Mixcraft 5 Manual (PDF)
+Exec=env WINEPREFIX="/home/owner/.wine" wine C:\\\\windows\\\\command\\\\start.exe /Unix /home/owner/.wine/dosdevices/c:/users/Public/Start\\ Menu/Programs/Acoustica\\ Mixcraft\\ 5/Mixcraft\\ 5\\ Manual\\ \\(PDF\\).lnk
+Type=Application
+StartupNotify=true
+Icon=11C7_Mixcraft 5 Manual.0

@@ -1,0 +1,12 @@
+if [ ! `which mogrify` ]; then
+  sudo dnf install ImageMagick
+fi
+echo "WARNING: this replaces the existing images. Press Ctrl C to cancel..."
+echo "3..."
+sleep 1
+echo "2..."
+sleep 1
+echo "1..."
+sleep 1
+mogrify -resize "900x900>" -quality 75 *.jpg
+# ignoring dimensions: mogrify -resize 33% -quality 75 *.jpg

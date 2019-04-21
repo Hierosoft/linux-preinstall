@@ -1,0 +1,11 @@
+http://www.linuxquestions.org/questions/slackware-14/printing-to-a-cups-printer-from-windows-7-a-853335/
+says:
+Add Printer
+Choose a printer not listed
+use http://192.168.1.5:631/printers/Canon-MP160 as URL
+choose matching driver.
+
+
+https://192.168.1.5:631/printers/Canon-MP160 was solution on linuxquestions page below, even though
+https://192.168.1.5:531/printers/Canon-MP160 was proposed by slack32. <http://www.linuxquestions.org/questions/linux-newbie-8/windows-8-is-unable-to-print-to-cups-print-server-4175448916/>. 10 Feb 2013. 30 Jan 2016.
+

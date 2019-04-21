@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=CodeBlocks
+Exec=codeblocks
+Type=Application
+StartupNotify=true
+Path=
+Icon=codeblocks

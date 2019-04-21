@@ -1,0 +1,41 @@
+[Desktop Action Session 22825ca05b26a7808423cac19e5775ab]
+Exec=kate -s Audiere
+Name=Audiere
+
+[Desktop Action Session 4e24b3b4d585cc651d148b1357ac2763]
+Exec=kate -s Namdax
+Name=Namdax
+
+[Desktop Action Session 5f5c367e51a0338d234e894a62960216]
+Exec=kate -s integratoredu
+Name=integratoredu
+
+[Desktop Action Session 6ca8737778665f3584987e30d526d95c]
+Exec=kate -s MoneyForesight
+Name=MoneyForesight
+
+[Desktop Action Session a02c83a7dbd96295beaefb72c2bee2de]
+Exec=kate -s Main
+Name=Main
+
+[Desktop Action Session c35542abf1fca7000e2f745981227b4e]
+Exec=kate -s csvedbcms
+Name=csvedbcms
+
+[Desktop Entry]
+Actions=Session 22825ca05b26a7808423cac19e5775ab;Session c35542abf1fca7000e2f745981227b4e;Session 5f5c367e51a0338d234e894a62960216;Session a02c83a7dbd96295beaefb72c2bee2de;Session 6ca8737778665f3584987e30d526d95c;Session 4e24b3b4d585cc651d148b1357ac2763;
+Categories=Qt;KDE;Utility;TextEditor;
+Comment=KDE Advanced Text Editor
+Exec=kate -b %U
+GenericName=Advanced Text Editor
+Icon=kate
+InitialPreference=9
+MimeType=text/plain;
+Name=Kate
+StartupNotify=true
+Terminal=false
+Type=Application
+X-DBUS-ServiceName=org.kde.kate
+X-DBUS-StartupType=Multi
+X-DocPath=kate/index.html
+X-KDE-HasTempFileOption=true

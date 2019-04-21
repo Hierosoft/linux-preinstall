@@ -1,0 +1,2 @@
+#where ? is block device:
+sudo sgdisk --zap-all /dev/?

@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=Uninstall
+Exec=env WINEPREFIX="/home/owner/.wine" wine C:\\\\windows\\\\command\\\\start.exe /Unix /home/owner/.wine/dosdevices/c:/users/Public/Start\\ Menu/Programs/Acoustica\\ Mixcraft\\ 5/Uninstall.lnk
+Type=Application
+StartupNotify=true
+Path=/home/owner/.wine/dosdevices/c:/Program Files (x86)/Acoustica Mixcraft 5
+Icon=A16B_Unwise.0

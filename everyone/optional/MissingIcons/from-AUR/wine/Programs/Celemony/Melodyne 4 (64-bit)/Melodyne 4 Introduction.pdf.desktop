@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=Melodyne 4 Introduction.pdf
+Exec=env WINEPREFIX="/home/owner/.wine" wine C:\\\\windows\\\\command\\\\start.exe /Unix /home/owner/.wine/dosdevices/c:/users/Public/Start\\ Menu/Programs/Celemony/Melodyne\\ 4\\ \\(64-bit\\)/Melodyne\\ 4\\ Introduction.pdf.lnk
+Type=Application
+StartupNotify=true
+Icon=8AC4_Melodyne 4 Introduction.0

@@ -1,0 +1,10 @@
+#!/bin/sh
+#http://www.ubuntugeek.com/install-webmin-on-ubuntu-14-04-trusty-tahr-server.html
+sudo su -
+echo "deb http://download.webmin.com/download/repository sarge contrib" >> /etc/apt/sources.list
+echo "deb http://webmin.mirror.somersettechsolutions.co.uk/repository sarge contrib" >> /etc/apt/sources.list
+sudo apt-get update
+wget http://www.webmin.com/jcameron-key.asc
+apt-key add jcameron-key.asc
+echo
+echo "Now you can access webmin via https://ubuntu-serverip:10000"

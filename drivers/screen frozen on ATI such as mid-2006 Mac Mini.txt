@@ -1,0 +1,13 @@
+sudo su -
+#These instructions were done using a mid-2006 Intel Mac Mini (Mac Mini often have ATI cards)
+#before using these instructions, be sure to replace 1280 1024 with a resolution compatible with your monitor--the optimal resolution can often can be found by going to the monitor's built-in menu.
+cvt 1280 1024 60
+#in the next line, change x to the output that appeared when you typed the previous line
+xrandr --newmode x
+xrandr --addmode VGA-0 1280x1024_60.00
+#The last line, below, only works if you (page in link below says to use DVI-0 and VGA-0, but the proper names can be found by typing xrandr without any params)
+xrandr --output DVI1 --off --output VGA1 --mode 1280x1024_60.00
+
+#The screen should go black, and resolution should change immediately.
+
+(modified version of instructions from https://bugs.launchpad.net/ubuntu/+source/xserver-xorg-video-ati/+bug/1307176 )

@@ -1,0 +1,11 @@
+#!/usr/bin/env xdg-open
+[Desktop Entry]
+Type=Application
+#Terminal=true
+Exec=/home/officetv@FBM/Documents/update-pictures.sh
+Hidden=false
+X-GNOME-Autostart-enabled=true
+Name[en_US]=Update Pictures Slideshow
+Name=Update Pictures Slideshow
+Comment[en_US]=Update Pictures Slideshow
+Comment=Update Pictures Slideshow

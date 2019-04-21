@@ -1,0 +1,5 @@
+For some reason some shortcuts only have their specific icon graphics
+after placed on desktop, though the graphics do not appear while in the
+folder here (due to a Thunar bug apparently). This happens with:
+* Goggles Music Manager (Icon=gogglesmm)
+* Ex Falso (Icon=quodlibet)

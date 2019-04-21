@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=Rapunzel
+Exec=env WINEPREFIX="/home/owner/.wine" wine C:\\\\windows\\\\command\\\\start.exe /Unix /home/owner/.wine/dosdevices/c:/users/Public/Start\\ Menu/Programs/Acoustica\\ Mixcraft\\ 6/Rapunzel.lnk
+Type=Application
+StartupNotify=true
+Path=/home/owner/.wine/dosdevices/c:/Program Files (x86)/Acoustica Mixcraft 6/Example Projects
+Icon=885E_Rapunzel.0

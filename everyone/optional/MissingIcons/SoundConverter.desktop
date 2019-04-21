@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=SoundConverter
+Exec=soundconverter
+Type=Application
+StartupNotify=true
+Path=
+Icon=soundconverter

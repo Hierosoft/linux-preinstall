@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=Log Files
+Exec=env WINEPREFIX="/home/owner/.wine" wine C:\\\\windows\\\\command\\\\start.exe /Unix /home/owner/.wine/dosdevices/c:/users/owner/Start\\ Menu/Programs/Acoustica\\ Mixcraft\\ 7\\ \\(32-bit\\)/Log\\ Files.lnk
+Type=Application
+StartupNotify=true
+Icon=2BBC_shell32.4

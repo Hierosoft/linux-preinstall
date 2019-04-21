@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Mixcraft 6
+MimeType=application/x-wine-extension-mx6template;
+Exec=env WINEPREFIX="/home/owner/.wine" wine start /ProgIDOpen Mixcraft\\ 6\\ Project.Document %f
+NoDisplay=true
+StartupNotify=true
+Icon=C5F0_mixcraft6.0

@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=GParted
+Exec=gksu gparted
+Type=Application
+StartupNotify=true
+Path=
+Icon=gparted

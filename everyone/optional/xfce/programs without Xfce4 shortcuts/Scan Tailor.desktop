@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Scan Tailor
+Exec=scantailor
+Type=Application
+StartupNotify=true
+#Path=/home/owner
+Icon=scanner
+Name[en_US.UTF-8]=Scan Tailor

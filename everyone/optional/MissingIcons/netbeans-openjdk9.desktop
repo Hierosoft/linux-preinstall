@@ -1,0 +1,12 @@
+#!/usr/bin/env xdg-open
+
+[Desktop Entry]
+Name=NetBeans IDE using openjdk9
+GenericName=Integrated Development Environment
+Comment=A Java (SE) IDE using openjdk9
+Icon=/usr/share/netbeans/nb/netbeans.png
+Exec=/usr/bin/netbeans --jdkhome /usr/lib/jvm/java-9-openjdk
+Terminal=false
+Type=Application
+Categories=Development;
+StartupNotify=true

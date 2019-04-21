@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=License
+Exec=env WINEPREFIX="/home/owner/.wine" wine C:\\\\windows\\\\command\\\\start.exe /Unix /home/owner/.wine/dosdevices/c:/users/Public/Start\\ Menu/Programs/Solveig\\ Multimedia/SolveigMM\\ Video\\ Splitter\\ Home\\ Edition/License.lnk
+Type=Application
+StartupNotify=true
+Icon=2F72_EULA.3

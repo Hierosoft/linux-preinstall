@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Capstan
+MimeType=application/x-wine-extension-capstan;
+Exec=env WINEPREFIX="/home/owner/.wine" wine start /ProgIDOpen Capstan %f
+NoDisplay=true
+StartupNotify=true
+Icon=F6DE_Capstan.0

@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=shotwell
+Exec=shotwell
+Type=Application
+StartupNotify=true
+Path=
+Icon=shotwell

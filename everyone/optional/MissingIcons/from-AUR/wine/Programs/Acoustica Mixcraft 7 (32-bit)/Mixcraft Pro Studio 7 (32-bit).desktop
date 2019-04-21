@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=Mixcraft Pro Studio 7 (32-bit)
+Exec=env WINEPREFIX="/home/owner/.wine" wine C:\\\\windows\\\\command\\\\start.exe /Unix /home/owner/.wine/dosdevices/c:/users/Public/Start\\ Menu/Programs/Acoustica\\ Mixcraft\\ 7\\ \\(32-bit\\)/Mixcraft\\ Pro\\ Studio\\ 7\\ \\(32-bit\\).lnk
+Type=Application
+StartupNotify=true
+Path=/home/owner/.wine/dosdevices/c:/Program Files (x86)/Acoustica Mixcraft 7
+Icon=050C_mixcraft7.2

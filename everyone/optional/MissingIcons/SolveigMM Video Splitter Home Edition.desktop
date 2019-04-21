@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=SolveigMM Video Splitter Home Edition
+Exec=env WINEPREFIX="/home/owner/.wine" wine C:\\\\Program\\ Files\\ \\(x86\\)\\\\Solveig\\ Multimedia\\\\SolveigMM\\ Video\\ Splitter\\ Home\\ Edition\\\\SMMVSplitter_Home.exe 
+Type=Application
+StartupNotify=true
+Icon=7600_SMMVSplitter_Home.0

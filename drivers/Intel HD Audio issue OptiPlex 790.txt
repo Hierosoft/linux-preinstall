@@ -1,0 +1,58 @@
+## ISSUE: Intel HD doesn't work on Fedora with alsa (but does with Jack)
+
+## Notes
+see <https://bbs.archlinux.org/viewtopic.php?id=140543>
+
+!!Advanced information - PCI Vendor/Device/Subsystem ID's
+!!-------------------------------------------------------
+
+00:1b.0 0403: 8086:1c20 (rev 04)
+        Subsystem: 1028:04ad
+--
+01:00.1 0403: 10de:0bea (rev a1)
+        Subsystem: 1043:836d
+
+# second one is HDMI according to https://pci-ids.ucw.cz/read/PC/10de/0bea
+
+`lspci --nn` says:
+
+00:1b.0 Audio device [0403]: Intel Corporation 6 Series/C200 Series Chipset Family High Definition Audio Controller [8086:1c20] (rev 04)
+
+sudo modprobe snd-hda-intel
+
+#see <http://slopjong.de/2011/08/20/unmute-the-sound-card-using-the-alsa-utils/>
+`aplay -l`
+
+**** List of PLAYBACK Hardware Devices ****
+card 0: PCH [HDA Intel PCH], device 0: ALC269VB Analog [ALC269VB Analog]
+  Subdevices: 0/1
+  Subdevice #0: subdevice #0
+card 1: NVidia [HDA NVidia], device 3: HDMI 0 [HDMI 0]
+  Subdevices: 1/1
+  Subdevice #0: subdevice #0
+card 1: NVidia [HDA NVidia], device 7: HDMI 0 [HDMI 0]
+  Subdevices: 1/1
+  Subdevice #0: subdevice #0
+card 1: NVidia [HDA NVidia], device 8: HDMI 0 [HDMI 0]
+  Subdevices: 1/1
+  Subdevice #0: subdevice #0
+card 1: NVidia [HDA NVidia], device 9: HDMI 0 [HDMI 0]
+  Subdevices: 1/1
+  Subdevice #0: subdevice #0
+
+#see <https://superuser.com/questions/626606/how-to-make-alsa-pick-a-preferred-sound-device-automatically>
+`cat /proc/asound/cards`
+ 0 [PCH            ]: HDA-Intel - HDA Intel PCH
+                      HDA Intel PCH at 0xdcc60000 irq 29
+ 1 [NVidia         ]: HDA-Intel - HDA NVidia
+                      HDA NVidia at 0xdc080000 irq 17
+`sudo nano /etc/asound.conf` then add (where 0 is correct card above):
+pcm.!default {
+    type hw
+    card 0
+}
+
+ctl.!default {
+    type hw           
+    card 0
+}

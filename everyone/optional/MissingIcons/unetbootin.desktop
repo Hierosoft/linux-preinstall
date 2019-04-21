@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=unetbootin
+Exec=gksu QT_X11_NO_MITSHM=1 unetbootin.elf
+Type=Application
+StartupNotify=true
+Path=
+Icon=unetbootin

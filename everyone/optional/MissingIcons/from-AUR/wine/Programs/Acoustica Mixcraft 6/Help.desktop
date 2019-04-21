@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=Help
+Exec=env WINEPREFIX="/home/owner/.wine" wine C:\\\\windows\\\\command\\\\start.exe /Unix /home/owner/.wine/dosdevices/c:/users/Public/Start\\ Menu/Programs/Acoustica\\ Mixcraft\\ 6/Help.lnk
+Type=Application
+StartupNotify=true
+Path=/home/owner/.wine/dosdevices/c:/Program Files (x86)/Acoustica Mixcraft 6
+Icon=D93B_mixcraft.0

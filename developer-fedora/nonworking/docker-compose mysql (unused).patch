@@ -1,0 +1,12 @@
++  db:
++    image: mysql:5.7
++    restart: always
++    environment:
++      - MYSQL_ROOT_PASSWORD=gitea
++      - MYSQL_USER=gitea
++      - MYSQL_PASSWORD=gitea
++      - MYSQL_DATABASE=gitea
++    networks:
++      - gitea
++    volumes:
++      - ./mysql:/var/lib/mysql

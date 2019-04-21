@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Microsoft Silverlight
+Exec=env WINEPREFIX="/home/owner/.wine" wine C:\\\\windows\\\\command\\\\start.exe /Unix /home/owner/.wine/dosdevices/c:/users/owner/Start\\ Menu/Programs/Microsoft\\ Silverlight/Microsoft\\ Silverlight.lnk
+Type=Application
+StartupNotify=true
+Comment=Microsoft Silverlight
+Path=/home/owner/.wine/dosdevices/c:/Program Files/Microsoft Silverlight/5.1.50907.0/
+Icon=DCB4_ConfigIconDLL_64.0

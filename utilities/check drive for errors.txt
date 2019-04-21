@@ -1,0 +1,18 @@
+#!/bin/sh
+
+#for blank drives (DESTRUCTIVE write test--WIPES DRIVE):
+#badblocks -wsv /dev/sd?
+
+#w: destructive read-write test
+#n: non-destructive read-write test
+#s: show progress bar
+#v: verbose
+#o [file]: output results to file instead of stdout
+
+#for drives with data (non-destructive write test)
+#sudo badblocks -nsv /dev/sd?
+
+#for live os, including file integrity check (tell fsck to call badblocks):
+fsck -vcck /dev/<device-PARTITION>
+#cc: non-destructive test mode
+#k: preserves old bad sectors that were detected

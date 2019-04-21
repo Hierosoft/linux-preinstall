@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=LogMeIn Client
+Exec=env WINEPREFIX="/home/owner/.wine" wine "C:\\\\users\\\\owner\\\\Downloads\\\\LogMeIn Client.exe"
+Type=Application
+StartupNotify=true
+Path=/home/owner/.wine/dosdevices/c:/users/owner/Downloads
+Icon=applications-internet
+Name[en_US.UTF-8]=LogMeIn Client

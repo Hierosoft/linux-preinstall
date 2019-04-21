@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=Uninstall
+Exec=env WINEPREFIX="/home/owner/.wine" wine C:\\\\windows\\\\command\\\\start.exe /Unix /home/owner/.wine/dosdevices/c:/users/Public/Start\\ Menu/Programs/Acoustica\\ Mixcraft\\ 6/Uninstall.lnk
+Type=Application
+StartupNotify=true
+Comment=Removes Acoustica Mixcraft 6 from your computer.
+Icon=A604_uninstall.0

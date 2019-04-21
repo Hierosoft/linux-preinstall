@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Mixcraft 7
+MimeType=application/x-wine-extension-mx7;
+Exec=env WINEPREFIX="/home/owner/.wine" wine start /ProgIDOpen Mixcraft\\ 7\\ Project.Document %f
+NoDisplay=true
+StartupNotify=true
+Icon=050C_mixcraft7.0

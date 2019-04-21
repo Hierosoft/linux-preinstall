@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Melodyne
+MimeType=application/x-wine-extension-mdd;
+Exec=env WINEPREFIX="/home/owner/.wine" wine start /ProgIDOpen com.celemony.mdd %f
+NoDisplay=true
+StartupNotify=true
+Icon=9512_Melodyne.0

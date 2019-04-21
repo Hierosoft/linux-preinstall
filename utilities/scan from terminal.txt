@@ -1,0 +1,83 @@
+#see https://ubuntuforums.org/showthread.php?t=1671216
+scanimage -L 
+#shows output such as:
+#device `brother4:bus8;dev1' is a Brother MFC-L2740DW USB scanner
+scanimage --help --device-name="brother4:bus8;dev1"
+#or
+#scanimage --help -d "brother4:bus8;dev1"
+#shows all available parameters for specific device
+
+#if instead shows:
+#scanimage: open of device brother4:bus8;dev1 failed: Invalid argument
+#Type ``scanimage --help -d DEVICE'' to get list of all options for DEVICE.
+#then first do:
+#sudo usermod -a -G lp <username>
+#then log out then back in
+
+#scanning:
+scanimage --device-name="brother4:bus8;dev1" --source="Automatic Document Feeder(left aligned,Duplex)" --resolution=50 --format=tiff --mode="True Gray" --batch="out%d.tif"
+
+exit(0)
+# below is sample output for help on Brother MFC-L2740DW:
+Usage: scanimage [OPTION]...
+
+Start image acquisition on a scanner device and write image data to
+standard output.
+
+Parameters are separated by a blank from single-character options (e.g.
+-d epson) and by a "=" from multi-character options (e.g. --device-name=epson).
+-d, --device-name=DEVICE   use a given scanner device (e.g. hp:/dev/scanner)
+    --format=pnm|tiff      file format of output file
+-i, --icc-profile=PROFILE  include this ICC profile into TIFF file
+-L, --list-devices         show available scanner devices
+-f, --formatted-device-list=FORMAT similar to -L, but the FORMAT of the output
+                           can be specified: %d (device name), %v (vendor),
+                           %m (model), %t (type), %i (index number), and
+                           %n (newline)
+-b, --batch[=FORMAT]       working in batch mode, FORMAT is `out%d.pnm' or
+                           `out%d.tif' by default depending on --format
+    --batch-start=#        page number to start naming files with
+    --batch-count=#        how many pages to scan in batch mode
+    --batch-increment=#    increase page number in filename by #
+    --batch-double         increment page number by two, same as
+                           --batch-increment=2
+    --batch-print          print image filenames to stdout
+    --batch-prompt         ask for pressing a key before scanning a page
+    --accept-md5-only      only accept authorization requests using md5
+-p, --progress             print progress messages
+-n, --dont-scan            only set options, don't actually scan
+-T, --test                 test backend thoroughly
+-A, --all-options          list all available backend options
+-h, --help                 display this help message and exit
+-v, --verbose              give even more status messages
+-B, --buffer-size=#        change input buffer size (in kB, default 32)
+-V, --version              print version information
+scanimage: rounded value of br-x from 215.9 to 215.88
+scanimage: rounded value of br-y from 355.6 to 355.567
+
+Options specific to device `brother4:bus8;dev1':
+  Mode:
+    --mode Black & White|Gray[Error Diffusion]|True Gray|24bit Color[Fast] [24bit Color[Fast]]
+        Select the scan mode
+    --resolution 100|150|200|300|400|600|1200|2400|4800|9600dpi [200]
+        Sets the resolution of the scanne1d image.
+    --source FlatBed|Automatic Document Feeder(left aligned)|Automatic Document Feeder(left aligned,Duplex)|Automatic Document Feeder(centrally aligned)|Automatic Document Feeder(centrally aligned,Duplex) [Automatic Document Feeder(left aligned)]
+        Selects the scan source (such as a document-feeder).
+    --brightness -50..50% (in steps of 1) [inactive]
+        Controls the brightness of the ac1quired image.
+    --contrast -50..50% (in steps of 1) [inactive]
+        Controls the contrast of the acquired image.
+  Geometry:
+    -l 0..215.9mm (in steps of 0.0999908) [0]
+        Top-left x position of scan area.
+    -t 0..355.6mm (in steps of 0.0999908) [0]
+        Top-left y position of scan area.
+    -x 0..215.9mm (in steps of 0.0999908) [215.88]
+        Width of scan-area.
+    -y 0..355.6mm (in steps of 0.0999908) [355.567]
+        Height of scan-area.
+
+Type ``scanimage --help -d DEVICE'' to get list of all options for DEVICE.
+
+List of available devices:
+    brother4:bus8;dev1

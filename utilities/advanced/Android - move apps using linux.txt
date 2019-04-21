@@ -1,0 +1,51 @@
+# Move Android Phone's Apps Using gdb on Linux
+
+Before you do all of this, see if you can move the app using: "Apps 2 SD (move app 2 sd) by Gregory House" on Google Play.
+* also see if you can move it using that app with Developer Options turned on (see below, then click Developer Options to turn on)
+
+see also https://stackoverflow.com/questions/23280804/how-to-move-spcific-apps-to-from-sd-card-using-adb
+
+* On Phone
+	* tap build number 7 times
+	* go back twice
+	* in developer options (newly enabled settings section), enable USB Debug Mode
+* On Computer
+	* install adb (comes with android platform tools or similarly named package)
+```
+cd /opt/android-sdk/platform-tools
+./adb shell
+#should try to connect to device now, but you must accept the using your phone:
+```
+* On Phone: accept the connection and store certificate permanently
+* On Computer:
+```
+#if you still have a linux prompt (as opposed to an Android prompt such as `shell@w3c:/ $`), run:
+adb shell
+#this shows what location for apps to be installed:
+pm get-install-location
+#you can optionally set the install location for new apps to the memory card (this is most reliable method):
+#should already be 0 (automatic), but you can set to 1 (internal memory), or 2 (memory card)
+pm set-install-location 2
+#or for versions earlier than 4.x (pre API 14):
+#pm setInstallLocation 2
+
+pm list packages -i | grep angry
+#take note of package name such as com.rovio.angrybirds
+# and installer name (found via -i option) such as com.android.vending
+
+pm list packages -i | grep fruit
+#take note of package name such as com.halfbrick.fruitninjafree
+# and installer name (found via -i option) such as com.android.vending
+
+#get full path of app (see also https://stackoverflow.com/questions/11012976/get-apk-of-installed-app ):
+
+pm path com.rovio.angrybirds
+#take note of the full apk path such as /mnt/asec/com.rovio.angrybirds-2/pkg.apk
+
+pm path com.halfbrick.fruitninjafree
+#take note of the full apk path such as /mnt/asec/com.halfbrick.fruitninjafree-1/pkg.apk
+
+#then do the following except change the names to your app:
+pm install -i com.android.vending -f -r /mnt/asec/com.rovio.angrybirds-2/pkg.apk
+pm install -i com.android.vending -f -r /mnt/asec/com.halfbrick.fruitninjafree-1/pkg.apk
+```

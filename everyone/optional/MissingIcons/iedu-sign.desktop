@@ -1,0 +1,11 @@
+[Desktop Entry]
+# update_enable: true
+Name=iedu-sign
+Comment=iedu-sign
+Exec=python3 /usr/local/lib/iedu/iedusign.py
+StartupNotify=false
+Path=/usr/local/lib/iedu
+Icon=avatar-default-symbolic
+Type=Application
+Categories=Network;
+Terminal=false

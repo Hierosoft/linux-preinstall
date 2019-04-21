@@ -1,0 +1,99 @@
+#ISSUE: trying to update produces keyring errors, but upgrading keyring also produces same error:
+#error: antergos-keyring: signature from "Antergos Build Server (Automated Package Build System) <admin@antergos.org>" is marginal trust
+#:: File /var/cache/pacman/pkg/antergos-keyring-20170524-1-any.pkg.tar.xz is corrupted (invalid or corrupted package (PGP signature)).
+#Do you want to delete it? [Y/n] n
+#error: failed to commit transaction (invalid or corrupted package (PGP signature))
+#Errors occurred, no packages were upgraded.
+
+#Joe at https://jonathanmh.com/antergos-keyring-unknown-trust-solved/
+#says this far down in forum worked -- https://forum.antergos.com/topic/2604/problem-with-pacman-mirrorlist-being-corrupted/37?page=2
+sudo pacman -S haveged
+sudo haveged -w 1024
+sudo pacman-key --init
+sudo pacman-key --populate archlinux antergos
+sudo pkill haveged
+
+#Joe says "then updating the keyring package worked:"
+#sudo pacman -Sy antergos-keyring
+#that didn't work so skipped: sudo pacman -Syyu
+
+#and tried https://jonathanmh.com/antergos-keyring-unknown-trust-solved/ :
+sudo pacman-key --refresh-keys
+#still didn't let me do: sudo pacman -Sy antergos-keyring
+
+#so did following instructions from 
+echo "change Trusts section to:"
+echo "# By default, pacman accepts packages signed by keys que its location keyring"
+echo "# Trusts (see pacman-key and its man page), as well as unsigned packages."
+echo "SigLevel = Optional TrustAll"
+echo "LocalFileSigLevel = Optional"
+echo "#RemoteFileSigLevel = Required"
+sudo nano /etc/pacman.conf
+echo "After changing the SigLevel line to the one above, this should work:"
+sudo pacman -Sy antergos-keyring
+sudo pacman -Syyu
+#still had errors with other packages (gitkracken, pamac) so did:
+sudo pacman-key --refresh-keys
+
+#same error on update,
+#so install "testing package of keyring" as per https://bbs.archlinux.org/viewtopic.php?id=229378
+sudo pacman -U https://www.archlinux.org/packages/testing/any/archlinux-keyring/download/
+#same error on update,
+#so sudo pacman-key --refresh-keys
+#sudo pacman -Sy archlinux-keyring
+sudo pacman-key --init
+sudo pacman-key --populate archlinux antergos
+
+#still nothing worked, so changed /etc/pacman.conf back to: SigLevel = Optional TrustAll
+#then did full system upgrade
+
+#but then found this:
+#thomas.kerpe's answer on https://forum.antergos.com/topic/6984/error-with-antergos-keyring/46
+gpg --recv-key 24B445614FAC071891EDCE49CDBD406AA1AA7A1D
+gpg -a --export 24B445614FAC071891EDCE49CDBD406AA1AA7A1D | sudo pacman-key -a -
+yaourt -S antergos-keyring
+
+#however supposedly the following alternative method also works:
+sudo pacman -Syuw
+sudo pacman -U antergos-keyring
+sudo pacman -U antergos-mirrorlist
+
+#updated, but had mime errors, so:
+sudo update-mime-database /usr/share/mime
+
+#Then I realized I had SigLevel still turned off in pacman.conf.
+#error came back on Antergos.
+#No solutions above worked.
+#Tried some solutions from https://forum.antergos.com/topic/6962/numix-icon-theme-signature-is-unknown-trust/11
+sudo pacman -S reflector
+#just's oneliner:
+sudo pacman-key --refresh-keys && sudo reflector --age 8 --fastest 128 --latest 64 --number 32 --sort rate --save /etc/pacman.d/mirrorlist && yaourt -Syyua && sync
+#didn't work (same error, signing pamac,spl-utils,spl,zfs-utils
+#then:
+sudo pacman-key --refresh-keys
+#then dangerous solution:
+sudo pacman -Scc
+#then reply with explicit y to the first question
+sudo pacman -Syy
+sudo haveged -w 1024
+sudo pacman-key --init
+sudo pacman-key --populate archlinux antergos
+sudo pkill haveged
+sudo pacman -S archlinux-keyring antergos-keyring
+sudo pacman -Syu
+#did not help.
+#tried customizing ignore for my errors:
+sudo pacman -Syu --ignore pamac,spl-utils,spl,zfs-utils
+sudo pacman-key --refresh-keys
+#still has problems, so disable checking again in /etc/pacman.conf then:
+sudo pacman -Syu
+
+## Manjaro solution
+
+Without turning if off on a Manjaro machine with the same problem, the problem was resolved with the following Antergos wiki solution (where alternative method above doesn't work):
+(didn't try to the gpg  --recv-key method above, but the following worked anyway)
+#from http://antergos.com/wiki/uncategorized/update-error-involving-keyrings/
+sudo pacman -Scc
+sudo pacman-key --refresh-keys
+sudo pacman -Syu
+

@@ -1,0 +1,8 @@
+#!/bin/sh
+echotest_log=/var/log/cron-echotest.log
+touch $echotest_log
+date +"%Y-%m-%d %T" > $echotest_log
+
+echotest_user_log=~/cron-echotest-as-current-user.log
+touch $echotest_user_log
+date +"%Y-%m-%d %T" > $echotest_user_log

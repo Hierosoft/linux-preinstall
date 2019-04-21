@@ -1,0 +1,95 @@
+sudo dnf upgrade -y
+sudo dnf install -y extra-cmake-modules qt5-devel kf5-kxmlgui-devel kf5-kdoctools-devel kf5-ktextwidgets-devel kf5-kcrash-devel kf5-kdbusaddons-devel kf5-ki18n-devel libkdegames-devel
+# extra-cmake-modules pulls: kf5-rpm-macros, qt5-linguist, qt5-rpm-macros
+# qt5-devel pulls 36 packages
+# kf5-kxmlgui-devel pulls: kf5-kauth-devel kf5-kcodecs-devel kf5-kconfig kf5-kconfig-devel kf5-kconfigwidgets-devel kf5-kcoreaddons-devel kf5-kwidgetsaddons-devel
+# kf5-kdoctools-devel pulls: perl-Any-URI-Escape
+# kf5-ktextwidgets-devel pulls: kf5-ki18n-devel kf5-prison kf5-sonnet kf5-sonnet-devel plasma-drkonqi qt5-qtspeech qt5-qtspeech-speechd
+# but results in:
+# Transaction check error: file /usr/lib64/qt5/qml/org/kde/kirigami.2/styles/Plasma/Icon.qml from install of kf5-plasma-5.44.0-1.fc27.x86_64 conflicts with file from package kf5-kirigami2-2.2.0-1.fc27.x86_64 file /usr/lib64/qt5/qml/org/kde/kirigami.2/styles/Plasma/Theme.qml from install of kf5-plasma-5.44.0-1.fc27.x86_64 conflicts with file from package kf5-kirigami2-2.2.0-1.fc27.x86_64 file /usr/lib64/qt5/qml/org/kde/kirigami.2/styles/Plasma/Units.qml from install of kf5-plasma-5.44.0-1.fc27.x86_64 conflicts with file from package kf5-kirigami2-2.2.0-1.fc27.x86_64 file /usr/lib64/qt5/qml/org/kde/kirigami.2/styles/org.kde.desktop.plasma/Units.qml from install of kf5-plasma-5.44.0-1.fc27.x86_64 conflicts with file from package kf5-kirigami2-2.2.0-1.fc27.x86_64 Error Summary ------------- 
+# so added `sudo dnf upgrade -y` above [SOLVED]
+
+sudo dnf remove kmines
+cd
+if [ ! -d Downloads ]; then
+  mkdir Downloads
+fi
+cd Downloads
+if [ ! -f "`command -v git`" ]; then
+  dnf install -y git
+fi
+git clone https://github.com/KDE/kmines.git
+if [ ! -d "kmines" ]; then
+  echo "ERROR: Nothing done since failed to clone into `pwd`/kmines"
+fi
+cd kmines
+mkdir build
+cd build
+
+cmake .. -DCMAKE_INSTALL_PREFIX=/usr/local
+make
+sudo make install
+
+
+exit 0
+
+# qt5-devel pulls:
+# assimp
+# expat-devel
+# fontconfig-devel
+# libinput-devel
+# libxkbcommon-devel
+# mesa-libEGL-devel
+# poly2tri
+# pulseaudio-libs-devel
+# qt5-designer
+# qt5-doctools
+# qt5-qt3d
+# qt5-qt3d-devel
+# qt5-qtbase-devel
+# qt5-qtbase-static
+# qt5-qtconnectivity
+# qt5-qtconnectivity-devel
+# qt5-qtdeclarative-devel
+# qt5-qtdeclarative-static
+# qt5-qtenginio
+# qt5-qtenginio-devel
+# qt5-qtlocation-devel
+# qt5-qtmultimedia-devel
+# qt5-qtscript-devel
+# qt5-qtsensors-devel
+# qt5-qtserialport-devel
+# qt5-qtsvg-devel
+# qt5-qttools-devel
+# qt5-qttools-libs-designercomponents
+# qt5-qttools-static
+# qt5-qtwayland-devel
+# qt5-qtwebchannel-devel
+# qt5-qtwebkit-devel
+# qt5-qtwebsockets
+# qt5-qtwebsockets-devel
+# qt5-qtx11extras-devel
+# qt5-qtxmlpatterns-devel
+
+
+# libkdegames-devel pulls:
+# kf5-karchive-devel.x86_64 5.44.0-1.fc27
+# kf5-kbookmarks-devel.x86_64 5.44.0-1.fc27
+# kf5-kcompletion-devel.x86_64 5.44.0-1.fc27
+# kf5-kdelibs4support-devel.x86_64 5.44.0-1.fc27
+# kf5-kdesignerplugin.x86_64 5.44.0-1.fc27
+# kf5-kemoticons-devel.x86_64 5.44.0-1.fc27
+# kf5-kguiaddons-devel.x86_64 5.44.0-1.fc27
+# kf5-kiconthemes-devel.x86_64 5.44.0-1.fc27
+# kf5-kinit-devel.x86_64 5.44.0-1.fc27
+# kf5-kio.x86_64 5.44.0-2.fc27
+# kf5-kio-devel.x86_64 5.44.0-2.fc27
+# kf5-kitemmodels-devel.x86_64 5.44.0-1.fc27
+# kf5-kitemviews-devel.x86_64 5.44.0-1.fc27
+# kf5-kjobwidgets-devel.x86_64 5.44.0-1.fc27
+# kf5-knotifications-devel.x86_64 5.44.0-1.fc27
+# kf5-kparts-devel.x86_64 5.44.0-1.fc27
+# kf5-kservice-devel.x86_64 5.44.0-1.fc27
+# kf5-kunitconversion-devel.x86_64 5.44.0-1.fc27
+# kf5-kwindowsystem-devel.x86_64 5.44.0-1.fc27
+# kf5-solid-devel.x86_64 5.44.0-1.fc27

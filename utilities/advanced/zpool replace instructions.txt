@@ -1,0 +1,41 @@
+sudo blkid
+#yields list of disks, and for zpool includes something like:
+#/dev/sdb1: LABEL="tank" UUID="10778514498707300037" UUID_SUB="191260131158548021" TYPE="zfs_member"
+#/dev/sdc1: LABEL="tank" UUID="10778514498707300037" UUID_SUB="17763999381814949993" TYPE="zfs_member"
+#/dev/sdd1: LABEL="tank" UUID="10778514498707300037" UUID_SUB="13031940703684963927" TYPE="zfs_member"
+
+#(not entirely necessary, except to identify the drive physically to pull the correct one)
+
+sudo zpool status
+
+#may yield disk block device name that failed such as:
+#  pool: tank
+# state: ONLINE
+#status: One or more devices has experienced an unrecoverable error.  An
+#        attempt was made to correct the error.  Applications are unaffected.
+#action: Determine if the device needs to be replaced, and clear the errors
+#        using 'zpool clear' or replace the device with 'zpool replace'.
+#   see: http://zfsonlinux.org/msg/ZFS-8000-9P
+#  scan: scrub repaired 1K in 3h2m with 0 errors on Sat Apr 23 01:47:53 2016
+#config:
+#
+#        NAME        STATE     READ WRITE CKSUM
+#        tank        ONLINE       0     0     0
+#          raidz1-0  ONLINE       0     0     0
+#            sdb     ONLINE       0     0     0
+#            sdc     ONLINE       0     0     1
+#            sdd     ONLINE       0     0     0
+#
+#errors: No known data errors
+#these are the device names used in the statements below:
+
+zpool offline pool_name device_name
+#such as:
+#zpool offline tank /dev/sdc
+
+#Then shutdown and replace drive, then:
+
+zpool replace pool_name device_name
+#such as:
+#zpool replace tank sdc
+

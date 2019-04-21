@@ -1,0 +1,125 @@
+#!/bin/sh
+#Download the non-free firmware version of Debian (Stretch or other stable)
+echo "Before using this script, make sure you have added contrib and non-free to ALL mirrors in /etc/apt/sources.list"
+#su -
+apt-get install sudo
+#add user to sudo group:
+adduser owner sudo
+#apt-get update
+#exit
+
+sudo apt install firmware-ivtv
+#sudo reboot
+
+sudo apt install ivtv-utils
+#(installs v4l-utils, build tools, and many other dependencies)
+#results in error: W: Download is performed unsandboxed as root as file '/root/.synaptic/tmp//tmp_sh' couldn't be accessed by user '_apt'. - pkgAcquire::Run (13: Permission denied)
+
+#sudo apt install xawtv
+#xawtv is black for unknown reason
+
+#show names of available frequency tables:
+#ivtv-tune --list-freqtable
+ivtv-tune --freq-table=us-bcast --list-channels
+#set to us-bcast channel 3 (fround from command above)
+ivtv-tune --frequency=61.250
+
+#also you can do:
+#see https://ubuntuforums.org/showthread.php?t=1634445
+scantv -c /dev/video0 -C /dev/vbi0
+ivtv-tune -c 3
+cat /dev/video0 > test.mpg
+#press CTRL-C to stop recording
+#NOTE: the v4l2-ctl command comes with v4l-utils
+v4l2-ctl --get-fmt-video
+#the above works, but at 352x288 so continue:
+
+#v4l2-ctl --help-vidcap
+#shows that --set-fmt-video option is like:
+#--set-fmt-video<OR
+#  --try-fmt-video>=width=<w>,height=<h>,pixelformat=<pf>,field=<f>,colorspace=<c>,
+#                  xfer=<xf>,ycbcr=<y>,quantization=<q>,premul-alpha,bytesperline=<bpl>
+#                     set/try the video capture format [VIDIOC_S/TRY_FMT]
+#                     pixelformat is either the format index as reported by
+#                       --list-formats, or the fourcc value as a string.
+#                     The bytesperline option can be used multiple times, once for each plane.
+#                     premul-alpha sets V4L2_PIX_FMT_FLAG_PREMUL_ALPHA.
+#                     <f> can be one of the following field layouts:
+#                       any, none, top, bottom, interlaced, seq_tb, seq_bt,
+#                       alternate, interlaced_tb, interlaced_bt
+#                     <c> can be one of the following colorspaces:
+#                       smpte170m, smpte240m, rec709, 470m, 470bg, jpeg, srgb,
+#                       adobergb, bt2020, dcip3
+#                     <xf> can be one of the following transfer functions:
+#                       default, 709, srgb, adobergb, smpte240m, smpte2084, dcip3, none
+#                     <y> can be one of the following Y'CbCr encodings:
+#                       default, 601, 709, xv601, xv709, bt2020, bt2020c, smpte240m
+#                     <q> can be one of the following quantization methods:
+#                       default, full-range, lim-range
+
+#NOTE: Gstreamer source says:
+#switch (range) {
+#+    case V4L2_QUANTIZATION_FULL_RANGE:
+#+      cinfo->range = GST_VIDEO_COLOR_RANGE_0_255;
+#+      break;
+#+    case V4L2_QUANTIZATION_LIM_RANGE:
+#+      cinfo->range = GST_VIDEO_COLOR_RANGE_16_235;
+#+      break;
+#+    case V4L2_QUANTIZATION_DEFAULT:
+#+      /* nothing, just use defaults for colorspace */
+#+      break;
+#+    default:
+#+      GST_WARNING ("Unknown enum v4l2_quantization value %d", range);
+#+      cinfo->range = GST_VIDEO_COLOR_RANGE_UNKNOWN;
+#+      break;
+#+  }
+
+v4l2-ctl --list-formats-ext
+v4l2-ctl --set-fmt-video width=720,height=480,pixelformat=MPEG
+#now the following works at 720x480 with stereo sound:
+cat /dev/video0 > capture.mpg
+#however, of course can't see picture, so:
+sudo apt install mplayer-gui
+#(installs mplayer also)
+#but mplayer-gui cannot open devices, so:
+sudo apt install smplayer
+#then open the program and add a named TV device (Open, TV, Edit) that points to: /dev/video0
+
+# DVD Burning Packages
+* brasero
+* devede
+* dvdauthor
+* k3b
+* videotrans
+
+# DVD Ripping
+* vobcopy: rips and joins vobs using name from DVD
+
+#also tried ffmpeg:
+
+sudo apt install ffmpeg
+#list devices:
+#on windows: `ffmpeg -y -f vfwcap -i list`
+#or on linux:
+v4l2-ctl --list-devices
+#FAILS: `ffmpeg -f v4l2 -list_formats all -i /dev/video0`
+v4l2-ctl --list-formats-ext
+#ffmpeg -f v4l2 -framerate 29.97 -video_size 720x480 -i /dev/video0 output.mkv
+#results in:
+#[video4linux2,v4l2 @ 0xddee00] The device does not support the streaming I/O method.
+#/dev/video0: Function not implemented
+#so tried method at https://lists.ffmpeg.org/pipermail/ffmpeg-user/2015-January/025085.html
+#ffmpeg -y -f mpegts -i /dev/video0 -c copy -f mpegts output.ts
+
+
+#streamer (image and video tv capture)
+sudo apt install streamer
+
+#ttv (console tv viewer)
+sudo apt install ttv
+
+#tvtime (pops gui configuration upon install)
+sudo apt install tvtime
+
+
+

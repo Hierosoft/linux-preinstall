@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Mixcraft 5
+MimeType=application/x-wine-extension-mx5;
+Exec=env WINEPREFIX="/home/owner/.wine" wine start /ProgIDOpen mixcraft5.Document %f
+NoDisplay=true
+StartupNotify=true
+Icon=F3BD_mixcraft5.0

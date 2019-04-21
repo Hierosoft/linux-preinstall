@@ -1,0 +1,31 @@
+You will likely need to do this preliminary step which installs the rpmfusion-free repository unless you have some other 3rd-party repo installed which has the required packages.
+See rpmfusion.org for complete installation instructions, but only the rpmfusion-free repo is needed acquiring kivy dependencies (though rpmfusion-nonfree is recommended by rpm fusion installation instructions) as shown in this step.
+# sudo dnf install -y https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm 
+
+# Install necessary system packages
+sudo dnf install -y python3-devel ffmpeg-libs SDL2-devel SDL2_image-devel SDL2_mixer-devel SDL2_ttf-devel portmidi-devel libavdevice libavc1394-devel zlibrary-devel ccache mesa-libGL mesa-libGL-devel
+
+# 
+# In case you get the following error preventing kivy install:
+#  annobin: _event.c: Error: plugin built for compiler version (8.0.1) but run with compiler version (8.1.1)
+#  cc1: error: fail to initialize plugin /usr/lib/gcc/86_64-redhat-linux/8/plugin/annobin.so
+# This has been resolved in later updates after the on-disk release of Fedora 28, so upgrade your packages:
+#  sudo dnf -y upgrade
+
+# avoid pip Cython conflict with packaged version:
+sudo dnf remove python3-Cython
+
+sudo pip3 install --upgrade pip setuptools
+
+# Use correct Cython version here (0.28.2 is for 1.10.1
+# --a table for choosing correct Cython version according to kivy version can be found at
+# <https://kivy.org/docs/installation/installation-linux.html#installation-in-a-virtual-environment>):
+sudo pip3 install Cython==0.28.2
+# if already installed, force version, such as:
+# sudo pip install -U --force-reinstall Cython==0.28.2
+sudo pip3 install kivy
+#optional (package system for kivy):
+sudo pip3 install kivy-garden
+echo "to install garden packages into your app, cd to your app's directory then run:"
+echo "garden install --app graph"
+echo "#where graph is the name of the garden package you want."

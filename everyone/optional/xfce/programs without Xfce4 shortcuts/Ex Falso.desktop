@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=Ex Falso
+Exec=quodlibet
+Type=Application
+StartupNotify=true
+Path=
+Icon=quodlibet

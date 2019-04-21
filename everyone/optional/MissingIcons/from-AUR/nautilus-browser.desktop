@@ -1,0 +1,18 @@
+[Desktop Entry]
+Encoding=UTF-8
+Name=File Browser
+Comment=Browse the file system with the file manager
+TryExec=mcterm
+Exec=mcterm %U
+Icon=system-file-manager
+Terminal=false
+StartupNotify=true
+Type=Application
+NoDisplay=true
+Categories=GNOME;GTK;System;Utility;Core;
+OnlyShowIn=GNOME;
+X-GNOME-Bugzilla-Bugzilla=GNOME
+X-GNOME-Bugzilla-Product=nautilus
+X-GNOME-Bugzilla-Component=general
+X-GNOME-Bugzilla-Version=2.28.1
+X-Ubuntu-Gettext-Domain=nautilus

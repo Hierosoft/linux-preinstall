@@ -1,0 +1,26 @@
+#!/bin/sh
+#this file is the cure for the self-deletion nonsense that is a result of annoying non-gpl or otherwise harmful corporations like or affiliated with LogMeIn--I command all entities to stop such behavior and to not retaliate
+ 
+tmp_name=logmein-client.exe
+tmp_path="$HOME/.wine/drive_c/users/$USER/Downloads/$tmp_name"
+perm_path="$HOME/.wine/drive_c/users/$USER/$tmp_name"
+lmic_path="$HOME/.wine/drive_c/users/$USER/Downloads/LogMeIn Client.exe"
+
+#satisfy paranoia:
+if [ ! -f "$lmic_path" ]; then
+  if [ -f "$perm_path" ]; then
+    cp -f "$perm_path" "$lmic_path"
+  fi
+fi
+#do rational things:
+if [ -f "$lmic_path" ]; then
+  cp -f "$lmic_path" "$tmp_path"
+  cp -f "$lmic_path" "$perm_path"
+  cd "/home/owner/.wine/dosdevices/c:/users/$USER/Downloads"
+  env WINEPREFIX="/home/owner/.wine" wine "C:\\Users\\$USER\\Downloads\\$tmp_name"
+else
+  lmic_title="logmein-client script not affiliated with LogMeIn(R)"
+  lmic_error="install SeaMonkey (32-bit) under wine then use logmein once, click Download again for logmein client since first time never works, then never run it or it will get deleted (instead, after downloading it, use this script), so that before running this script, the following file already exists: $lmic_path"
+  zenity --error --text="$lmic_error" --title="$lmic_title"
+  xmessage "$(printf "$lmic_title: $lmic-error")"
+fi

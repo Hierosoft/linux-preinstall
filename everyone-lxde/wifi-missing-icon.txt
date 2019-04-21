@@ -1,0 +1,2 @@
+See solution via bauer-power
+from http://www.webupd8.org/2014/04/fix-lubuntu-1404-network-manager.html

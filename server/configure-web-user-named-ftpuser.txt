@@ -1,0 +1,55 @@
+#!/bin/sh
+#sudo apt-get update
+sudo apt-get install vsftpd
+sudo useradd ftpuser --home /home/ftpuser
+sudo usermod --home /var/www/html ftpuser
+sudo chgrp -R www-data /var/www/html
+sudo chown -R ftpuser /var/www/html
+sudo usermod -a -G www-data owner
+sudo usermod -a -G www-data ftpuser
+sudo chmod -R g+w /var/www/html
+#-a means supplimental group (ensures that the group named owner is still owner's primary group)
+
+#referred to (but skipped anon ftp section of): https://help.ubuntu.com/lts/serverguide/ftp-server.html#vsftpd-security
+#The link above recommends the link below.
+#Generated cert as per (used passphrase in plist): https://help.ubuntu.com/lts/serverguide/certificates-and-security.html
+#below is modified version of https://community.rackspace.com/products/f/25/t/172
+sudo su -
+mv /etc/vsftpd.conf /etc/vsftpd.conf.2nd
+echo "" > /etc/vsftpd.conf
+echo "anonymous_enable=NO" >> /etc/vsftpd.conf
+echo "local_enable=YES" >> /etc/vsftpd.conf
+echo "write_enable=YES" >> /etc/vsftpd.conf
+echo "local_umask=022" >> /etc/vsftpd.conf
+echo "dirmessage_enable=YES" >> /etc/vsftpd.conf
+echo "xferlog_enable=YES" >> /etc/vsftpd.conf
+echo "connect_from_port_20=YES" >> /etc/vsftpd.conf
+echo "xferlog_std_format=YES" >> /etc/vsftpd.conf
+echo "listen=YES" >> /etc/vsftpd.conf
+echo "pam_service_name=vsftpd" >> /etc/vsftpd.conf
+echo "userlist_enable=YES" >> /etc/vsftpd.conf
+echo "tcp_wrappers=YES" >> /etc/vsftpd.conf
+#echo "pasv_min_port=60000" >> /etc/vsftpd.conf
+#echo "pasv_max_port=65000" >> /etc/vsftpd.conf
+echo "pasv_min_port=10090" >> /etc/vsftpd.conf
+echo "pasv_max_port=10100" >> /etc/vsftpd.conf
+echo "ftpuser" > /etc/vsftpd.user_list
+
+echo "chroot_local_user=YES" >> /etc/vsftpd.conf
+echo "chroot_list_enable=YES" >> /etc/vsftpd.conf
+echo "chroot_list_file=/etc/vsftpd.chroot_list" >> /etc/vsftpd.conf
+
+echo "file_open_mode=0755" >> /etc/vsftpd.conf
+echo "local_umask=022" >> /etc/vsftpd.conf
+echo "write_enable=YES" >> /etc/vsftpd.conf
+
+
+ufw allow 21
+#ufw allow proto tcp from any to any port 60000:65000
+ufw allow proto tcp from any to any port 10090:10100
+
+#after doing the above, SFTP works fine in FileZilla
+#echo "" >> /etc/vsftpd.conf
+#echo "ssl_enable=YES" >> /etc/vsftpd.conf
+#echo "rsa_cert_file=/etc/ssl/certs/login_axlemedia_net.crt" >> /etc/vsftpd.conf
+#echo "rsa_private_key_file=/etc/ssl/private/login_axlemedia_net.key" >> /etc/vsftpd.conf

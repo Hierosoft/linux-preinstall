@@ -1,0 +1,5 @@
+sudo apt-get purge bcmwl-kernel-source broadcom-sta-common broadcom-sta-source
+
+sudo apt-get install b43-fwcutter firmware-b43-installer
+
+#after restart, the wifi sources should appear in nm-applet (up&down arrow icon in task tray)

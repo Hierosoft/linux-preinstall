@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=gucharmap
+Exec=gucharmap
+Type=Application
+StartupNotify=true
+Path=
+Icon=gucharmap

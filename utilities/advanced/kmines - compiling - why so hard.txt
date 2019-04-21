@@ -1,0 +1,30 @@
+sudo apt remove kmines
+
+# got help from similar project here: https://github.com/psifidotos/Latte-Dock/issues/485
+sudo apt install cmake
+# satisfy "ECM" dependency:
+sudo apt install extra-cmake-modules
+# satisfy "KF5" dependency ( "Could NOT find KF5 (missing: ConfigWidgets Crash DocTools TextWidgets
+#   WidgetsAddons XmlGui) (found suitable version "5.44.0", minimum required is
+#   "5.30.0")"):
+sudo apt install libkf5plasma-dev
+# which has on effect, so try again to satisfy "KF5" dependency:
+sudo apt install libkf5iconthemes-dev libkf5windowsystem-dev libkf5declarative-dev libkf5xmlgui-dev libkf5activities-dev libkf5wayland-dev libkf5crash-dev libkf5newstuff-dev
+# not tried: qtdeclarative5-dev
+# still says "Could NOT find KF5 (missing: DocTools)" so:
+sudo apt install kdoctools-dev
+# still says 'Could not find a package configuration file provided by "KF5KDEGames"' so see solution for similar project <https://github.com/audoban/PlayBar2/issues/3>:
+sudo apt install kde-games-core-declarative
+#above pulls in libkdeclarative5 libkdegames6abi1
+#but has no effect, so:
+sudo apt install libkdegames-dev
+#but has no effect, so:
+sudo apt install libkf5kdegames-dev
+
+mkdir build
+cd build
+#cmake .. -DCMAKE_INSTALL_PREFIX=~/kmines
+#cmake ..
+cmake .. -DCMAKE_INSTALL_PREFIX=/usr/local
+make
+sudo make install
