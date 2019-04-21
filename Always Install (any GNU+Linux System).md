@@ -486,7 +486,8 @@ Changes:
 * before ln, mkdir (and assurances before mkdir, in case kde4 is not installed) since "kate" dir doesn't exist in user's kde4 config dir by default
 * for ln, use the copy of kate-plugins that is in python2.7 site-packages
 * use python2's pip, since python3's has python2 code in it still so install fails with:
-  ```
+
+```
     Complete output from command python setup.py egg_info:
     Traceback (most recent call last):
       File "<string>", line 1, in <module>
@@ -498,7 +499,8 @@ Changes:
     Command "python setup.py egg_info" failed with error code 1 in /tmp/pip-build-lzhmk_q7/pysmell/
 ```
 
-## Therefore you must:
+
+## Therefore you must
 
 ```
 sudo pacman -Syu python2-pip
