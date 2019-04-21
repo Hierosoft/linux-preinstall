@@ -490,9 +490,8 @@ THESE STEPS DO NOT WORK, so use jshint instead and run manually redirecting > ou
         print post_install_message
                                  ^
     SyntaxError: Missing parentheses in call to 'print'. Did you mean print(print post_install_message)?
-
     ----------------------------------------
-Command "python setup.py egg_info" failed with error code 1 in /tmp/pip-build-lzhmk_q7/pysmell/
+    Command "python setup.py egg_info" failed with error code 1 in /tmp/pip-build-lzhmk_q7/pysmell/
 ```
 Change to python2 Kate plugins:
 ```
