@@ -1,9 +1,9 @@
-# Always Do (Linux)
+## Always Do (Linux)
 
-## Note caveats for users
+### Note caveats for users
 * Alt Right-click and scroll wheel zooms in and out of entire screen
 
-## Always Remove
+### Always Remove
 * Mono is broken often, so:
 ```bash
 pacman -R dbus-sharp fsharp gdata-sharp gtk-sharp-2 gtk-sharp-3 keepass mono-addins mono-zeroconf monodevelop-stable msbuild-15-bin nuget referenceassemblies-pcl taglib-sharp-git banshee dbus-sharp-glib gconf-sharp gio-sharp gkeyfile-sharp gnome-keyring-sharp gudev-sharp mono-upnp notify-sharp pinta gtk-sharp-beans
@@ -108,49 +108,51 @@ sudo make install
 ## For Everyone
 
 Install
-  * Xfce group (things don't go well  unless you install the whole group)
-  and: xfce-polkit xfce4-whiskermenu-plugin xfce4-dockbarx-plugin xfce4-pulseaudio-plugin mugshot fontweak
-    * xfce-polkit (so user gets prompted to run certain GUI programs with sudo)
-    * xfce4-whiskermenu-plugin
-    * xfce4-dockbarx-plugin (advantage of dockbarx is that it will let you right-click and "create custom launcher" if can't pin (it can therefore effectively pin any program that other docks can't)
-    * xfce4-pulseaudio-plugin
-    * yaourt -Syyu --noconfirm --aur mugshot -- if not installed, double-clicking your generic profile picture on the top left in the whisker menu causes dialog box with "Error" "Failed to edit profile." "Failed to execute child process “mugshot” (No such file or directory)"
-    * fontweak is "a GUI front-end of fontconfig" [sic] (controls font rendering settings)
-  * Manually login as the user, then manually implement Xfce4 user-side settings:
-    `echo "gtk-error-bell = 0" >> ~/.gtkrc-2.0` (remove beep when say, backspacing in FileZilla dialogs or search bar in Thunar)
-      * CentOS: `echo 'set bell-style none' >> ~/.inputrc` as per https://unix.stackexchange.com/questions/152691/how-to-disable-beep-sound-in-linux-centos-7-command-line/152694#152694
-      * see also `set bell-style none` /etc/inputrc (may work system-wide, and has a premade line for it to uncomment)
-    * Remove bottom bar
-    * move top bar to bottom
-    * remove menu & add whiskermenu there
-    * add places menu next
-    * add dockbarx plugin next
-    * add spacer (with Expand option)
-    * add clock
-    * place notification area next
-    * then trash
-    * then pulseaudio plugin
-    * always last: Show desktop
-    * instruct user on finding items and pinning open applications
-    * give them the icons that can't be found in Whisker menu, from my ownCloud/Linux/AlwaysInstall
-    * Set window to not maximize (Instead, remember): Whisker Menu, Settings, Window Manager, Advanced, Double click action: change from "Maximize" to "None"
-    * In Thunar, show file time (instead of "Today," "Yesterday" or date): Open Thunar, click Edit, Preferences, then change Format under Date.
-    * Application menu, Settings, Window Manager:
-      * Style:
-        * remove shade button by dragging it to "Hidden" category
-      * Advanced:
-        * "Double click action": "Maximize window" (default is Shade window(?))
-    * Application menu, Settings, Window Manager Tweaks:
-      * Accessibility:
-        * "Use mouse wheel on title bar to roll up the window": No
-        * "Notify of urgency by making window's decoration blink": Yes (default is No)
-      * Workspaces:
-        * "Use the mouse wheel on the desktop to switch workspaces": No
-    * set borders to Numix (has 4px instead of 1px bottom: see [Xfwm4: improve accessibility (wider bottom edge)](https://github.com/MaxKh/numix-gtk-theme/commit/6057a2d907a2e3014ae9e268e1aed8dc819a55c8))
+* Xfce group (things don't go well  unless you install the whole group)
+and: xfce-polkit xfce4-whiskermenu-plugin xfce4-dockbarx-plugin xfce4-pulseaudio-plugin mugshot fontweak
+  * xfce-polkit (so user gets prompted to run certain GUI programs with sudo)
+  * xfce4-whiskermenu-plugin
+  * xfce4-dockbarx-plugin (advantage of dockbarx is that it will let you right-click and "create custom launcher" if can't pin (it can therefore effectively pin any program that other docks can't)
+  * xfce4-pulseaudio-plugin
+  * yaourt -Syyu --noconfirm --aur mugshot -- if not installed, double-clicking your generic profile picture on the top left in the whisker menu causes dialog box with "Error" "Failed to edit profile." "Failed to execute child process “mugshot” (No such file or directory)"
+  * fontweak is "a GUI front-end of fontconfig" [sic] (controls font rendering settings)
+* Manually login as the user, then manually implement Xfce4 user-side settings:
+  `echo "gtk-error-bell = 0" >> ~/.gtkrc-2.0` (remove beep when say, backspacing in FileZilla dialogs or search bar in Thunar)
+    * CentOS: `echo 'set bell-style none' >> ~/.inputrc` as per https://unix.stackexchange.com/questions/152691/how-to-disable-beep-sound-in-linux-centos-7-command-line/152694#152694
+    * see also `set bell-style none` /etc/inputrc (may work system-wide, and has a premade line for it to uncomment)
+  * Remove bottom bar
+  * move top bar to bottom
+  * remove menu & add whiskermenu there
+  * add places menu next
+  * add dockbarx plugin next
+  * add spacer (with Expand option)
+  * add clock
+  * place notification area next
+  * then trash
+  * then pulseaudio plugin
+  * always last: Show desktop
+  * instruct user on finding items and pinning open applications
+  * give them the icons that can't be found in Whisker menu, from my ownCloud/Linux/AlwaysInstall
+  * Set window to not maximize (Instead, remember): Whisker Menu, Settings, Window Manager, Advanced, Double click action: change from "Maximize" to "None"
+  * In Thunar, show file time (instead of "Today," "Yesterday" or date): Open Thunar, click Edit, Preferences, then change Format under Date.
+  * Application menu, Settings, Window Manager:
+    * Style:
+      * remove shade button by dragging it to "Hidden" category
+    * Advanced:
+      * "Double click action": "Maximize window" (default is Shade window(?))
+  * Application menu, Settings, Window Manager Tweaks:
+    * Accessibility:
+      * "Use mouse wheel on title bar to roll up the window": No
+      * "Notify of urgency by making window's decoration blink": Yes (default is No)
+    * Workspaces:
+      * "Use the mouse wheel on the desktop to switch workspaces": No
+  * set borders to Numix (has 4px instead of 1px bottom: see [Xfwm4: improve accessibility (wider bottom edge)](https://github.com/MaxKh/numix-gtk-theme/commit/6057a2d907a2e3014ae9e268e1aed8dc819a55c8))
+Install Xfce and whisker menu
 Install a volume button daemon if keyboard has volume controls
-    * try a community repo, otherwise try a shell script: https://bbs.archlinux.org/viewtopic.php?id=124513
+* try a community repo, otherwise try a shell script: https://bbs.archlinux.org/viewtopic.php?id=124513
 Disable window rollup feature (xfce >= 4.8):
-    xfconf-query -c xfwm4 -p /general/mousewheel_rollup -s false
+```
+xfconf-query -c xfwm4 -p /general/mousewheel_rollup -s false
 #Allow installing firefox-nightly install to succeed:
 #see https://aur.archlinux.org/packages/firefox-nightly/
 #(running with sudo doesn't work for some reason--I ran with & didn't work then without then it worked)
@@ -163,6 +165,7 @@ gpg --keyserver pgp.mit.edu --recv-keys 14F26682D0916CDD81E37B6D61B7B526D98F0353
 #see https://aur.archlinux.org/packages/firefox-nightly/
 gpg --recv-keys --keyserver hkp://pgp.mit.edu 1C69C4E55E9905DB
 #change hostname permanently
+```
 
 #### Ubuntu Xenial
 ```
@@ -179,7 +182,6 @@ echo "  sudo add-apt-repository --remove ppa:thomas-schiex/blender"
 echo "  #see also https://unix.stackexchange.com/questions/60595/how-to-undo-sudo-add-apt-repository"
 
 ```
-
 #### Arch
 ```
 # use the binary version of webgitgtk
@@ -189,6 +191,7 @@ echo "[archlinuxcn]" >> /etc/pacman.conf
 # using single-quotes, '$' doesn't have to be escaped:
 echo 'Server = https://cdn.repo.archlinuxcn.org/$arch' >> /etc/pacman.conf
 ```
+
 ##### Antergos
 ```
 pacman -Syu reflector
@@ -242,11 +245,10 @@ git clone https://github.com/mono/monodevelop.git
 git clone https://github.com/mono/mono-addins.git
 cd mono-addins
 ```
-
 ### Developer
 
 
-* successor to jslint which was merged with kate when Kate-plugins (still a python wheel) was, but then removed from Kate since people considered jslint to be too opinionated -- see https://stackoverflow.com/questions/10707869/what-is-the-most-effective-javascript-syntax-checking-solution/10708007#10708007 and https://stackoverflow.com/questions/17935343/how-to-install-kate-plugins
+successor to jslint which was merged with kate when Kate-plugins (still a python wheel) was, but then removed from Kate since people considered jslint to be too opinionated -- see https://stackoverflow.com/questions/10707869/what-is-the-most-effective-javascript-syntax-checking-solution/10708007#10708007 and https://stackoverflow.com/questions/17935343/how-to-install-kate-plugins
 ```
 yaourt -Syu nodejs-jshint
 ```
@@ -256,11 +258,12 @@ yaourt -Syu nodejs-jshint
   (see <http://www.pixelbeat.org/lkdb/screen.html>)
 * sort processes by memory usage
   `ps aux --sort -rss`
-* REISUB (restart even if frozen): OFF BY DEFAULT in many modern distros, for security (since these magic keys can be sent via remote terminal)
+* REISUB (restart even if frozen)
+
   by Phoenix from <https://askubuntu.com/questions/4408/what-should-i-do-when-ubuntu-freezes/36717#36717> edited 1 Sep 2015
   If it locks up completely, you can REISUB it, which is a safer alternative to just cold rebooting the computer.
 ```
-  Do "REISUB" as follows:
+  REISUB by:
 
   While holding Alt and the SysReq (Print Screen) keys, type REISUB.
 
@@ -286,10 +289,9 @@ yaourt -Syu nodejs-jshint
 ```
 
 ### Machine Owned by Tech Support Provider
-
-(any GNU/Linux System)
-* avoid bash wierdness by asking for sudo password first before anything bad happens like pasting this code causes it to thing you are pasting a password for the first sudo command:
 ```
+(any GNU/Linux System)
+#avoid bash wierdness by asking for sudo password first before anything bad happens like pasting this code causes it to thing you are pasting a password for the first sudo command:
 sudo echo ""
 sudo echo ""
 if [ ! -f "$HOME/logmein-client.bak" ]; then
@@ -299,13 +301,11 @@ if [ ! -f "$HOME/logmein-client.bak" ]; then
 fi
 sudo echo "" > /usr/local/bin/logmein-client
 sudo nano /usr/local/bin/logmein-client
+#paste the following:
 ```
-* paste the following:
-
 
 ```
 sudo chmod +x /usr/local/bin/logmein-client
-
 #avoid breaking installation of arch-based distro
 # yaourt -Syu packagename
 # NOT -S and definitely not -Sy -- see https://www.reddit.com/r/archlinux/comments/6a4qh5/arch_completely_broken_due_to_missing_libssl_and/ :
@@ -323,12 +323,10 @@ touch ~/.local/share/applications/defaults.list
 echo "[Default Applications]" >> ~/.local/share/applications/defaults.list
 echo "inode/directory=thunar.desktop" >> ~/.local/share/applications/defaults.list
 ```
-* To force other desktop files to point to Thunar without modifying
-  builtin desktop files, override them in ~/.local as in method shown
-  below "Using Midnight Commander" at
-  <https://help.ubuntu.com/community/DefaultFileManager>:
-  * `nano ~/.local/share/applications/nautilus-browser.desktop`
-    then paste:
+* to force other desktop files to point to Thunar without modifying builtin desktop files, override them in ~/.local as in method shown below "Using Midnight Commander
+" at https://help.ubuntu.com/community/DefaultFileManager :
+  `nano ~/.local/share/applications/nautilus-browser.desktop`
+    then paste
 ```
 [Desktop Entry]
 Encoding=UTF-8
@@ -349,8 +347,8 @@ X-GNOME-Bugzilla-Component=general
 X-GNOME-Bugzilla-Version=2.28.1
 X-Ubuntu-Gettext-Domain=nautilus
 ```
-  * `nano ~/.local/share/applications/nautilus-folder-handler.desktop`
-    then paste:
+  * nano ~/.local/share/applications/nautilus-folder-handler.desktop
+    then paste
 ```
 [Desktop Entry]
 Encoding=UTF-8
@@ -370,9 +368,9 @@ X-GNOME-Bugzilla-Component=general
 X-GNOME-Bugzilla-Version=2.28.1
 X-Ubuntu-Gettext-Domain=nautilus
 ```
-  * `nano ~/.local/share/applications/nautilus-home.desktop`
-    then paste:
+  nano ~/.local/share/applications/nautilus-home.desktop
 ```
+ * then paste
 [Desktop Entry]
 Encoding=UTF-8
 Name=Home Folder
@@ -391,34 +389,35 @@ X-GNOME-Bugzilla-Component=general
 X-Ubuntu-Gettext-Domain=nautilus
 ```
 
+
 ### OPTIONAL
+Install redshift
+* changes color temperature of screen based on your surroundings
 
-* Install redshift: changes color temperature of screen based on your
-  surroundings (as determined by GPS or manual position, and time)
-
-* Force immediate save to bash_history:
+Force immediate save to bash_history:
 (see http://web.archive.org/web/20090815205011/http://www.cuberick.com/2008/11/update-bash-history-in-realtime.html )
 ```
 echo "shopt -s histappend" >> ~/.bashrc
 echo "PROMPT_COMMAND=\"history -a;\$PROMPT_COMMAND\"" >> ~/.bashrc
 ```
 
-* Install Shadow icons theme
+Install Shadow icons theme
 * make pc speaker go away in nautilus on backspace or delete:
-  * manual fix
+  #manual fix
   ```
   xsetboff_path=/etc/systemd/system/xsetboff.unit
   sudo nano $xsetboff_path
   #OR? sudo nano /etc/sysctl.d/xsetboff
+  #NOTE: unit files installed by packages reside in /usr/lib/systemd/system/
+  #(formerly init.d, but "Arch now uses systemd rather than openRC"-- see https://bbs.archlinux.org/viewtopic.php?id=194843 )
 ```
-  * NOTE: unit files installed by packages reside in /usr/lib/systemd/system/
-  * (formerly init.d, but "Arch now uses systemd rather than openRC"-- see https://bbs.archlinux.org/viewtopic.php?id=194843 )
-  * enter the following unit file then:
-```
+  * enter the following unit file:
+  * then:
+  ```
   sudo chmod +x $xsetboff_path
-``
-  * stuff that didn't work:
 ```
+  * stuff that didn't work:
+  ```
   #see https://unix.stackexchange.com/questions/214607/how-to-disable-beep-tone-in-xfce-when-the-delete-button-is-pressed
   #turn off bell for all X applications
   echo "xset b off" >> ~/.bashrc
@@ -446,28 +445,25 @@ sudo sh -c 'curl https://www.folkswithhats.org/installer | bash'
 ```
 
 ### Fedora 25:
-* gui method: http://labtestproject.com/using_linux/permanently_change_hostname_on_fedora
-* terminal method (change $1 to desired hostname):
-```
+#gui method: http://labtestproject.com/using_linux/permanently_change_hostname_on_fedora
+#terminal method:
 #(see https://fedoramagazine.org/set-hostname-fedora/ )
-sudo hostnamectl set-hostname $1
-```
-* Set clock to 12hr format
+sudo hostnamectl set-hostname <new-name>
+Set clock to 12hr format
+'
 
 ## Development
-* Change git username (replace $1 with your git username in the
-  following): `git config --global user.name "$1"`
+#replace $1 with your git username:
+#git config --global user.name "$1"
 
 ## Laptop Only
 * sign into freesound.org and download battery low sound such as http://freesound.org/people/eggtimer/sounds/103057/ to /home/owner/ownCloud/Samples
 * open in audacity, do Noise Reduction, Fade In, Fade Out, Compressor, export with 1b at end of filename
-```
+  ```
 cd $HOME
 ln -s /home/owner/ownCloud/Samples/127967__n-a-n-i__when-the-toys-go-winding-down1b.wav battery-low.wav
 #ln -s /home/owner/ownCloud/Samples/103057__eggtimer__battery-low1b.wav battery-low.wav
-```
-* set low battery warning (such as in Xfce "Battery Monitor" item) to:
-```
+#set low battery warning (such as in Xfce "Battery Monitor" item) to:
 mplayer /home/owner/battery-low.wav
 ```
 
@@ -480,8 +476,8 @@ mplayer /home/owner/battery-low.wav
 
 ### Plugins for Kate (such as jslint)
 THESE STEPS DO NOT WORK, so use jshint instead and run manually redirecting > output (not 2> output) to err.txt (then run output inspector in same directory)
-Below is repaired version of instructions from https://pypi.python.org/pypi/Kate-plugins
-Changes:
+#below is repaired version of instructions from https://pypi.python.org/pypi/Kate-plugins
+#changes:
 * remove slash after parenthesis, since prefix includes slash
 * before ln, mkdir (and assurances before mkdir, in case kde4 is not installed) since "kate" dir doesn't exist in user's kde4 config dir by default
 * for ln, use the copy of kate-plugins that is in python2.7 site-packages
@@ -498,7 +494,7 @@ Changes:
     ----------------------------------------
 Command "python setup.py egg_info" failed with error code 1 in /tmp/pip-build-lzhmk_q7/pysmell/
 ```
-Therefore you must:
+Change to python2 Kate plugins:
 ```
 sudo pacman -Syu python2-pip
 sudo python2 -m pip install --upgrade pip wheel setuptools
@@ -526,5 +522,3 @@ else
   echo "ERROR: Nothing was done since you need (Kate and hence) kde4 installed in order to use kde4-config to get user's plugins folder"
 fi
 ```
-
-
