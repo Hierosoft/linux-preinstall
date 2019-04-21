@@ -108,49 +108,51 @@ sudo make install
 ## For Everyone
 
 Install
-  * Xfce group (things don't go well  unless you install the whole group)
-  and: xfce-polkit xfce4-whiskermenu-plugin xfce4-dockbarx-plugin xfce4-pulseaudio-plugin mugshot fontweak
-    * xfce-polkit (so user gets prompted to run certain GUI programs with sudo)
-    * xfce4-whiskermenu-plugin
-    * xfce4-dockbarx-plugin (advantage of dockbarx is that it will let you right-click and "create custom launcher" if can't pin (it can therefore effectively pin any program that other docks can't)
-    * xfce4-pulseaudio-plugin
-    * yaourt -Syyu --noconfirm --aur mugshot -- if not installed, double-clicking your generic profile picture on the top left in the whisker menu causes dialog box with "Error" "Failed to edit profile." "Failed to execute child process “mugshot” (No such file or directory)"
-    * fontweak is "a GUI front-end of fontconfig" [sic] (controls font rendering settings)
-  * Manually login as the user, then manually implement Xfce4 user-side settings:
-    `echo "gtk-error-bell = 0" >> ~/.gtkrc-2.0` (remove beep when say, backspacing in FileZilla dialogs or search bar in Thunar)
-      * CentOS: `echo 'set bell-style none' >> ~/.inputrc` as per https://unix.stackexchange.com/questions/152691/how-to-disable-beep-sound-in-linux-centos-7-command-line/152694#152694
-      * see also `set bell-style none` /etc/inputrc (may work system-wide, and has a premade line for it to uncomment)
-    * Remove bottom bar
-    * move top bar to bottom
-    * remove menu & add whiskermenu there
-    * add places menu next
-    * add dockbarx plugin next
-    * add spacer (with Expand option)
-    * add clock
-    * place notification area next
-    * then trash
-    * then pulseaudio plugin
-    * always last: Show desktop
-    * instruct user on finding items and pinning open applications
-    * give them the icons that can't be found in Whisker menu, from my ownCloud/Linux/AlwaysInstall
-    * Set window to not maximize (Instead, remember): Whisker Menu, Settings, Window Manager, Advanced, Double click action: change from "Maximize" to "None"
-    * In Thunar, show file time (instead of "Today," "Yesterday" or date): Open Thunar, click Edit, Preferences, then change Format under Date.
-    * Application menu, Settings, Window Manager:
-      * Style:
-        * remove shade button by dragging it to "Hidden" category
-      * Advanced:
-        * "Double click action": "Maximize window" (default is Shade window(?))
-    * Application menu, Settings, Window Manager Tweaks:
-      * Accessibility:
-        * "Use mouse wheel on title bar to roll up the window": No
-        * "Notify of urgency by making window's decoration blink": Yes (default is No)
-      * Workspaces:
-        * "Use the mouse wheel on the desktop to switch workspaces": No
-    * set borders to Numix (has 4px instead of 1px bottom: see [Xfwm4: improve accessibility (wider bottom edge)](https://github.com/MaxKh/numix-gtk-theme/commit/6057a2d907a2e3014ae9e268e1aed8dc819a55c8))
+* Xfce group (things don't go well  unless you install the whole group)
+and: xfce-polkit xfce4-whiskermenu-plugin xfce4-dockbarx-plugin xfce4-pulseaudio-plugin mugshot fontweak
+  * xfce-polkit (so user gets prompted to run certain GUI programs with sudo)
+  * xfce4-whiskermenu-plugin
+  * xfce4-dockbarx-plugin (advantage of dockbarx is that it will let you right-click and "create custom launcher" if can't pin (it can therefore effectively pin any program that other docks can't)
+  * xfce4-pulseaudio-plugin
+  * yaourt -Syyu --noconfirm --aur mugshot -- if not installed, double-clicking your generic profile picture on the top left in the whisker menu causes dialog box with "Error" "Failed to edit profile." "Failed to execute child process “mugshot” (No such file or directory)"
+  * fontweak is "a GUI front-end of fontconfig" [sic] (controls font rendering settings)
+* Manually login as the user, then manually implement Xfce4 user-side settings:
+  `echo "gtk-error-bell = 0" >> ~/.gtkrc-2.0` (remove beep when say, backspacing in FileZilla dialogs or search bar in Thunar)
+    * CentOS: `echo 'set bell-style none' >> ~/.inputrc` as per https://unix.stackexchange.com/questions/152691/how-to-disable-beep-sound-in-linux-centos-7-command-line/152694#152694
+    * see also `set bell-style none` /etc/inputrc (may work system-wide, and has a premade line for it to uncomment)
+  * Remove bottom bar
+  * move top bar to bottom
+  * remove menu & add whiskermenu there
+  * add places menu next
+  * add dockbarx plugin next
+  * add spacer (with Expand option)
+  * add clock
+  * place notification area next
+  * then trash
+  * then pulseaudio plugin
+  * always last: Show desktop
+  * instruct user on finding items and pinning open applications
+  * give them the icons that can't be found in Whisker menu, from my ownCloud/Linux/AlwaysInstall
+  * Set window to not maximize (Instead, remember): Whisker Menu, Settings, Window Manager, Advanced, Double click action: change from "Maximize" to "None"
+  * In Thunar, show file time (instead of "Today," "Yesterday" or date): Open Thunar, click Edit, Preferences, then change Format under Date.
+  * Application menu, Settings, Window Manager:
+    * Style:
+      * remove shade button by dragging it to "Hidden" category
+    * Advanced:
+      * "Double click action": "Maximize window" (default is Shade window(?))
+  * Application menu, Settings, Window Manager Tweaks:
+    * Accessibility:
+      * "Use mouse wheel on title bar to roll up the window": No
+      * "Notify of urgency by making window's decoration blink": Yes (default is No)
+    * Workspaces:
+      * "Use the mouse wheel on the desktop to switch workspaces": No
+  * set borders to Numix (has 4px instead of 1px bottom: see [Xfwm4: improve accessibility (wider bottom edge)](https://github.com/MaxKh/numix-gtk-theme/commit/6057a2d907a2e3014ae9e268e1aed8dc819a55c8))
+Install Xfce and whisker menu
 Install a volume button daemon if keyboard has volume controls
-    * try a community repo, otherwise try a shell script: https://bbs.archlinux.org/viewtopic.php?id=124513
+* try a community repo, otherwise try a shell script: https://bbs.archlinux.org/viewtopic.php?id=124513
 Disable window rollup feature (xfce >= 4.8):
-    xfconf-query -c xfwm4 -p /general/mousewheel_rollup -s false
+```
+xfconf-query -c xfwm4 -p /general/mousewheel_rollup -s false
 #Allow installing firefox-nightly install to succeed:
 #see https://aur.archlinux.org/packages/firefox-nightly/
 #(running with sudo doesn't work for some reason--I ran with & didn't work then without then it worked)
@@ -163,6 +165,7 @@ gpg --keyserver pgp.mit.edu --recv-keys 14F26682D0916CDD81E37B6D61B7B526D98F0353
 #see https://aur.archlinux.org/packages/firefox-nightly/
 gpg --recv-keys --keyserver hkp://pgp.mit.edu 1C69C4E55E9905DB
 #change hostname permanently
+```
 
 #### Ubuntu Xenial
 ```
@@ -189,6 +192,7 @@ echo "[archlinuxcn]" >> /etc/pacman.conf
 # using single-quotes, '$' doesn't have to be escaped:
 echo 'Server = https://cdn.repo.archlinuxcn.org/$arch' >> /etc/pacman.conf
 ```
+
 ##### Antergos
 ```
 pacman -Syu reflector
@@ -256,7 +260,7 @@ yaourt -Syu nodejs-jshint
   (see <http://www.pixelbeat.org/lkdb/screen.html>)
 * sort processes by memory usage
   `ps aux --sort -rss`
-* REISUB (restart even if frozen): OFF BY DEFAULT in many modern distros, for security (since these magic keys can be sent via remote terminal)
+* REISUB (restart even if frozen): DISABLED BY DEFAULT in many modern distros, for security (since these magic keys can be sent via remote terminal)
   by Phoenix from <https://askubuntu.com/questions/4408/what-should-i-do-when-ubuntu-freezes/36717#36717> edited 1 Sep 2015
   If it locks up completely, you can REISUB it, which is a safer alternative to just cold rebooting the computer.
 ```
@@ -305,7 +309,6 @@ sudo nano /usr/local/bin/logmein-client
 
 ```
 sudo chmod +x /usr/local/bin/logmein-client
-
 #avoid breaking installation of arch-based distro
 # yaourt -Syu packagename
 # NOT -S and definitely not -Sy -- see https://www.reddit.com/r/archlinux/comments/6a4qh5/arch_completely_broken_due_to_missing_libssl_and/ :
@@ -391,6 +394,7 @@ X-GNOME-Bugzilla-Component=general
 X-Ubuntu-Gettext-Domain=nautilus
 ```
 
+
 ### OPTIONAL
 
 * Install redshift: changes color temperature of screen based on your
@@ -416,7 +420,7 @@ echo "PROMPT_COMMAND=\"history -a;\$PROMPT_COMMAND\"" >> ~/.bashrc
   * enter the following unit file then:
 ```
   sudo chmod +x $xsetboff_path
-``
+```
   * stuff that didn't work:
 ```
   #see https://unix.stackexchange.com/questions/214607/how-to-disable-beep-tone-in-xfce-when-the-delete-button-is-pressed
