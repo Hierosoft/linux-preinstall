@@ -6,12 +6,13 @@
 # * faster owncloud if on same network:
 # su -c 'echo "192.168.1.5 login.axlemedia.net" >> /etc/hosts'
 
+source /etc/os-release
 ## auto-install
-wget https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-28.noarch.rpm
-wget https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-28.noarch.rpm
-rpm -iv rpmfusion-free-release-28.noarch.rpm
+wget https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$VERSION_ID.noarch.rpm
+wget https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$VERSION_ID.noarch.rpm
+rpm -iv rpmfusion-free-release-$VERSION_ID.noarch.rpm
 dnf -y upgrade
-rpm -iv rpmfusion-nonfree-release-28.noarch.rpm
+rpm -iv rpmfusion-nonfree-release-$VERSION_ID.noarch.rpm
 dnf -y install blender inkscape gimp thunderbird chromium owncloud-client git-cola obs-studio keepassxc geany python python2-pillow python3-pillow speedcrunch filezilla darktable avidemux codeblocks qt-creator mypaint krita kate lmms vinagre scantailor vlc mpv librecad freecad gedit catfish meld hexchat ghex simple-scan audacity-freeworld gxmms2 python2-pygame gucharmap tiled evince fontforge qdirstat kdenlive frei0r-plugins redshift redshift-gtk plasma-applet-redshift-control projectM-pulseaudio eclipse-jdt java-1.8.0-openjdk-devel java-1.8.0-openjdk icedtea-web maven shotcut chromium-libs-media-freeworld exfat-utils fuse-exfat unetbootin gimp-elsamuko gimp-resynthesizer gimp-wavelet-denoise-plugin gimp-paint-studio gimp-lqr-plugin gimp-normalmap gimp-lensfun gimp-data-extras GREYCstoration-gimp star sloccount icoutils ladspa-cmt-plugins ladspa-autotalent-plugins ladspa-zam-plugins ladspa-rev-plugins PersonalCopy-Lite-soundfont ardour5 rhythmbox scribus discord libreoffice remarkable discord icoutils python3-pycodestyle gmic-gimp gnome-terminal screen
 #NOT lxmusic
 #NOT bluez-hid2hci etc (see below for why using builtin KDE functionality instead)

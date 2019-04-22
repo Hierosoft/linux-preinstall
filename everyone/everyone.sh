@@ -1,4 +1,9 @@
 #!/bin/sh
+source /etc/os-release
+
+dnf -y install evince
+#evince: (aka "Document Viewer") pdf viewer better than okular
+
 vid_conf_type="radeon"
 vid_conf=
 if [ -f /etc/X11/xorg.conf.d/10-radeon.conf ]; then

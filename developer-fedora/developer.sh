@@ -171,15 +171,24 @@ EOF
 # fi
 #endregion nonworking
 
-
+bash ../everyone-fedora/everyone-fedora.sh
 ## auto-install
-wget https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-28.noarch.rpm
-wget https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-28.noarch.rpm
-rpm -iv rpmfusion-free-release-28.noarch.rpm
+source /etc/os-release
+wget https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$VERSION_ID.noarch.rpm
+wget https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$VERSION_ID.noarch.rpm
+rpm -iv rpmfusion-free-release-$VERSION_ID.noarch.rpm
 dnf -y upgrade
-rpm -iv rpmfusion-nonfree-release-28.noarch.rpm
-dnf -y install blender inkscape gimp thunderbird chromium owncloud-client obs-studio keepassxc geany python python2-pillow python3-pillow speedcrunch filezilla darktable avidemux codeblocks qt-creator mypaint krita kate lmms vinagre scantailor vlc mpv librecad freecad gedit catfish meld hexchat ghex simple-scan audacity-freeworld gxmms2 python2-pygame gucharmap tiled evince fontforge qdirstat kdenlive frei0r-plugins redshift redshift-gtk plasma-applet-redshift-control projectM-pulseaudio eclipse-jdt java-1.8.0-openjdk-devel java-1.8.0-openjdk icedtea-web maven shotcut chromium-libs-media-freeworld exfat-utils fuse-exfat unetbootin gimp-elsamuko gimp-resynthesizer gimp-wavelet-denoise-plugin gimp-paint-studio gimp-lqr-plugin gimp-normalmap gimp-lensfun gimp-data-extras GREYCstoration-gimp star sloccount icoutils ladspa-cmt-plugins ladspa-autotalent-plugins ladspa-zam-plugins ladspa-rev-plugins PersonalCopy-Lite-soundfont ardour5 rhythmbox scribus discord libreoffice remarkable discord icoutils pandoc git gstreamer-ffmpeg sqlitebrowser
+rpm -iv rpmfusion-nonfree-release-$VERSION_ID.noarch.rpm
+dnf -y install simple-scan audacity-freeworld gimp thunderbird chromium
 
+dnf -y install blender inkscape owncloud-client obs-studio keepassxc geany python python2-pillow python3-pillow speedcrunch filezilla darktable avidemux codeblocks qt-creator mypaint krita kate lmms vinagre scantailor vlc mpv librecad freecad gedit catfish meld hexchat ghex gxmms2 python2-pygame gucharmap tiled fontforge qdirstat kdenlive frei0r-plugins redshift redshift-gtk plasma-applet-redshift-control projectM-pulseaudio eclipse-jdt java-1.8.0-openjdk-devel java-1.8.0-openjdk icedtea-web maven shotcut chromium-libs-media-freeworld exfat-utils fuse-exfat unetbootin gimp-elsamuko gimp-resynthesizer gimp-wavelet-denoise-plugin gimp-paint-studio gimp-lqr-plugin gimp-normalmap gimp-lensfun gimp-data-extras GREYCstoration-gimp star sloccount icoutils ladspa-cmt-plugins ladspa-autotalent-plugins ladspa-zam-plugins ladspa-rev-plugins PersonalCopy-Lite-soundfont ardour5 rhythmbox scribus libreoffice remarkable icoutils pandoc git gstreamer-ffmpeg sqlitebrowser
+cat >> $postinstall <<END
+* The run-in-place version of Discord is necessary to get the latest 
+  updates automatically. The packaged version is too old to be allowed
+  to login. If you want Discord, you'll have to get that version
+  manually from https://discordapp.com/download (Select 'tar.gz' before
+  clicking Download Now.)" >> $postinstall
+END
 # for scale2x (see install-as-user.sh):
 dnf -y install zlib libpng
 
@@ -251,7 +260,7 @@ dnf -y install libav
 #   * so try including modules/ocl/include manually (see install-as-user)
 
 # gstreamer-ffmpeg: should allow dragon player to play the files it opens by default but can't play by default (mkv, mp4, mov)
-#source /etc/os-release
+
 #if (( $VERSION_ID > 28 )) ; then
   # then use included gimp (29 has 2.10, 28 has 2.8 so use flatpak there)
 #fi
@@ -284,8 +293,7 @@ dnf -y install brave-keyring brave-browser
 dnf -y install python-devel ffmpeg-libs SDL2-devel SDL2_image-devel SDL2_mixer-devel SDL2_ttf-devel portmidi-devel libavdevice libavc1394-devel zlibrary-devel ccache mesa-libGL mesa-libGL-devel
 dnf -y install python3-pip python2-pip xclip
 
-#compatibility:
-dnf -y msttcore-fonts wine-fonts wine-tahoma-fonts-system wine-times-new-roman-fonts-system wine-wingdings-fonts-system
+
 
 dnf config-manager --add-repo https://download.sublimetext.com/rpm/stable/x86_64/sublime-text.repo
 dnf install sublime-text
@@ -328,85 +336,9 @@ dnf groupinstall "C Development Tools and Libraries"
 # Doing the above causes KDE to prompt for privs after login for both blueman and RfKill (separate prompt for each)
 # Doing the above also results in two bluetooth symbol icons on the task tray (one blurry blue blueman one, plus one themed one)
 
-source_fonts_path=/usr/share/wine/fonts
-this_font_name=arial.ttf
-this_font_path="$source_fonts_path/$this_font_name"
-my_fonts_path=/usr/local/share/fonts/wine
-if [ -f "$this_font_path" ]; then
-  if [ ! -d "$my_fonts_path" ]; then
-    sudo mkdir -p "$my_fonts_path"
-  fi
-  this_dest_path="$my_fonts_path/$this_font_name"
-  if [ ! -f "$this_dest_path" ]; then
-    if [ ! -L "$this_dest_path" ]; then
-      echo "making symlink to $this_font_path..."
-      sudo ln -s "$this_font_path" "$this_dest_path"
-    else
-      echo "NOTICE: redoing existing symlink $this_dest_path"
-      sudo rm -f "$this_dest_path"
-      sudo ln -s "$this_font_path" "$this_dest_path"
-    fi
-  else
-    if [ ! -L "$this_dest_path" ]; then
-      echo "WARNING: skipping font symlink $this_dest_path which is already a real file"
-    else
-      echo "NOTICE: redoing existing symlink $this_dest_path"
-      sudo rm -f "$this_dest_path"
-      sudo ln -s "$this_font_path" "$this_dest_path"
-    fi
-  fi
-else
-  echo "WARNING, font not present: $this_font_path"
-fi
-
-#also: wine-fonts wine-tahoma-fonts-system wine-times-new-roman-fonts-system wine-wingdings-fonts-system
-#wine-*-system: wine font families system integration
-#Calibri and Cambria compatible fonts (are installed by default?) respectively are:
-sudo dnf -y install google-crosextra-carlito-fonts google-crosextra-caladea-fonts
-#Make substitutions in libreoffice (see https://ask.libreoffice.org/en/question/15041/calibri-and-cambria-fonts-in-libreoffice/ which links to https://wiki.debian.org/SubstitutingCalibriAndCambriaFonts):
-
-# * should already be in /etc/fonts/conf.d/
-# * but will not work on new documents, only documents created on a computer with Calibri and Cambria
-#Rename them (see https://superuser.com/questions/472102/change-font-family-rename-font):
-sudo dnf -y install fontforge
-# * open fontforge (gui)
-if [ ! -d "$HOME/tmp/google-crosextra-carlito-as-calibri" ]; then
-
-  mkdir -p "$HOME/tmp/google-crosextra-caladea-as-cambria"
-  cp /usr/share/fonts/google-crosextra-caladea/* "$HOME/tmp/google-crosextra-caladea-as-cambria/"
-  cd "$HOME/tmp/google-crosextra-caladea-as-cambria"
-  mv Caladea-BoldItalic.ttf Cambria-BoldItalic.ttf
-  mv Caladea-Bold.ttf Cambria-Bold.ttf
-  mv Caladea-Italic.ttf Cambria-Italic.ttf
-  mv Caladea-Regular.ttf Cambria-Regular.ttf
-
-  mkdir -p "$HOME/tmp/google-crosextra-carlito-as-calibri"
-  cp /usr/share/fonts/google-crosextra-carlito/* "$HOME/tmp/google-crosextra-carlito-as-calibri/"
-  cd "$HOME/tmp/google-crosextra-carlito-as-calibri"
-  mv Carlito-BoldItalic.ttf Calibri-BoldItalic.ttf
-  mv Carlito-Bold.ttf Calibri-Bold.ttf
-  mv Carlito-Italic.ttf Calibri-Italic.ttf
-  mv Carlito-Regular.ttf Calibri-Regular.ttf
-
-  # * fontforge "$HOME/tmp/google-crosextra-carlito-as-calibri/"
-  # * fontforge "$HOME/tmp/google-crosextra-caladea-as-cambria"
-  # * manually change names using fontforge or TTFEdit (java) or fpedit (Windows) from https://www.microsoft.com/typography/property/fpedit.htm
-fi
-  # * Element, Font Info...
-#audacity-freeworld installs audacity with MP3 support
-#evince: (aka "Document Viewer") pdf viewer better than okular
-
 #optional
 dnf -y install youtube-dl
 
-cd
-if [ ! -d "Downloads" ]; then
-  mkdir Downloads
-fi
-wget http://download.brother.com/welcome/dlf006893/linux-brprinter-installer-2.2.0-1.gz
-#or get latest from <http://support.brother.com/g/b/downloadhowto.aspx?c=us&lang=en&prod=mfcl2740dw_us_eu_as&os=127&dlid=dlf006893_000&flang=4&type3=625>
-gunzip linux-brprinter-installer-2.2.0-1.gz
-sudo bash linux-brprinter-installer-2.2.0-1 MFC-L2740DW
 
 sudo dnf groupinstall "Development Tools"
 echo "The correct package is `sudo dnf grouplist | grep Development | grep -v "D Development"`" >> $postinstall
@@ -508,15 +440,6 @@ To to via GUI"
   - B3D Exporter (install from file--download github.com/minetest/ fork)
   -
 END
-if [ -f ../developer,any/install-voxelshop.sh ]; then
-    bash ../developer,any/install-voxelshop.sh
-elif [ -f install-voxelshop.sh ]; then
-    bash install-voxelshop.sh
-else
-    echo "* The VoxelShop install script normally with this script was not found"
-    echo "  (../developer,any/install-voxelshop.sh or install-voxelshop.sh)."
-    echo "  You can install VoxelShop from https://github.com/simlu/voxelshop/releases"
-fi
 #dnf -y install psutils
 #echo "psutils allows printing multiple pages per sheet:"
 #echo "  psnup -4 file.ps print.ps"

@@ -1,5 +1,8 @@
 #!/bin/bash
 
+dnf -y install nano
+#audacity-freeworld installs audacity with MP3 support
+
 # region GNOME
 dnf -y install @gnome
 dnf -y install gnome-tweak-tool gparted
