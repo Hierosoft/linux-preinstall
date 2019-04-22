@@ -1,8 +1,8 @@
 #!/bin/sh
-if [ ! -f "`command -v git-cola`" ]; then
-  python3 -m pip install https://github.com/git-cola/git-cola/zipball/master --user
+#if [ ! -f "`command -v git-cola`" ]; then
+#  python3 -m pip install https://github.com/git-cola/git-cola/zipball/master --user
   # with --user option, this installs launch script to /home/owner/.local/bin/git-cola
-fi
+#fi
 # flatpak install gimp
 
 # see <https://askubuntu.com/questions/237942/how-does-copy-paste-work-with-xterm>

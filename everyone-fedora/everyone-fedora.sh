@@ -1,7 +1,25 @@
 #!/bin/bash
 
-dnf -y install nano
-#audacity-freeworld installs audacity with MP3 support
+source /etc/os-release
+wget https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$VERSION_ID.noarch.rpm
+wget https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$VERSION_ID.noarch.rpm
+rpm -iv rpmfusion-free-release-$VERSION_ID.noarch.rpm
+dnf -y upgrade
+rpm -iv rpmfusion-nonfree-release-$VERSION_ID.noarch.rpm
+
+dnf -y install \
+  audacity-freeworld \
+  chromium \
+  evince \
+  gimp \
+  nano \
+  openssh \
+  rsync \
+  simple-scan \
+  thunderbird \
+  ;
+# audacity-freeworld installs audacity with MP3 support
+# evince: ("Document Viewer") PDF viewer, fast & accurate unlike okular
 
 # region GNOME
 dnf -y install @gnome
