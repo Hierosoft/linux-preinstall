@@ -1,4 +1,28 @@
-#!/bin/sh
+#!/bin/bash
+me=`basename $0`
+
+# region common
+postinstall="generated.md"
+maindir=""
+if [ -f api.rc ]; then
+    maindir="."
+elif [ -f ../api.rc ]; then
+    maindir=".."
+elif [ -f ../../api.rc ]; then
+    maindir="../.."
+elif [ -f ../../../api.rc ]; then
+    maindir="../../.."
+fi
+if [ ! -z "$maindir" ]; then
+    source $maindir/api.rc
+    postinstall="$maindir/$_POSTINSTALL_NAME"
+else
+    echo "WARNING: api.rc cannot be found in `pwd` nor up to ../../.."
+    echo "  tips will be placed in `pwd`/$postinstall instead."
+fi
+touch $postinstall
+# endregion common
+
 ## LXQt (an LXQt dev says 2019-03-31 that 0.13.0 included with Fedora 29 is "old")
 #see https://github.com/lxqt/lxqt/wiki/Building-from-source
 #for compiling lxqt (Qt deps):
