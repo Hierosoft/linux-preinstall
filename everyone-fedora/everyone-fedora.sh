@@ -36,9 +36,11 @@ cat <<END
     - Application Menu
     - System Tray
     - [Desktop Icons](https://extensions.gnome.org/extension/1465/desktop-icons/)
+    - [Sound Input & Output Device
+      Chooser](https://extensions.gnome.org/extension/906/sound-output-device-chooser/)
   - Remember to ENABLE them using Tweaks (gnome-tweak-tool application),
-    Extensions.
-    - Also click gear by Dash to Dock and change:
+    in the "Extensions" section.
+    - Also, mannually click the gear by Dash to Dock and change:
       - Position and Size:
         - maximum width
         - Position on screen: Bottom
