@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=Chex Quest
+Exec=chocolate-doom
+# -iwad /home/x/Downloads/Chex/chex.wad
+# The following switch is not needed, but the file must be present:
+# -deh /home/x/Downloads/Chex/chex.deh
+Icon=chocolate-doom
+Type=Application
+Comment=Conservative source port
+Categories=Game;ActionGame;
+Keywords=first;person;shooter;vanilla;
