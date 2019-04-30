@@ -31,6 +31,11 @@ echo "Console:"
 
 # set-x11-keymap LAYOUT [MODEL [VARIANT [OPTIONS]]]
 
+# --no-convert
+#            If set-keymap or set-x11-keymap is invoked and this option is passed, then the keymap will not be
+#            converted from the console to X11, or X11 to console, respectively.
+# from <https://www.linux.org/docs/man1/localectl.html>
+
 echo "* settings console to Colemak..."
 kb_conf="/etc/X11/xorg.conf.d/00-keyboard.conf"
 line=
@@ -100,6 +105,11 @@ so you may need to check respective forums for any solutions.
 
 END
 
+if [ -f "`command -v keyboardctl`" ]; then
+    echo "* Manjaro keyboardctl detected, setting system to Colemak..."
+    sudo keyboardctl -l us colemak
+fi
+
 # below doesn't work on Fedora 29:
 #colemak_arc=colemak-1.0.tar.gz
 #colemak_unz=colemak-1.0
@@ -122,3 +132,6 @@ END
 #fi
 #sudo loadkeys -b "$colemak_map_dst" || echo "* Loading '$colemak_map_dst' failed."
 ## WARNING: If the command above fails, it resets the x11 layout to Qwerty!
+echo "Done."
+echo
+echo
