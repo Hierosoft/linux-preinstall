@@ -92,6 +92,11 @@ switching back to the GUI (even though they are set on each startup):
   ./colemak-nonroot.sh
 - Using the top bar of GNOME, click "en" and choose "Colemak"
 
+For changes to '$kb_conf'
+to be applied to TTYs and GUI login, you must reboot.
+
+On Arch-based distros, alternate TTYs may not respect '$kb_conf',
+so you may need to check respective forums for any solutions.
 
 END
 
