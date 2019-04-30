@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=colemak_x
+Comment=colemak_x script from linux-preinstall by poikilos
+Exec=/usr/local/bin/colemak_x.sh
+X-GNOME-Autostart-enabled=true
+X-KDE-autostart-after=panel
+X-Desktop-File-Install-Version=0.23
