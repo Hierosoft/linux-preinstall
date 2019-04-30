@@ -100,14 +100,22 @@ switching back to the GUI (even though they are set on each startup):
 For changes to '$kb_conf'
 to be applied to TTYs and GUI login, you must reboot.
 
-On Arch-based distros, alternate TTYs may not respect '$kb_conf',
-so you may need to check respective forums for any solutions.
-
 END
 
+source /etc/os-release
 if [ -f "`command -v keyboardctl`" ]; then
     echo "* Manjaro keyboardctl detected, setting system to Colemak..."
     sudo keyboardctl -l us colemak
+elif [ ! -z "$ID_LIKE" ]]; then
+    if [[ $ID_LIKE == *arch* ]]; then
+        cat <<END
+On Arch-based distros, alternate TTYs may not respect '$kb_conf',
+so you may need to check respective forums for any solutions.
+
+This script can use Manjaro keyboardctl if present.
+
+END
+    fi
 fi
 
 # below doesn't work on Fedora 29:
