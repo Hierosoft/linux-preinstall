@@ -5,4 +5,5 @@ if [ -f "$colemak_x_dst" ]; then
 else
     echo "* ERROR: missing $colemak_x_dst - run colemak.sh first"
 fi
+gsettings set org.gnome.desktop.input-sources sources "[('xkb','us+colemak')]"
 gsettings set org.gnome.desktop.input-sources sources "[('xkb','us+colemak'),('xkb','us')]"
