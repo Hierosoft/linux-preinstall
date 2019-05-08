@@ -106,7 +106,7 @@ source /etc/os-release
 if [ -f "`command -v keyboardctl`" ]; then
     echo "* Manjaro keyboardctl detected, setting system to Colemak..."
     sudo keyboardctl -l us colemak
-elif [ ! -z "$ID_LIKE" ]]; then
+elif [ ! -z "$ID_LIKE" ]; then
     if [[ $ID_LIKE == *arch* ]]; then
         cat <<END
 On Arch-based distros, alternate TTYs may not respect '$kb_conf',
