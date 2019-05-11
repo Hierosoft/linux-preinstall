@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# GNOME extensions: see bottom
+
 source /etc/os-release
 wget https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$VERSION_ID.noarch.rpm
 wget https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$VERSION_ID.noarch.rpm
@@ -38,6 +40,39 @@ cat <<END
     - [Desktop Icons](https://extensions.gnome.org/extension/1465/desktop-icons/)
     - [Sound Input & Output Device
       Chooser](https://extensions.gnome.org/extension/906/sound-output-device-chooser/)
+    - [Vitals](https://extensions.gnome.org/extension/1460/vitals/)
+    - [Microphone Echo-Cancellation]
+      (https://extensions.gnome.org/extension/1456/microphone-echo-cancellation/)
+    - [System
+      Info](https://extensions.gnome.org/extension/471/system-info/)
+  - and optionally:
+    - [IdleRPG](https://extensions.gnome.org/extension/643/idlerpg/)
+    - [Mumble](https://extensions.gnome.org/extension/1090/mumble/):
+      adds overlay option when right-clicking applications
+    - [Transparent GNOME panel]
+      (https://extensions.gnome.org/extension/1099/transparent-gnome-panel/)
+    - [Presences]
+      (https://extensions.gnome.org/extension/447/presences/):
+      "Enables all online status types (available, busy, away, hidden,
+      offline) in user menu."
+    - [Pidgin @ User Menu]
+      (https://extensions.gnome.org/extension/506/pidgin-in-user-menu/)
+    - [quake-menu]
+      (https://extensions.gnome.org/extension/1411/quake-mode/)
+    - [NVIDIA GPU Stats Tool]
+      (https://extensions.gnome.org/extension/1320/nvidia-gpu-stats-tool/)
+    - [KStatusNotifierItem/AppIndicator Support]
+      (https://extensions.gnome.org/extension/615/appindicator-support/)
+    - [Battery Percentage and Time]
+      (https://extensions.gnome.org/extension/1771/battery-percentage-and-time/)
+  - The following don't seem to be needed anymore on GNOME 3.32.2:
+    - [Backlight Control]
+      (https://extensions.gnome.org/extension/1293/backlight-control/)
+    - [Applications
+      Menu](https://extensions.gnome.org/extension/6/applications-menu/)
+  - The following only work on the distro mentioned in the name:
+    - [Fedora Linux Updates
+      Indicator](https://extensions.gnome.org/extension/1150/fedora-linux-updates-indicator/)
   - Remember to ENABLE them using Tweaks (gnome-tweak-tool application),
     in the "Extensions" section.
     - Also, mannually click the gear by Dash to Dock and change:
