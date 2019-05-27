@@ -60,6 +60,7 @@ def addDateConv(path):
     global filesDifferentCount
     lineCount = 0
     filesReadCount += 1
+    done_flag = "to_date("
     while originalLine:
         originalLine = ins.readline()
         if originalLine:
@@ -78,7 +79,7 @@ def addDateConv(path):
                     if line[i] == "'":
                         sqlVal = line[start:i+1]
                         fmt = getDateFmt(sqlVal, stripChars="'")
-                        if fmt is None:
+                        if (fmt is None) or (line[-len(done_flag):].lower() == done_flag):
                             line2 += sqlVal
                             # if (len(sqlVal) == 9) or (len(sqlVal) == 11):
                                 # print("  NotDate: " + sqlVal)
