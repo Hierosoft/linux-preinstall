@@ -21,6 +21,8 @@ cd $ex_name && bash install-linux.sh
 #    echo "  You can install VoxelShop from https://github.com/simlu/voxelshop/releases"
 #fi
 
+# kdenlive: see creative-nonroot.sh for appimage install and why
+
 cat <<END
 In Blender, User Preferences, Add-ons, enable:
   - Color Palette

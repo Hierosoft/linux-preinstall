@@ -101,7 +101,6 @@ dnf -y install \
     tiled \
     fontforge \
     qdirstat \
-    kdenlive \
     frei0r-plugins \
     redshift \
     redshift-gtk \
@@ -150,6 +149,7 @@ dnf -y install \
     gnome-terminal \
     screen \
     ;
+
 
 # gstreamer-ffmpeg: should allow dragon player to play the files it opens by default but can't play by default (mkv, mp4, mov)
 
