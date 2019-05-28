@@ -79,6 +79,7 @@ def addDateConv(path):
                     if line[i] == "'":
                         sqlVal = line[start:i+1]
                         fmt = getDateFmt(sqlVal, stripChars="'")
+                        # check for done_flag to avoid creating `to_date(to_date` recursion:
                         if (fmt is None) or (line[-len(done_flag):].lower() == done_flag):
                             line2 += sqlVal
                             # if (len(sqlVal) == 9) or (len(sqlVal) == 11):
