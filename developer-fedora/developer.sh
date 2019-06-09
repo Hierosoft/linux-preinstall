@@ -107,8 +107,6 @@ dnf -y install \
     plasma-applet-redshift-control \
     projectM-pulseaudio \
     eclipse-jdt \
-    java-1.8.0-openjdk-devel \
-    java-1.8.0-openjdk \
     icedtea-web \
     maven \
     shotcut \
