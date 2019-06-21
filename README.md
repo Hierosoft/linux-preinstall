@@ -29,3 +29,11 @@ except `*-nonroot.sh` scripts must run as `root` (or with `sudo bash`):
 * universal folders that are not distro-specific (such as everyone)
 * nonroot scripts (run as regular user without sudo, though some of the
   scripts call sudo but change settings for the current user).
+
+## Developer notes
+* For silent installation, dealing with files marked
+  `linux_preinstall_interactive=true` somehow is necessary (either
+  automating them more, or noting how to proceed in $postinstall doc)
+  - [ ] A code audit is needed: all script files that aren't silent
+    installs should have the boolean value.
+  - See "developer-fedora/mysql-community-server.sh" for an example.
