@@ -1,4 +1,10 @@
 #!/bin/sh
+
+# - Install to $HOME/minetest.
+# - Backs up skins and worlds before upgrade, then restore afterward.
+# - Put icon and shortcut in correct directories in $HOME/.local
+#   (as per XDG standard).
+
 killall minetest
 arcName=minetest-linux64.zip
 url=https://downloads.minetest.org/$arcName
