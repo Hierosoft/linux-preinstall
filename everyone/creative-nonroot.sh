@@ -33,17 +33,18 @@ if [ ! -d "$appimage_dir" ]; then
     if [ "@$ok" = "@false" ]; then
         echo "FAILED to create $appimage_dir"
     fi
-    dl_path=$appimage_dir/$dl_name
 fi
-if [ "@$ok" = "@false" ]; then
+dl_path=$appimage_dir/$dl_name
+
+#if [ "@$ok" = "@false" ]; then
     if [ ! -f "$dl_path" ]; then
         present=false
         enable_dl=true
     fi
-fi
+#fi
 echo "present: $present"
 echo "enable_dl: $enable_dl"
-if [ "@$enable_dl" = "@false" ]; then
+if [ "@$present" = "@false" ]; then
     if [ "@$enable_dl" = "@true" ]; then
         wget -O $dl_path https://files.kde.org/kdenlive/release/$dl_name || ok=false
     else
