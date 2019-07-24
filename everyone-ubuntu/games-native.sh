@@ -1,5 +1,10 @@
 #!/bin/sh
-sudo apt-get install a7xpg adonthell airstrike alienblaster amphetamine antigravitaattori ardentryst asc atanks balazar3 berusky2 btanks bubbros bzflag lincity-ng mazeofgalious meritous openclonk plee-the-bear raincat smc smc-music supertuxkart tomatoes trackballs xbill tumiki-fighters
+sudo apt-get install a7xpg adonthell airstrike alienblaster amphetamine antigravitaattori ardentryst asc atanks berusky2 btanks bubbros bzflag lincity-ng mazeofgalious meritous openclonk plee-the-bear raincat supertuxkart tomatoes trackballs xbill tumiki-fighters
+
+#not in Mint:
+sudo apt install -y smc smc-music
+sudo apt install -y balazar3
+
 #UNIVERSE contains: a7xpg adonthell airstrike alienblaster amphetamine antigravitaattori ardentryst asc atanks balazar3 berusky2 btanks bubbros bzflag lincity-ng mazeofgalious meritous openclonk plee-the-bear raincat smc smc-music supertuxkart tomatoes trackballs xbill tumiki-fighters
 #airstrike: 1-2 player, side-view biplane game inspired by Amiga(R) Biplanes and BIP
 #alienblaster: 1 player, top view vertical scroller inspired by similar Atari(R) 7800-era games

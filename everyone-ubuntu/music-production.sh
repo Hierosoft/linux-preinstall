@@ -1,2 +1,3 @@
 #!/bin/sh
-sudo apt-get install lmms audacity lame ffmpeg
+sudo apt update
+sudo apt install -y lmms audacity lame ffmpeg
