@@ -46,4 +46,4 @@ If it is already working and you just want to change the hotkey or
 program, search the application menu for "Shortcut" and use the
 "Shortcut Keys" program to change the setting.
 END
-dnf -y install lximage-qt scrot lxqt-globalkeys
+#dnf -y install lximage-qt scrot lxqt-globalkeys
