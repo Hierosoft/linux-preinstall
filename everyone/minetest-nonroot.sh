@@ -8,6 +8,7 @@
 killall minetest
 arcName=minetest-linux64.zip
 url=https://downloads.minetest.org/$arcName
+installPath="`pwd`"
 customDie() {
     echo
     echo "ERROR:"
@@ -28,7 +29,6 @@ do
         enableOffline=true
     fi
 done
-
 cd "$HOME/Downloads" || customDie "Cannot cd '$HOME/Downloads'"
 unzName=minetest-linux64
 if [ "@$enableOffline" = "@false" ]; then
@@ -115,7 +115,7 @@ updaterName=org.minetest.mtupdate.desktop
 updaterSrc="share/applications/$updaterName"
 updaterDst="$HOME/.local/share/applications/$updaterName"
 
-if [ -f "$updaterSrc" ]; then
+if [ -f "$installPath/$updaterSrc" ]; then
     cat "$updaterSrc" | grep -v Exec= > $updaterDst
     echo "Exec=$HOME/git/linux-preinstall/everyone/minetest-nonroot.sh" >> $updaterDst
 else
