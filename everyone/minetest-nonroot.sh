@@ -116,7 +116,7 @@ updaterSrc="share/applications/$updaterName"
 updaterDst="$HOME/.local/share/applications/$updaterName"
 
 if [ -f "$installPath/$updaterSrc" ]; then
-    cat "$updaterSrc" | grep -v Exec= > $updaterDst
+    cat "$installPath/$updaterSrc" | grep -v Exec= > $updaterDst
     echo "Exec=$HOME/git/linux-preinstall/everyone/minetest-nonroot.sh" >> $updaterDst
 else
     echo "'$updaterSrc' is missing."
