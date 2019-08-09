@@ -1,5 +1,7 @@
 #!/bin/sh
 
+git pull
+
 # - Install to $HOME/minetest.
 # - Backs up skins and worlds before upgrade, then restore afterward.
 # - Put icon and shortcut in correct directories in $HOME/.local
@@ -31,6 +33,13 @@ do
 done
 cd "$HOME/Downloads" || customDie "Cannot cd '$HOME/Downloads'"
 unzName=minetest-linux64
+if [ -f "$arcName" ]; then
+    if [ `stat --format=%Y $arcName` -gt $(( `date +%s` - (24*60*60) )) ]; then
+        # File is newer than 24 hours.
+        echo "Existing '$arcName' is recent (no download is required)."
+        enableOffline=true
+    fi
+fi
 if [ "@$enableOffline" = "@false" ]; then
     wget -O "$arcName" $url || customDie "Cannot download $url"
     if [ -d "$unzName" ]; then
@@ -116,8 +125,9 @@ updaterSrc="share/applications/$updaterName"
 updaterDst="$HOME/.local/share/applications/$updaterName"
 
 if [ -f "$installPath/$updaterSrc" ]; then
-    cat "$installPath/$updaterSrc" | grep -v Exec= > $updaterDst
+    cat "$installPath/$updaterSrc" | grep -v Exec= | grep -v Icon= > $updaterDst
     echo "Exec=$HOME/git/linux-preinstall/everyone/minetest-nonroot.sh" >> $updaterDst
+    echo "Icon=$HOME/.local/share/pixmaps/minetest.png" >> $updaterDst
 else
     echo "'$updaterSrc' is missing."
 fi
