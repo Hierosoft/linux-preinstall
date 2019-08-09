@@ -137,4 +137,4 @@ echo
 echo
 echo "Update is complete."
 echo
-sleep 2
+sleep 4
