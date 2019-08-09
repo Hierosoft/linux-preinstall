@@ -110,3 +110,14 @@ cat "$srcShortcut" | grep -v "Exec=" | grep -v "Name=" | grep -v "Icon=" > "$dst
 echo "Exec=$HOME/minetest/bin/minetest" >> "$dstShortcut"
 echo "Name=Final Minetest" >> "$dstShortcut"
 echo "Icon=$destPix/minetest.png" >> "$dstShortcut"
+
+updaterName=org.minetest.mtupdate.desktop
+updaterSrc="share/applications/$updaterName"
+updaterDst="$HOME/.local/share/applications/$updaterName"
+
+if [ -f "$updaterSrc" ]; then
+    cat "$updaterSrc" | grep -v Exec= > $updaterDst
+    echo "Exec=$HOME/git/linux-preinstall/everyone/minetest-nonroot.sh" >> $updaterDst
+else
+    echo "'$updaterSrc' is missing."
+fi
