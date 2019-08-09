@@ -36,7 +36,9 @@ unzName=minetest-linux64
 if [ -f "$arcName" ]; then
     if [ `stat --format=%Y $arcName` -gt $(( `date +%s` - (24*60*60) )) ]; then
         # File is newer than 24 hours.
-        echo "Existing '$arcName' is recent (no download is required)."
+        echo
+        echo "* Existing '$arcName' is recent (no download is required)."
+        echo
         enableOffline=true
     fi
 fi
@@ -131,3 +133,8 @@ if [ -f "$installPath/$updaterSrc" ]; then
 else
     echo "'$updaterSrc' is missing."
 fi
+echo
+echo
+echo "Update is complete."
+echo
+sleep 2
