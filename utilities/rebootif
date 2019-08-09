@@ -1,0 +1,12 @@
+#!/bin/bash
+if [ ! -f "`which finger`" ]; then
+    echo "This script requires finger."
+    exit 1
+fi
+if finger | grep -q tty; then
+    echo "someone is using a TTY:"
+    # Leave out -q this time, so grep actually shows the line:
+    finger | grep tty
+else
+    reboot
+fi
