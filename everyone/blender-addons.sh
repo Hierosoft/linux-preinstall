@@ -2,8 +2,27 @@
 
 #echo "This script"
 ../utilities/blender-install-git-addon.sh https://github.com/machin3io/MACHIN3tools.git
+../utilities/blender-install-git-addon.sh https://github.com/JacquesLucke/code_autocomplete.git
 
 cat <<END
+## Manual Steps Required
+- You must manually enable the addons above in User Preferences,
+  Add-ons to use them.
+- Click "Save User Preferences" if you don't want to have to
+  enable each Add-on again for each Blender project (blend
+  file).
+- If you want to use **code_autocomplete**, after enabling it
+  above, you must also:
+  - Open a text editor panel
+  - Open the left menu (with the small plus button at the left edge
+    of the Text Editor panel, near the top).
+  - Enable Line Numbers, Word Wrap, and Syntax Highlight
+  - Under "Addon Development," choose "code_autocomplete"
+  - Click Run Addon, Start
+  - Click Build if there is a warning (usually necessary for
+    first-time setup).
+
+## Optional
 There are some addons on the Blender Market you may find helpful for
 simplifying the modeling of advanced shapes:
 - [Boxcutter](https://blendermarket.com/products/boxcutter)
