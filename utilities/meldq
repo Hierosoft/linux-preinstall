@@ -11,9 +11,34 @@ if [ ! -f "`command -v meld`" ]; then
     exit 1
 fi
 
+if [ -z "$1" ]; then
+    echo "You must specify 2 or 3 files or directories."
+    exit 1
+elif [ ! -f "$1" ]; then
+    if [ ! -d "$1" ]; then
+        echo "'$1' is neither a file nor a directory"
+        exit 1
+    fi
+fi
+
+if [ -z "$2" ]; then
+    echo "You must specify 2 or 3 files or directories."
+    exit 1
+elif [ ! -f "$2" ]; then
+    if [ ! -d "$2" ]; then
+        echo "'$2' is neither a file nor a directory"
+        exit 1
+    fi
+fi
+
 if [ -f "$1" ]; then
     if [ ! -f "$2" ]; then
         echo "Cannot compare a file ('$1') to something that is not a file ('$2')"
+        exit 1
+    fi
+elif [ -d "$1" ]; then
+    if [ ! -d "$2" ]; then
+        echo "Cannot compare a directory ('$1') to something that is not a directory ('$2')"
         exit 1
     fi
 fi
@@ -22,6 +47,11 @@ if [ ! -z "$3" ]; then
     if [ -f "$1" ]; then
         if [ ! -f "$3" ]; then
             echo "Cannot compare a file ('$1') to something that is not a file ('$3')"
+            exit 1
+        fi
+    elif [ -d "$1" ]; then
+        if [ ! -d "$3" ]; then
+            echo "Cannot compare a directory ('$1') to something that is not a directory ('$3')"
             exit 1
         fi
     fi
