@@ -1,3 +1,4 @@
+*.pyc
 nohup.out
 rpmfusion-*.noarch.rpm
 generated.md
