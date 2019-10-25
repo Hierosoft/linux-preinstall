@@ -145,12 +145,16 @@ def install_program_in_place(src_path, caption=None, name=None, version=None, do
             print("mv \"{}\" \"{}\"".format(src_path, path))
             shutil.move(src_path, path)
 
-    os.chmod(path, stat.S_IXGRP | stat.S_IEXEC | stat.S_IREAD | stat.S_IRGRP)
+    os.chmod(path, stat.S_IRWXU | stat.S_IXGRP | stat.S_IRGRP | stat.S_IROTH | stat.S_IXOTH)
+    # stat.S_IRWXU : Read, write, and execute by owner
     # stat.S_IEXEC : Execute by owner
     # stat.S_IXGRP : Execute by group
     # stat.S_IXOTH : Execute by others
     # stat.S_IREAD : Read by owner
     # stat.S_IRGRP : Read by group
+    # stat.S_IROTH : Read by others
+    # stat.S_IWOTH : Write by others
+    # stat.S_IXOTH : Execute by others
 
     shortcut_data = shortcut_data_template.format(x=path,
                                                   name=caption,
