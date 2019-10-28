@@ -63,6 +63,11 @@ simplifying the modeling of advanced shapes:
     and other features for highly-detailed models. Add eyebrows or hair
     by drawing a freehand outline on the surface.
   Alternatives: Sculpt Toolkit
+- [Car-Rig Pro "Blender Kit"](https://blendermarket.com/products/car-rig-pro-blender-kit)
+  Price: $39
+  Rating: 4/5
+  Description: Draw a curve, and the addon animates the car, snaps the
+    wheels to the curve, and handles all physics.
 END
 
 cat <<END
