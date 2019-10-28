@@ -167,7 +167,7 @@ def install_program_in_place(src_path, caption=None, name=None, version=None, do
     shortcut_append_lines = None
     if os.path.isfile(meta_path):
         with open(meta_path) as f:
-            print("* Using shortcut metadata from '{}'".format(meta_path))
+            print("* using shortcut metadata from '{}'".format(meta_path))
             lines = f.readlines()  # includes newlines!
             shortcut_append_lines = []
             for line_original in lines:
