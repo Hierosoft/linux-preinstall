@@ -68,6 +68,23 @@ simplifying the modeling of advanced shapes:
   Rating: 4/5
   Description: Draw a curve, and the addon animates the car, snaps the
     wheels to the curve, and handles all physics.
+- [Procedural Noise Pack](https://gumroad.com/l/NOISE-P)
+  Author: Simon Thommes
+  Price: Pay what you want
+  Description: (recommended by CGShrimp [3D Nebulae and the Power of the
+    Blender Community - Gleb
+    Alexandrov](https://www.youtube.com/watch?v=4w8_SBxCOxo&t=0s)
+- [MandelBulb (blend file)]
+  Author: Gleb Alexandrov @gleb_alexandrov
+  Description: See JonasDichelle's tweaked MandelBulb in
+    "everyone/blender/mandelbulb (1) by JonasDichelle.blend"
+    from https://drive.google.com/file/d/1OZbh7f4KIFVMgzIEP_cenCQp-36RwozW/view
+    via https://www.youtube.com/watch?v=WSQFt1Nruns
+- [Volumetric cycles #b3d nebula 2.0]
+  Author: Robert @robert_trirop
+  Description: infinitely complex nebulae
+    https://twitter.com/robert_trirop/status/755141408302956545
+
 END
 
 cat <<END
