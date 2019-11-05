@@ -4,6 +4,7 @@ import stat
 import os
 import shutil
 
+me = os.path.split(sys.argv[0])[-1]
 version_chars = "0123456789."
 icons = {}
 icons["freecad"] = "org.freecadweb.FreeCAD"
@@ -15,12 +16,12 @@ def is_version(s):
     return True
 
 def usage():
-    print()
+    print("")
     print("USAGE:")
-    print(sys.argv[0] + " <Program Name_version.AppImage>")
-    print(sys.argv[0] + " <file.AppImage> <Icon Caption>")
-    print()
-    print()
+    print(me + " <Program Name_version.AppImage>")
+    print(me + " <file.AppImage> <Icon Caption>")
+    print("")
+    print("")
 
 def split_any(s, delimiters):
     ret = []
@@ -60,11 +61,21 @@ FreeCAD_0.18-16131-Linux-Conda_Py3Qt5_glibc2.12-x86_64.AppImage)
 """
 def install_program_in_place(src_path, caption=None, name=None, version=None, do_move=False):
 
+    local = os.path.join(os.environ["HOME"], ".local")
+    lib64 = os.path.join(local, "lib64")
+    programs = lib64
+
     if src_path is None:
+        usage()
         print("ERROR: You must specify a path to a binary file.")
         return False
     elif not os.path.isfile(src_path):
+        usage()
         print("ERROR: '{}' is not a file.".format(src_path))
+        src_name = os.path.split(src_path)[-1]
+        try_dest_path = os.path.join(programs, src_name)
+        if os.path.isfile(try_dest_path):
+            print("'{}' is already installed.".format(try_dest_path))
         return False
 
     filename = os.path.split(src_path)[-1]
@@ -92,13 +103,11 @@ def install_program_in_place(src_path, caption=None, name=None, version=None, do
             usage()
             print("End of program name (any of '" + breakers
                   + "') is not in " + try_name)
-            print()
-            print()
+            print("")
+            print("")
             return False
 
 
-    local = os.path.join(os.environ["HOME"], ".local")
-    lib64 = os.path.join(local, "lib64")
     share = os.path.join(local, "share")
     applications = os.path.join(share, "applications")
     shortcut = None
@@ -135,7 +144,6 @@ def install_program_in_place(src_path, caption=None, name=None, version=None, do
             caption += " (AppImage)"
         print("* using '" + caption + "' as caption")
     path = src_path
-    programs = lib64
     # programs = os.path.join(os.environ.get("HOME"), ".config")
     if do_move:
         if not os.path.isdir(programs):
@@ -183,6 +191,7 @@ def install_program_in_place(src_path, caption=None, name=None, version=None, do
         print("Wrote '{}'".format(shortcut))
         print("  Name={}".format(caption))
         print("  Exec={}".format(path))
+        print("  Icon={}".format(iconName))
         os.chmod(shortcut, stat.S_IROTH | stat.S_IREAD | stat.S_IRGRP | stat.S_IWUSR)
         return True
     return False
@@ -191,7 +200,10 @@ if __name__ == "__main__":
     caption = None
     src_path = None
     if len(sys.argv) < 2:
-        print("You must specify an executable binary file.")
+        usage()
+        print("You must specify a binary file.")
+        print("")
+        print("")
         exit(1)
     src_path = sys.argv[1]
     if len(sys.argv) >= 3:
