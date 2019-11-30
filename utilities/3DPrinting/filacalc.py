@@ -35,7 +35,7 @@ def get_float(s, name, unit):
     try:
         r = float(s)
     except ValueError:
-        msg = "'{}'".format(s)
+        msg = "You must specify a length in meters (m). '{}'".format(s)
         if unit is not None:
             msg += " {}".format(unit)
         msg += " is not a number.".format(s)

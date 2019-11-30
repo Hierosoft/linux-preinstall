@@ -36,7 +36,7 @@ def split_any(s, delimiters):
 shortcut_data_template = """[Desktop Entry]
 Name={name}
 Exec={x}
-Icon={iconName}
+Icon={icon_name}
 Terminal=false
 Type=Application
 """
@@ -82,6 +82,7 @@ def install_program_in_place(src_path, caption=None, name=None, version=None, do
     dirpath = os.path.split(src_path)[-2]
     dirname = os.path.split(dirpath)[-1]
     version = None
+    icon_name = None
 
     if (name is None) or (version is None):
         try_names = [filename, dirname]
@@ -94,6 +95,11 @@ def install_program_in_place(src_path, caption=None, name=None, version=None, do
         if parts is not None:
             if name is None:
                 name = parts[0]
+                if caption is None:
+                    caption = parts[0] + " " + parts[1]
+                icon_name = name.lower()
+                if (len(parts) > 1) and (len(parts[1]) > 0) and (parts[1][0] == parts[1][0].upper()):
+                    name += " " + parts[1]
                 print("* using '" + name + "' as program name")
             if version is None:
                 if (len(parts) > 1) and (is_version(parts[1])):
@@ -130,11 +136,12 @@ def install_program_in_place(src_path, caption=None, name=None, version=None, do
         shortcut_name += "-appimage"
     shortcut_name += ".desktop"
     shortcut = os.path.join(applications, shortcut_name)
-    iconName = name.lower()
+    if icon_name is None:
+        icon_name = name.lower()
     try_icon = icons.get(name.lower())
 
     if try_icon is not None:
-        iconName = try_icon
+        icon_name = try_icon
     if caption is None:
         caption = name
         if version is not None:
@@ -166,7 +173,7 @@ def install_program_in_place(src_path, caption=None, name=None, version=None, do
 
     shortcut_data = shortcut_data_template.format(x=path,
                                                   name=caption,
-                                                  iconName=iconName)
+                                                  icon_name=icon_name)
 
     my_dir = os.path.dirname(os.path.realpath(__file__))
     meta_dir = os.path.join(my_dir, "shortcut-metadata")
@@ -191,7 +198,7 @@ def install_program_in_place(src_path, caption=None, name=None, version=None, do
         print("Wrote '{}'".format(shortcut))
         print("  Name={}".format(caption))
         print("  Exec={}".format(path))
-        print("  Icon={}".format(iconName))
+        print("  Icon={}".format(icon_name))
         os.chmod(shortcut, stat.S_IROTH | stat.S_IREAD | stat.S_IRGRP | stat.S_IWUSR)
         return True
     return False
