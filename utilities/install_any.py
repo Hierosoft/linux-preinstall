@@ -1,8 +1,10 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import sys
 import stat
 import os
 import shutil
+import tarfile
+import tempfile
 
 me = os.path.split(sys.argv[0])[-1]
 version_chars = "0123456789."
@@ -20,6 +22,7 @@ def usage():
     print("USAGE:")
     print(me + " <Program Name_version.AppImage>")
     print(me + " <file.AppImage> <Icon Caption>")
+    print(me + " <file.deb> <Icon Caption>")
     print("")
     print("")
 
@@ -33,10 +36,17 @@ def split_any(s, delimiters):
         ret = parts
     return ret
 
+def dir_is_empty(folder_path):
+    count = 0
+    sub_names = os.listdir(folder_path)
+    for sub_name in sub_names:
+        count += 1
+    return count < 1
+
 shortcut_data_template = """[Desktop Entry]
 Name={name}
 Exec={x}
-Icon={icon_name}
+Icon={icon}
 Terminal=false
 Type=Application
 """
@@ -50,20 +60,261 @@ Example: src_path=../Downloads/blender-2.79-e045fe53f1b0-linux-glibc217-x86_64/b
 blender-2.79-e045fe53f1b0-linux-glibc217-x86_64 since it has more
 delimiters than the filename "blender")
 
-do_move: Only set this to true if src_path is an AppImage or other self-
-contained binary file. The file will be moved to ~/.local/lib64/
-do_move=True example:
+move_what: Only set this to 'file' if src_path is an AppImage or other
+self-contained binary file. Otherwise you may set it to 'directory'. The
+file or directory will be moved to ~/.local/lib64/.
+move_what='file' example:
 If name is not specified, the name and version will be calculated from
 either the filename at src_path or the path's parent directory's name.
 Example: src_path=../Downloads/FreeCAD_0.18-16131-Linux-Conda_Py3Qt5_glibc2.12-x86_64.AppImage
 (In this case, this function will extract the name and version from
 FreeCAD_0.18-16131-Linux-Conda_Py3Qt5_glibc2.12-x86_64.AppImage)
 """
-def install_program_in_place(src_path, caption=None, name=None, version=None, do_move=False):
-
-    local = os.path.join(os.environ["HOME"], ".local")
-    lib64 = os.path.join(local, "lib64")
+def install_program_in_place(src_path, caption=None, name=None,
+        version=None, move_what=None, do_uninstall=False,
+        icon_path=None, enable_reinstall=False):
+    local_path = os.path.join(os.environ["HOME"], ".local")
+    share_path = os.path.join(local_path, "share")
+    icons_path = os.path.join(share_path, "pixmaps")
+    lib64 = os.path.join(local_path, "lib64")
     programs = lib64
+    dirname = None
+    ex_tmp = None
+    new_tmp = None
+    ending = ".deb"
+    if src_path.lower()[-(len(ending)):] == ending:
+        ex_tmp = tempfile.mkdtemp()
+        print("* extracting '{}' to '{}'...".format(src_path, ex_tmp))
+        ex_command = "cd '{}' && ar xv '{}'".format(ex_tmp, src_path)
+        # NOTE: Instead of `ar`, python-libarchive could also work.
+        cmd_return = os.system(ex_command);
+        if dir_is_empty(ex_tmp):
+            print("ERROR: `{}` did not result in any extracted files or"
+                  " directories in"
+                  " '{}'".format(ex_command, ex_tmp))
+            return False
+        elif cmd_return != 0:
+            print("ERROR: `{}` returned an error value"
+                  " ({})".format(ex_command, cmd_return))
+            return False
+        print("")
+        # tar = tarfile.open(src_path)
+        # tar.extractall(path=ex_tmp)
+        # tar.close()
+        next_path = os.path.join(ex_tmp, "data.tar.xz")
+        if not os.path.isfile(next_path):
+            print("ERROR: Extracting deb did not result in"
+                  " '{}'.".format(next_path))
+            shutil.rmtree(ex_tmp)
+            print("  * deleted {}.".format(ex_tmp))
+            return False
+        next_temp = tempfile.mkdtemp()
+        print("* extracting '{}'...".format(next_path))
+        try:
+            tar = tarfile.open(next_path)
+            tar.extractall(path=next_temp)
+            tar.close()
+        except tarfile.ReadError:
+            print("ERROR: tar could not extract '{}'".format(next_path))
+            return False
+        shutil.rmtree(ex_tmp)  # Remove temporary directory containing
+                               # only control.tar.gz, data.tar.xz, and
+                               # debian-binary.
+        # Now next_temp should contain directories such as usr & etc.
+        src_usr = os.path.join(next_temp, "usr")
+        src_usr_share = os.path.join(src_usr, "share")
+        if not os.path.isdir(src_usr_share):
+            print("ERROR: extracting '{}' from '{}' did not result in"
+                  " '{}'".format(next_temp, next_path, src_usr_share))
+            shutil.rmtree(next_temp)
+            return False
+        folder_path = src_usr_share
+        programs = []
+        not_programs = ["applications", "icons", "doc"]
+        sub_names = os.listdir(folder_path)
+        for sub_name in sub_names:
+            sub_path = os.path.join(folder_path, sub_name)
+            if os.path.isdir(sub_path) and sub_name[:1]!=".":
+                if sub_name not in not_programs:
+                    programs.append(sub_name)
+        if len(programs) == 0:
+            print("ERROR: extracting '{}' from '{}' did not result in"
+                  " any programs in '{}' (only {})".format(
+                    next_temp,
+                    next_path,
+                    src_usr_share,
+                    sub_names
+                )
+            )
+            shutil.rmtree(next_temp)
+            print("* removed '{}'".format(next_temp))
+            return False
+        elif len(programs) > 1:
+            print("ERROR: extracting '{}' from '{}' resulted in"
+                  " too many unknown directories in '{}': ({})".format(
+                    next_temp,
+                    next_path,
+                    src_usr_share,
+                    programs
+                )
+            )
+            shutil.rmtree(next_temp)
+            print("* removed '{}'".format(next_temp))
+            return False
+        program_temp = tempfile.mkdtemp()
+        program_path = os.path.join(src_usr_share, programs[0])
+        binaries = []
+        binary_path = None
+        folder_path = program_path
+        sub_names = os.listdir(folder_path)
+        for sub_name in sub_names:
+            sub_path = os.path.join(folder_path, sub_name)
+            if os.path.isfile(sub_path) and (sub_name[:1] != "."):
+                binaries.append(sub_name)
+                print("* detected program file '{}'".format(sub_path))
+                if sub_name == programs[0]:
+                    binary_path = sub_path
+                    break
+        if binary_path is None:
+            if len(binaries) == 1:
+                binary_path = os.path.join(program_path, binaries[0])
+            else:
+                shutil.rmtree(next_temp)
+                if len(binaries) == 0:
+                    print("ERROR: extracting '{}' from '{}' did not"
+                          " result in any files such as binaries in"
+                          " '{}' (only {})".format(
+                            next_temp,
+                            next_path,
+                            program_path,
+                            sub_names
+                        )
+                    )
+                else:
+                    print("ERROR: extracting '{}' from '{}'"
+                          " resulted in more than one file in"
+                          " '{}' and one is not named {}, so the binary"
+                          " could not be detected (among {})".format(
+                            next_temp,
+                            next_path,
+                            program_path,
+                            binaries[0],
+                            binaries
+                        )
+                    )
+                return False
+
+        # The program is extracted and detected. Now, find the icon:
+        src_icons = os.path.join(src_usr_share, "icons")
+        icon_path = None
+        icon_count = 0
+        if os.path.isdir(src_icons):
+            for root, dirs, files in os.walk(src_icons):
+                for sub_name in files:
+                    sub_path = os.path.join(root, sub_name)
+                    icon_path = os.path.join(icons_path, sub_name)
+                    if do_uninstall:
+                        if os.path.isfile(icon_path):
+                            os.remove(icon_path)
+                            print("* removed '{}'".format(icon_path))
+                    else:
+                        if not os.path.isdir(icons_path):
+                            os.makedirs(icons_path)
+                        try:
+                            shutil.move(sub_path, icon_path)
+                            print("* added '{}'".format(icon_path))
+                        except Exception as e:
+                            print("ERROR: moving '{}' to '{}'"
+                                  " failed.".format(sub_path,
+                                                    icon_path), e)
+                            shutil.rmtree(next_temp)
+                            print("* removed '{}'".format(next_temp))
+                            return False
+                    icon_count += 1
+            if icon_count == 0:
+                print("INFO: No icons were found in '{}' or its"
+                      " subdirectories.".format(src_icons))
+            if do_uninstall:
+                for root, dirs, files in os.walk(src_icons):
+                    for sub_name in dirs:
+                        sub_path = os.path.join(icons_path, sub_name)
+                        if dir_is_empty(sub_path):
+                            # This should work (deepest will be listed
+                            # first) since walk sets topdown to False by
+                            # default.
+                            os.rmdir(sub_path)
+                            print("* removed '{}'".format(sub_path))
+            else:
+                print("* using '{}' as icon".format(icon_path))
+        else:
+            print("INFO: No '{}' directory was found.".format(src_icons))
+        # Now install the program:
+        result = install_program_in_place(
+            binary_path,
+            caption=programs[0]+" (deb)",
+            name=name,
+            version=version,
+            move_what='directory',
+            do_uninstall=do_uninstall,
+            icon_path=icon_path,
+            enable_reinstall=enable_reinstall
+        )
+        shutil.rmtree(next_temp)
+        print("* removed '{}'".format(next_temp))
+        return result
+    endings = [".tar.bz2", ".tar.gz", ".tar.xz"]
+    for ending in endings:
+        if src_path.lower()[-(len(ending)):] == ending:
+            dirname = src_path[:-(len(ending))]
+            break
+    if (dirname is not None) and (not do_uninstall):
+        move_what = 'directory'
+        ex_tmp = tempfile.mkdtemp()
+        print("* created '{}'".format(ex_tmp))
+        print("* enabling move from directory '{}'".format(ex_tmp))
+        sub_dirs = []
+        sub_files = []
+        tar = tarfile.open(src_path)
+        print("* extracting '{}'...".format(src_path))
+        tar.extractall(path=ex_tmp)
+        tar.close()
+        print("* extracted '{}'".format(ex_tmp))
+        folder_path = ex_tmp
+        for sub_name in os.listdir(folder_path):
+            sub_path = os.path.join(folder_path, sub_name)
+            if os.path.isfile(sub_path):  #sub_name[:1]!="." and
+                sub_files.append(sub_path)
+            elif os.path.isdir(sub_path):
+                sub_dirs.append(sub_path)
+        dirpath = None
+        new_tmp = None
+        if (len(sub_dirs) == 1) and (len(sub_files) == 0):
+            dirpath = sub_dirs[0]
+            print("* detected program path '{}'".format(dirpath))
+        else:
+            dirpath = ex_tmp
+            print("* detected program path '{}'".format(dirpath))
+            new_tmp = tempfile.mkdtemp()
+            dirpath = os.path.join(new_tmp, dirname)
+            shutil.move(ex_tmp, dirpath)
+            print("* changed temp program path to '{}'".format(dirpath))
+        src_path = dirpath
+        move_what = 'directory'
+        print("* changed install source to '{}'".format(src_path))
+
+    if os.path.isdir(src_path):
+        print("* trying to detect binary...")
+        src_name = os.path.split(src_path)[-1]
+        try_name = src_name.split("-")[0]
+        try_path = os.path.join(src_path, try_name)
+        if os.path.isfile(try_path):
+            print("* detected binary: '{}'".format(try_path))
+            src_path = try_path
+        else:
+            print("* could not detect binary in {}".format(os.listdir(src_path)))
+            return False
+
+
 
     if src_path is None:
         usage()
@@ -74,9 +325,10 @@ def install_program_in_place(src_path, caption=None, name=None, version=None, do
         print("ERROR: '{}' is not a file.".format(src_path))
         src_name = os.path.split(src_path)[-1]
         try_dest_path = os.path.join(programs, src_name)
-        if os.path.isfile(try_dest_path):
-            print("'{}' is already installed.".format(try_dest_path))
-        return False
+        if not do_uninstall:
+            if os.path.isfile(try_dest_path):
+                print("'{}' is already installed.".format(try_dest_path))
+            return False
 
     filename = os.path.split(src_path)[-1]
     dirpath = os.path.split(src_path)[-2]
@@ -93,18 +345,24 @@ def install_program_in_place(src_path, caption=None, name=None, version=None, do
             if (parts is None) or (len(try_parts) > len(parts)):
                 parts = try_parts
         if parts is not None:
-            if name is None:
-                name = parts[0]
-                if caption is None:
-                    caption = parts[0] + " " + parts[1]
-                icon_name = name.lower()
-                if (len(parts) > 1) and (len(parts[1]) > 0) and (parts[1][0] == parts[1][0].upper()):
-                    name += " " + parts[1]
-                print("* using '" + name + "' as program name")
+            version_flags = []
+            for part in parts:
+                version_flags.append(False)
             if version is None:
                 if (len(parts) > 1) and (is_version(parts[1])):
                     version = parts[1]
+                    version_flags[1] = True
                     print("* using '" + version + "' as version")
+            if name is None:
+                name = parts[0]
+                if caption is None:
+                    caption = parts[0].title() + " " + parts[1].title()
+                icon_name = name.lower()
+                if (len(parts) > 1) and (len(parts[1]) > 0) and (parts[1][0] == parts[1][0].upper()) and (not version_flags[1]):
+                    name += " " + parts[1]
+                name = name.lower()
+
+                print("* using '" + name + "' as program name")
         else:
             usage()
             print("End of program name (any of '" + breakers
@@ -114,8 +372,7 @@ def install_program_in_place(src_path, caption=None, name=None, version=None, do
             return False
 
 
-    share = os.path.join(local, "share")
-    applications = os.path.join(share, "applications")
+    applications = os.path.join(share_path, "applications")
     shortcut = None
     shortcut_name = None
     is_appimage = False
@@ -128,6 +385,7 @@ def install_program_in_place(src_path, caption=None, name=None, version=None, do
             shortcut_name = "org.blender-{}".format(version)
         else:
             shortcut_name = "org.blender"
+        print("* using {} as shortcut name".format(shortcut_name))
     elif version is not None:
         shortcut_name = "{}-{}".format(name.lower(),version)
     else:
@@ -152,28 +410,60 @@ def install_program_in_place(src_path, caption=None, name=None, version=None, do
         print("* using '" + caption + "' as caption")
     path = src_path
     # programs = os.path.join(os.environ.get("HOME"), ".config")
-    if do_move:
+    if move_what == 'file':
         if not os.path.isdir(programs):
-            os.makedirs(programs)
+            if not do_uninstall:
+                os.makedirs(programs)
+            else:
+                print("'{}' does not exist, so there is nothing to uninstall.".format(programs))
+                return True
         path = os.path.join(programs, filename)
         if src_path != path:
-            print("mv \"{}\" \"{}\"".format(src_path, path))
-            shutil.move(src_path, path)
+            if not do_uninstall:
+                print("mv \"{}\" \"{}\"".format(src_path, path))
+                shutil.move(src_path, path)
+            else:
+                print("rm \"{}\"".format(path))
+                os.remove(path)
+    elif move_what == 'directory':
+        dst_dirpath = os.path.join(programs, dirname)
+        if do_uninstall:
+            if os.path.isdir(dst_dirpath):
+                shutil.rmtree(dst_dirpath)
+            else:
+                print("There is no '{}'.".format(dst_dirpath))
+        else:
+            print("mv '{}' '{}'".format(dirpath, dst_dirpath))
+            if os.path.isdir(dst_dirpath):
+                if enable_reinstall:
+                    shutil.rmtree(dst_dirpath)
+                else:
+                    print("ERROR: '{}' already exists. Use the"
+                          " --reinstall option to ERASE the"
+                          " directory.".format(dst_dirpath))
+                    return False
+            shutil.move(dirpath, dst_dirpath)
+            path = os.path.join(dst_dirpath, filename)
 
-    os.chmod(path, stat.S_IRWXU | stat.S_IXGRP | stat.S_IRGRP | stat.S_IROTH | stat.S_IXOTH)
-    # stat.S_IRWXU : Read, write, and execute by owner
-    # stat.S_IEXEC : Execute by owner
-    # stat.S_IXGRP : Execute by group
-    # stat.S_IXOTH : Execute by others
-    # stat.S_IREAD : Read by owner
-    # stat.S_IRGRP : Read by group
-    # stat.S_IROTH : Read by others
-    # stat.S_IWOTH : Write by others
-    # stat.S_IXOTH : Execute by others
+
+    if not do_uninstall:
+        os.chmod(path, stat.S_IRWXU | stat.S_IXGRP | stat.S_IRGRP | stat.S_IROTH | stat.S_IXOTH)
+        # stat.S_IRWXU : Read, write, and execute by owner
+        # stat.S_IEXEC : Execute by owner
+        # stat.S_IXGRP : Execute by group
+        # stat.S_IXOTH : Execute by others
+        # stat.S_IREAD : Read by owner
+        # stat.S_IRGRP : Read by group
+        # stat.S_IROTH : Read by others
+        # stat.S_IWOTH : Write by others
+        # stat.S_IXOTH : Execute by others
+
+    if icon_path is None:
+        icon_path = icon_name
 
     shortcut_data = shortcut_data_template.format(x=path,
                                                   name=caption,
-                                                  icon_name=icon_name)
+                                                  icon=icon_path)
 
     my_dir = os.path.dirname(os.path.realpath(__file__))
     meta_dir = os.path.join(my_dir, "shortcut-metadata")
@@ -193,14 +483,31 @@ def install_program_in_place(src_path, caption=None, name=None, version=None, do
         shortcut_data += "\n".join(shortcut_append_lines)
     if shortcut_data[-1] != "\n":
         shortcut_data += "\n"
-    with open(shortcut, 'w') as outs:
-        outs.write(shortcut_data)
-        print("Wrote '{}'".format(shortcut))
-        print("  Name={}".format(caption))
-        print("  Exec={}".format(path))
-        print("  Icon={}".format(icon_name))
-        os.chmod(shortcut, stat.S_IROTH | stat.S_IREAD | stat.S_IRGRP | stat.S_IWUSR)
+    if not do_uninstall:
+        # shutil.rmtree(dirpath)
+        if ex_tmp is not None:
+            if os.path.isdir(ex_tmp):
+                shutil.rmtree(ex_tmp)
+        if new_tmp is not None:
+            if os.path.isdir(new_tmp):
+                shutil.rmtree(new_tmp)
+
+    if do_uninstall:
+        if os.path.isfile(shortcut):
+            print("rm \"{}\"".format(shortcut))
+            os.remove(shortcut)
+        else:
+            print("* The shortcut was not present: {}".format(shortcut))
         return True
+    else:
+        with open(shortcut, 'w') as outs:
+            outs.write(shortcut_data)
+            print("Wrote '{}'".format(shortcut))
+            print("  Name={}".format(caption))
+            print("  Exec={}".format(path))
+            print("  Icon={}".format(icon_path))
+            os.chmod(shortcut, stat.S_IROTH | stat.S_IREAD | stat.S_IRGRP | stat.S_IWUSR)
+            return True
     return False
 
 if __name__ == "__main__":
@@ -212,12 +519,48 @@ if __name__ == "__main__":
         print("")
         print("")
         exit(1)
-    src_path = sys.argv[1]
-    if len(sys.argv) >= 3:
-        caption = sys.argv[2]
+    do_uninstall = False
+    enable_reinstall = False
+    move_what = None
+    for i in range(1, len(sys.argv)):
+        arg = sys.argv[i]
+        if arg[:2] == "--":
+            if arg == "--uninstall":
+                do_uninstall = True
+            elif arg == "--move":
+                move_what = 'any'
+            elif arg == "--reinstall":
+                enable_reinstall = True
+            else:
+                print("ERROR: '{}' is not a valid option.".format(arg))
+                exit(1)
+        else:
+            if src_path is None:
+                src_path = arg
+            elif caption is None:
+                caption = arg
+            else:
+                print("A 3rd parameter is unexpected: '{}'".format(arg))
+                exit(1)
+    if move_what == 'any':
+        if os.path.isdir(src_path):
+            move_what = 'directory'
+        elif os.path.isfile(src_path):
+            move_what = 'file'
+        else:
+            print("{} is not a file nor a directory.".format(src_path))
+            exit(1)
+    if src_path is None:
+        print("You must specify a source path.")
+        exit(1)
     parts = src_path.split('.')
-    do_move=False
     if parts[-1] == "AppImage":
-        do_move=True
+        move_what='file'
 
-    install_program_in_place(src_path, caption=caption, do_move=do_move)
+    install_program_in_place(
+        src_path,
+        caption=caption,
+        move_what=move_what,
+        do_uninstall=do_uninstall,
+        enable_reinstall=enable_reinstall
+    )

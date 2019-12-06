@@ -30,6 +30,11 @@ except `*-nonroot.sh` scripts must run as `root` (or with `sudo bash`):
 * nonroot scripts (run as regular user without sudo, though some of the
   scripts call sudo but change settings for the current user).
 
+### Notable Features
+* You can use utilities/install_any.py to install deb packages!
+  - It seems to only be able to use tar to exctact xz files if you use
+    Python 3 (Python 2 doesn't work).
+
 ## Developer notes
 * For silent installation, dealing with files marked
   `linux_preinstall_interactive=true` somehow is necessary (either
