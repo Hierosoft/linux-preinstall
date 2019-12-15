@@ -51,33 +51,38 @@ Terminal=false
 Type=Application
 """
 
-"""Install binary program src_path
 
-If name is not specified, the name and version will be calculated from
-either the filename at src_path or the path's parent directory's name.
-Example: src_path=../Downloads/blender-2.79-e045fe53f1b0-linux-glibc217-x86_64/blender
-(In this case, this function will extract the name and version from
-blender-2.79-e045fe53f1b0-linux-glibc217-x86_64 since it has more
-delimiters than the filename "blender")
-
-move_what: Only set this to 'file' if src_path is an AppImage or other
-self-contained binary file. Otherwise you may set it to 'directory'. The
-file or directory will be moved to ~/.local/lib64/.
-move_what='file' example:
-If name is not specified, the name and version will be calculated from
-either the filename at src_path or the path's parent directory's name.
-Example: src_path=../Downloads/FreeCAD_0.18-16131-Linux-Conda_Py3Qt5_glibc2.12-x86_64.AppImage
-(In this case, this function will extract the name and version from
-FreeCAD_0.18-16131-Linux-Conda_Py3Qt5_glibc2.12-x86_64.AppImage)
-"""
 def install_program_in_place(src_path, caption=None, name=None,
         version=None, move_what=None, do_uninstall=False,
-        icon_path=None, enable_reinstall=False):
+        icon_path=None, enable_reinstall=False,
+        detect_program_parent=False):
+    """Install binary program src_path
+
+    If name is not specified, the name and version will be calculated from
+    either the filename at src_path or the path's parent directory's name.
+    Example: src_path=../Downloads/blender-2.79-e045fe53f1b0-linux-glibc217-x86_64/blender
+    (In this case, this function will extract the name and version from
+    blender-2.79-e045fe53f1b0-linux-glibc217-x86_64 since it has more
+    delimiters than the filename "blender")
+
+    move_what: Only set this to 'file' if src_path is an AppImage or other
+    self-contained binary file. Otherwise you may set it to 'directory'. The
+    file or directory will be moved to ~/.local/lib64/ (or whatever programs
+    directory is detected as a parent of the directory if
+    detect_program_parent is True [automaticaly True by calling itself in
+    the case of deb]).
+    move_what='file' example:
+    If name is not specified, the name and version will be calculated from
+    either the filename at src_path or the path's parent directory's name.
+    Example: src_path=../Downloads/FreeCAD_0.18-16131-Linux-Conda_Py3Qt5_glibc2.12-x86_64.AppImage
+    (In this case, this function will extract the name and version from
+    FreeCAD_0.18-16131-Linux-Conda_Py3Qt5_glibc2.12-x86_64.AppImage)
+    """
     local_path = os.path.join(os.environ["HOME"], ".local")
     share_path = os.path.join(local_path, "share")
     icons_path = os.path.join(share_path, "pixmaps")
     lib64 = os.path.join(local_path, "lib64")
-    programs = lib64
+    dst_programs = lib64  # changed if deb has a different programs dir
     dirname = None
     ex_tmp = None
     new_tmp = None
@@ -135,7 +140,6 @@ def install_program_in_place(src_path, caption=None, name=None,
                   " '{}'".format(next_temp, next_path, try_programs_paths))
             shutil.rmtree(next_temp)
             return False
-        # programs = []
         found_programs_paths = []
         sub_names = None
         for folder_path in try_programs_paths:
@@ -147,7 +151,6 @@ def install_program_in_place(src_path, caption=None, name=None,
                 sub_path = os.path.join(folder_path, sub_name)
                 if os.path.isdir(sub_path) and (sub_name[:1] != "."):
                     if sub_name not in not_programs:
-                        # programs.append(sub_name)
                         found_programs_paths.append(sub_path)
         if len(found_programs_paths) == 0:
             print("ERROR: extracting '{}' from '{}' did not result in"
@@ -177,8 +180,25 @@ def install_program_in_place(src_path, caption=None, name=None,
             print("* removed '{}'".format(next_temp))
             return False
         program_temp = tempfile.mkdtemp()
-        program_path = found_programs_paths[0]  # os.path.join(src_usr_share, programs[0])
+        program_path = found_programs_paths[0]
         program = os.path.split(found_programs_paths[0])[-1]
+        this_programs_path = os.path.split(found_programs_paths[0])[0]
+        this_programs = os.path.split(this_programs_path)[-1]
+        dst_programs = os.path.join(local_path, this_programs)
+        print("* found programs path in deb: '{}'".format(dst_programs))
+
+        if dst_programs == local_path:
+            print("ERROR: source programs directory (directory"
+                  " containing {}) was not"
+                  " detected in deb.".format(program_path))
+            shutil.rmtree(next_temp)
+            print("* removed '{}'".format(next_temp))
+            print("")
+            print("Install did not complete.")
+
+            print("")
+            exit(1)
+
         binaries = []
         binary_path = None
         folder_path = program_path
@@ -254,6 +274,10 @@ def install_program_in_place(src_path, caption=None, name=None,
                 for root, dirs, files in os.walk(src_icons):
                     for sub_name in dirs:
                         sub_path = os.path.join(icons_path, sub_name)
+                        if not os.path.isdir(sub_path):
+                            print("* WARNING: '{}' is already not"
+                                  " present.".format(sub_path))
+                            continue
                         if dir_is_empty(sub_path):
                             # This should work (deepest will be listed
                             # first) since walk sets topdown to False by
@@ -273,7 +297,8 @@ def install_program_in_place(src_path, caption=None, name=None,
             move_what='directory',
             do_uninstall=do_uninstall,
             icon_path=icon_path,
-            enable_reinstall=enable_reinstall
+            enable_reinstall=enable_reinstall,
+            detect_program_parent=True
         )
         shutil.rmtree(next_temp)
         print("* removed '{}'".format(next_temp))
@@ -340,7 +365,7 @@ def install_program_in_place(src_path, caption=None, name=None,
         usage()
         print("ERROR: '{}' is not a file.".format(src_path))
         src_name = os.path.split(src_path)[-1]
-        try_dest_path = os.path.join(programs, src_name)
+        try_dest_path = os.path.join(dst_programs, src_name)
         if not do_uninstall:
             if os.path.isfile(try_dest_path):
                 print("'{}' is already installed.".format(try_dest_path))
@@ -348,6 +373,28 @@ def install_program_in_place(src_path, caption=None, name=None,
 
     filename = os.path.split(src_path)[-1]
     dirpath = os.path.split(src_path)[-2]
+    if detect_program_parent:
+        this_programs_path = os.path.split(dirpath)[0]
+        this_programs = os.path.split(this_programs_path)[-1]
+        dst_programs = os.path.join(local_path, this_programs)
+        if dst_programs == local_path:
+            print("ERROR: source programs directory (directory"
+                  " containing {}) was not"
+                  " detected.".format(src_path))
+            if ex_tmp is not None:
+                if os.path.isdir(ex_tmp):
+                    shutil.rmtree(ex_tmp)
+                    print("* removed '{}'".format(ex_tmp))
+            if new_tmp is not None:
+                if os.path.isdir(new_tmp):
+                    shutil.rmtree(new_tmp)
+                    print("* removed '{}'".format(new_tmp))
+            print("")
+            print("Install did not complete.")
+            print("")
+            exit(1)
+
+    print("* using programs path: '{}'".format(dst_programs))
     dirname = os.path.split(dirpath)[-1]
     version = None
     icon_name = None
@@ -425,15 +472,15 @@ def install_program_in_place(src_path, caption=None, name=None,
             caption += " (AppImage)"
         print("* using '" + caption + "' as caption")
     path = src_path
-    # programs = os.path.join(os.environ.get("HOME"), ".config")
+    # dst_programs = os.path.join(os.environ.get("HOME"), ".config")
     if move_what == 'file':
-        if not os.path.isdir(programs):
+        if not os.path.isdir(dst_programs):
             if not do_uninstall:
-                os.makedirs(programs)
+                os.makedirs(dst_programs)
             else:
-                print("'{}' does not exist, so there is nothing to uninstall.".format(programs))
+                print("'{}' does not exist, so there is nothing to uninstall.".format(dst_programs))
                 return True
-        path = os.path.join(programs, filename)
+        path = os.path.join(dst_programs, filename)
         if src_path != path:
             if not do_uninstall:
                 print("mv \"{}\" \"{}\"".format(src_path, path))
@@ -442,7 +489,7 @@ def install_program_in_place(src_path, caption=None, name=None,
                 print("rm \"{}\"".format(path))
                 os.remove(path)
     elif move_what == 'directory':
-        dst_dirpath = os.path.join(programs, dirname)
+        dst_dirpath = os.path.join(dst_programs, dirname)
         if do_uninstall:
             if os.path.isdir(dst_dirpath):
                 shutil.rmtree(dst_dirpath)
