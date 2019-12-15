@@ -122,47 +122,63 @@ def install_program_in_place(src_path, caption=None, name=None,
                                # debian-binary.
         # Now next_temp should contain directories such as usr & etc.
         src_usr = os.path.join(next_temp, "usr")
+        src_opt = os.path.join(next_temp, "opt")
         src_usr_share = os.path.join(src_usr, "share")
-        if not os.path.isdir(src_usr_share):
+        try_programs_paths = [src_usr_share, src_opt]
+        found_any = False
+        for folder_path in try_programs_paths:
+            if os.path.isdir(folder_path):
+                found_any = True
+        if not found_any:
             print("ERROR: extracting '{}' from '{}' did not result in"
-                  " '{}'".format(next_temp, next_path, src_usr_share))
+                  " any of the following:"
+                  " '{}'".format(next_temp, next_path, try_programs_paths))
             shutil.rmtree(next_temp)
             return False
-        folder_path = src_usr_share
-        programs = []
-        not_programs = ["applications", "icons", "doc"]
-        sub_names = os.listdir(folder_path)
-        for sub_name in sub_names:
-            sub_path = os.path.join(folder_path, sub_name)
-            if os.path.isdir(sub_path) and sub_name[:1]!=".":
-                if sub_name not in not_programs:
-                    programs.append(sub_name)
-        if len(programs) == 0:
+        # programs = []
+        found_programs_paths = []
+        sub_names = None
+        for folder_path in try_programs_paths:
+            if not os.path.isdir(folder_path):
+                continue
+            not_programs = ["applications", "icons", "doc"]
+            sub_names = os.listdir(folder_path)
+            for sub_name in sub_names:
+                sub_path = os.path.join(folder_path, sub_name)
+                if os.path.isdir(sub_path) and (sub_name[:1] != "."):
+                    if sub_name not in not_programs:
+                        # programs.append(sub_name)
+                        found_programs_paths.append(sub_path)
+        if len(found_programs_paths) == 0:
             print("ERROR: extracting '{}' from '{}' did not result in"
-                  " any programs in '{}' (only {})".format(
+                  " any programs in any known directories:".format(
                     next_temp,
                     next_path,
-                    src_usr_share,
-                    sub_names
                 )
             )
+            for folder_path in try_programs_paths:
+                if os.path.isdir(folder_path):
+                    print("{} only contains:"
+                          " {}".format(folder_path,
+                                       os.listdir(folder_path)))
             shutil.rmtree(next_temp)
             print("* removed '{}'".format(next_temp))
             return False
-        elif len(programs) > 1:
+        elif len(found_programs_paths) > 1:
             print("ERROR: extracting '{}' from '{}' resulted in"
                   " too many unknown directories in '{}': ({})".format(
                     next_temp,
                     next_path,
-                    src_usr_share,
-                    programs
+                    try_programs_paths,
+                    found_programs_paths
                 )
             )
             shutil.rmtree(next_temp)
             print("* removed '{}'".format(next_temp))
             return False
         program_temp = tempfile.mkdtemp()
-        program_path = os.path.join(src_usr_share, programs[0])
+        program_path = found_programs_paths[0]  # os.path.join(src_usr_share, programs[0])
+        program = os.path.split(found_programs_paths[0])[-1]
         binaries = []
         binary_path = None
         folder_path = program_path
@@ -172,7 +188,7 @@ def install_program_in_place(src_path, caption=None, name=None,
             if os.path.isfile(sub_path) and (sub_name[:1] != "."):
                 binaries.append(sub_name)
                 print("* detected program file '{}'".format(sub_path))
-                if sub_name == programs[0]:
+                if sub_name == program:
                     binary_path = sub_path
                     break
         if binary_path is None:
@@ -251,7 +267,7 @@ def install_program_in_place(src_path, caption=None, name=None,
         # Now install the program:
         result = install_program_in_place(
             binary_path,
-            caption=programs[0]+" (deb)",
+            caption=program+" (deb)",
             name=name,
             version=version,
             move_what='directory',
