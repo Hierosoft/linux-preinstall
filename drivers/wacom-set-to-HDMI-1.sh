@@ -1,4 +1,5 @@
 #!/bin/bash
+# See https://github.com/linuxwacom/xf86-input-wacom/wiki/Dual-and-Multi-Monitor-Set-Up-II
 xrandr
 xsetwacom --list
 echo
