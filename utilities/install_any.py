@@ -203,12 +203,16 @@ def install_program_in_place(src_path, caption=None, name=None,
         binary_path = None
         folder_path = program_path
         sub_names = os.listdir(folder_path)
+        print("* looking for {}...".format(program))
+        try_program_names = [program, program.lower(), program.title(),
+                             program.upper()]
         for sub_name in sub_names:
             sub_path = os.path.join(folder_path, sub_name)
             if os.path.isfile(sub_path) and (sub_name[:1] != "."):
                 binaries.append(sub_name)
-                print("* detected program file '{}'".format(sub_path))
-                if sub_name == program:
+                print("* detected possible program file"
+                      " '{}'".format(sub_path))
+                if sub_name in try_program_names:
                     binary_path = sub_path
                     break
         if binary_path is None:
@@ -234,7 +238,7 @@ def install_program_in_place(src_path, caption=None, name=None,
                             next_temp,
                             next_path,
                             program_path,
-                            binaries[0],
+                            try_program_names,
                             binaries
                         )
                     )
@@ -425,7 +429,7 @@ def install_program_in_place(src_path, caption=None, name=None,
                     name += " " + parts[1]
                 name = name.lower()
 
-                print("* using '" + name + "' as program name")
+                print("* using '" + name + "' as internal program name")
         else:
             usage()
             print("End of program name (any of '" + breakers
