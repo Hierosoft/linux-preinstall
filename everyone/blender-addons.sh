@@ -3,6 +3,7 @@
 #echo "This script"
 ../utilities/blender-install-git-addon.sh https://github.com/machin3io/MACHIN3tools.git
 ../utilities/blender-install-git-addon.sh https://github.com/JacquesLucke/code_autocomplete.git
+../utilities/blender-install-git-addon.sh https://github.com/jayanam/fast-carve.git
 
 cat <<END
 ## Manual Steps Required
