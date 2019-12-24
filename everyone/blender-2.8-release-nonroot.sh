@@ -37,7 +37,7 @@ if [ -d "$exName" ]; then
     rm -Rf "$exName"
 fi
 echo "Extracting..."
-tar xf $dlName || customDie "Cannot extract '$dlName'"
+tar xf $dlName || customDie "Cannot extract '`pwd`/$dlName'. If you delete it then run this script again, this script will download $url automatically."
 if [ ! -f "`command -v rsync`" ]; then
     customDie "This script requires rsync."
 fi
