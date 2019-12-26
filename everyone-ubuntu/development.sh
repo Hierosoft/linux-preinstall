@@ -1,11 +1,15 @@
 #!/bin/sh
 sudo apt install -y python3-kivy
 sudo apt install -y geany
+sudo apt install -y geany-plugins-spellcheck
 sudo apt install -y automake autoconf
 sudo apt install -y git
 sudo apt install -y mercurial
 sudo apt install -y mono-complete
-
+echo
+echo "You must do the following manual steps to enable newly-installed features:"
+echo " - [ ] Enable spell check plugin in Geany's \"Tools,\" \"Plugin manager\" window."
+echo
 # Packages no longer available as of 18.04:
 # - monodevelop: see mono-complete instead
 # - kivy-examples
