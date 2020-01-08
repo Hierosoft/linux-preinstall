@@ -18,7 +18,7 @@ DESCRIPTION=`lspci -vnn | grep VGA`
 
 cat <<END
 
-Your card is:
+Your graphics card model is:
 $DESCRIPTION
 
 1.
@@ -32,9 +32,14 @@ For Legacy GeForce 8/9/200/300 execute:
 2.
   akmods --force
 
-3. If #3 shows an error building, run:
+3. If #2 shows an error building, run:
+  # For recent GeForce/Quadro/Tesla execute (This fix is not tested and possibly not necessary for these models):
+  dnf update -y --enablerepo=rpmfusion-nonfree-updates-testing akmod-nvidia\*
+  # For other devices:
   dnf update -y --enablerepo=rpmfusion-nonfree-updates-testing xorg-x11-drv-nvidia\*
   # (See See https://linuxconfig.org/how-to-install-the-nvidia-drivers-on-fedora-31)
+
+You must perform the steps above manually, using only the commands specific to your nVidia graphics card model.
 
 END
 
