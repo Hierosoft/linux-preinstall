@@ -488,10 +488,16 @@ def install_program_in_place(src_path, caption=None, name=None,
         if src_path != path:
             if not do_uninstall:
                 print("mv \"{}\" \"{}\"".format(src_path, path))
-                shutil.move(src_path, path)
+                if src_path != path:
+                    shutil.move(src_path, path)
+                else:
+                    print("The file is already at '{}'.".format(path))
             else:
                 print("rm \"{}\"".format(path))
                 os.remove(path)
+                if src_path == path:
+                    print("The source path"
+                          " '{}' is removed.".format(path))
     elif move_what == 'directory':
         dst_dirpath = os.path.join(dst_programs, dirname)
         if do_uninstall:
@@ -609,6 +615,10 @@ if __name__ == "__main__":
             else:
                 print("A 3rd parameter is unexpected: '{}'".format(arg))
                 exit(1)
+    if src_path is None:
+        print("You must specify a source path.")
+        exit(1)
+    src_path = os.path.abspath(src_path)
     if move_what == 'any':
         if os.path.isdir(src_path):
             move_what = 'directory'
@@ -617,9 +627,8 @@ if __name__ == "__main__":
         else:
             print("{} is not a file nor a directory.".format(src_path))
             exit(1)
-    if src_path is None:
-        print("You must specify a source path.")
-        exit(1)
+
+
     parts = src_path.split('.')
     if parts[-1] == "AppImage":
         move_what='file'
