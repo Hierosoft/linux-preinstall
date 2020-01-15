@@ -1,0 +1,10 @@
+customDie() {
+    echo
+    echo
+    echo "ERROR:"
+    echo "$1"
+    echo
+    echo
+    exit 1
+}
+UNPRIV_USER=pi
