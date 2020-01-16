@@ -8,3 +8,9 @@ customDie() {
     exit 1
 }
 UNPRIV_USER=pi
+temps="/tmp/linux_preinstall_octoprint"
+
+echo "* linux-preinstall loaded octoprint.rc"
+echo "  - UNPRIV_USER: $UNPRIV_USER"
+echo "  - temps: $temps"
+
