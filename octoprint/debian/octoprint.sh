@@ -80,26 +80,43 @@ echo "DAEMON=/home/$UNPRIV_USER/OctoPrint/venv/bin/octoprint" >> /etc/default/oc
 echo "OCTOPRINT_USER=$UNPRIV_USER" >> /etc/default/octoprint
 systemctl enable octoprint
 # apt -y install ffmpeg  # not unless your main drive is > 2 GB (adds 391MB, which is approximately all of your remaining space if you have a 2GB drive)
-echo
-echo "* You can check the status after reboot by typing any of the following:"
-echo "  service octoprint status"
-echo "  sudo lsof -i -P -n | grep LISTEN"
-echo "  ss -tulw"
-echo "* If the 'service octoprint status' results in 'dead', enable the service:"
-echo "  service octoprint enable"
-echo "  service octoprint start"
-echo "* If 'service octoprint status' still says 'dead' or 'active (exited)', the virtualenv may not have setup automatically. Try:"
-echo "  su $UNPRIV_USER"
-echo "  cd /home/$UNPRIV_USER/include/"
-echo "  ./octoprint-nonroot-pi.sh"
-echo "  service octoprint stop"
-echo "  service octoprint start"
-echo
-echo "* Now you must manually set a password for pi by typing:"
-echo "  passwd pi"
-echo "* Also, you must set the usb device in octoprint by going to http://`hostname -I`:5000 in your browser."
-echo "  - Follow the steps to complete setup."
-echo "  - Choose a USB or other connection from the connection panel"
-echo "  - Choose a fixed Baudrate if necessary for your 3D printer (the baudrate is USUALLY 250000--check with your 3D printer manufacturer!)."
-echo "  - For convenience, I suggest checking 'Save connection settings' and 'Auto-connect on server startup' before clicking connect."
-echo "* See also: [A Guide To Safe Remote Access of OctoPrint](https://octoprint.org/blog/2018/09/03/safe-remote-access/)"
+cat <<END
+
+* You can check the status after reboot by typing any of the following:
+  service octoprint status
+  sudo lsof -i -P -n | grep LISTEN
+  ss -tulw
+* If the 'service octoprint status' results in 'dead', enable the service:
+  service octoprint enable
+  service octoprint start
+* If 'service octoprint status' still says 'dead' or 'active (exited)', the virtualenv may not have setup automatically. Try:
+  su $UNPRIV_USER
+  cd /home/$UNPRIV_USER/include/
+  ./octoprint-nonroot-pi.sh
+  service octoprint stop
+  service octoprint start
+
+* Now you must manually set a password for pi by typing:
+  passwd pi
+* Also, you must set the usb device in octoprint by going to http://`hostname -I`:5000 in your browser.
+  - Follow the steps to complete setup.
+  - Choose a USB or other connection from the connection panel
+  - Choose a fixed Baudrate if necessary for your 3D printer (the baudrate is USUALLY 250000--check with your 3D printer manufacturer!).
+  - For convenience, I suggest checking 'Save connection settings' and 'Auto-connect on server startup' before clicking connect.
+* See also:
+  - [A Guide To Safe Remote Access of OctoPrint](https://octoprint.org/blog/2018/09/03/safe-remote-access/)
+* The following recommended plugins are available for automatic install
+  using the settings (wrench button) menu of OctoPrint:
+  - [Action Trigger Plugin](https://plugins.octoprint.org/plugins/actiontrigger/)
+    - Pauses print (optionally) on filament sensor or door open sensor events.
+    - "Plugin for OctoPrint that handles serial commands sent out by the printer."
+  - Action Commands
+    - Run a system command or GCODE command where the GCODE contains a
+      comment with an action command that you define in the plugin.
+    - Examples:
+      - (The lcd-stats command is available via
+        `pip install https://github.com/poikilos/pypicolcd/archive/master.zip`)
+      - `action:showprep` lcd-stats --host=pgs --x=153 --y=40  "3D printer is preheating."
+      - `action:showstart` lcd-stats --host=pgs --x=153 --y=40 "The 3D print has started."
+      - `action:showend` lcd-stats --host=pgs --x=153 --y=40   "The 3D print is finished."
+END
