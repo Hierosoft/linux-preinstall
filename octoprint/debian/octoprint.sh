@@ -120,7 +120,7 @@ cat <<END
         - Then follow the instructions in the README to allow the port
           with firewall-cmd, set the --localhost=x where x is your IP,
           and allow an unpriveleged user to write to the USB device:
-
+          <https://github.com/poikilos/pypicolcd/blob/master/README.md>
       - `action:showprep` lcd-stats --x=153 --y=40  "3D printer is preheating."
       - `action:showstart` lcd-stats --x=153 --y=40 "The 3D print has started."
       - `action:showend` lcd-stats --x=153 --y=40   "The 3D print is finished."
