@@ -114,9 +114,15 @@ cat <<END
     - Run a system command or GCODE command where the GCODE contains a
       comment with an action command that you define in the plugin.
     - Examples:
-      - (The lcd-stats command is available via
-        `pip install https://github.com/poikilos/pypicolcd/archive/master.zip`)
-      - `action:showprep` lcd-stats --host=pgs --x=153 --y=40  "3D printer is preheating."
-      - `action:showstart` lcd-stats --host=pgs --x=153 --y=40 "The 3D print has started."
-      - `action:showend` lcd-stats --host=pgs --x=153 --y=40   "The 3D print is finished."
+      - The lcd-cli and lcd-stats (same as lcd-cli but also shows free
+        storage and RAM) commands are available via:
+        - `pip install https://github.com/poikilos/pypicolcd/archive/master.zip`)
+        - Then follow the instructions in the README to allow the port
+          with firewall-cmd, set the --localhost=x where x is your IP,
+          and allow an unpriveleged user to write to the USB device:
+
+      - `action:showprep` lcd-stats --x=153 --y=40  "3D printer is preheating."
+      - `action:showstart` lcd-stats --x=153 --y=40 "The 3D print has started."
+      - `action:showend` lcd-stats --x=153 --y=40   "The 3D print is finished."
+      - To use the --host command and specify a remote host,
 END
