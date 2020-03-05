@@ -350,14 +350,65 @@ def install_program_in_place(src_path, caption=None, name=None,
     if os.path.isdir(src_path):
         print("* trying to detect binary...")
         src_name = os.path.split(src_path)[-1]
+        only_name = src_name.strip("-0123456789. ")
         try_name = src_name.split("-")[0]
         try_path = os.path.join(src_path, try_name)
+        print("  src_name: {}".format(src_name))
+        print("  only_name: {}".format(only_name))
         if os.path.isfile(try_path):
             print("* detected binary: '{}'".format(try_path))
             src_path = try_path
         else:
-            print("* could not detect binary in {}".format(os.listdir(src_path)))
-            return False
+            all_files = os.listdir(src_path)
+            scripts = []
+            jars = []
+            for sub in all_files:
+                sub_path = os.path.join(src_path, sub)
+                ext = os.path.splitext(sub)[1].strip(".")
+                if sub.startswith("."):
+                    continue
+                if os.path.isdir(sub_path):
+                    continue
+                if sub.endswith(".jar"):
+                    jars.append(sub)
+                elif (ext == "sh") or (ext == ""):
+                    scripts.append(sub)
+            if len(scripts) >= 2:
+                bad_indices = []
+                good_indices = []
+                for script in scripts:
+                    if script.startswith(only_name):
+                        good_indices.append(only_name)
+                    else:
+                        bad_indices.append(only_name)
+                if len(good_indices) == 1:
+                    for bad_ii in range(len(bad_indices)-1, -1, -1):
+                        bad_i = bad_indices[bad_ii]
+                        del scripts[bad_i]
+                    print("  only one matches \"{}\"".format(only_name))
+                    enable_force_script = True
+            if len(scripts) == 2:
+                short_i = 0
+                long_i = 1
+                if len(scripts[0]) > len(scripts[1]):
+                    short_i = 1
+                    long_i = 0
+                sName = scripts[short_i]
+                lName = scripts[long_i]
+                if lName.startswith(os.path.splitext(lName)):
+                    # if has something like argouml.sh and
+                    # argouml2.sh (experimental), use argouml.sh.
+                    del scripts[long_i]
+            if len(jars) > 0:
+                enable_force_script = True
+            if enable_force_script and (len(scripts) == 1):
+                src_path = os.path.join(src_path, scripts[0])
+                print("* detected executable script: '{}'".format(src_path))
+            else:
+                print("* could not detect binary in {}".format(all_files))
+                print("  scripts: {}".format(scripts))
+                print("  jars: {}".format(jars))
+                return False
 
 
 
