@@ -143,6 +143,7 @@ dnf -y install \
     icoutils \
     pandoc \
     git \
+    git-credential-libsecret \  # remember password securely in terminal
     gstreamer-ffmpeg \
     sqlitebrowser \
     python3-pycodestyle \
@@ -273,7 +274,9 @@ gem install wayback_machine_downloader
 #projectM-pulseaudio: The projectM visualization plugin for pulseaudio
 #sloccount: Measures source lines of code (SLOC) in programs
 #privacy-oriented browser:
-sudo dnf config-manager --add-repo https://brave-browser-rpm-release.s3.brave.com/x86_64/
+dnf -y install dnf-plugins-core
+dnf -y config-manager --add-repo https://brave-browser-rpm-release.s3.brave.com/x86_64/
+rpm --import https://brave-browser-rpm-release.s3.brave.com/brave-core.asc
 dnf -y install brave-keyring brave-browser
 
 #for kivy:
@@ -444,6 +447,10 @@ cat >> $postinstall <<END
   because they can also be used in terminal and in other programs:
   * Flowblade
   * Krita
+* Disable hardware acceleration in Brave to prevent horrible glitches
+  (invisible interface that only updates when you move the Window):
+  - Click Settings (hamburger button), "Advanced," "System,"
+    then turn off "Hardware Acceleration."
 
 ## See Also
 * python3-mutagen (python module to handle audio meta-data)
