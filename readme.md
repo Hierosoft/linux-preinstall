@@ -36,12 +36,3 @@ except `*-nonroot.sh` scripts must run as `root` (or with `sudo bash`):
     Python 3 (not Python 2).
 ![Screenshot of using install_any.py and the resulting installed
 shortcuts from a directories, archive, deb, or appimage](media/screenshot-install_any.jpg)
-
-
-## Developer notes
-* For silent installation, dealing with files marked
-  `linux_preinstall_interactive=true` somehow is necessary (either
-  automating them more, or noting how to proceed in $postinstall doc)
-  - [ ] A code audit is needed: all script files that aren't silent
-    installs should have the boolean value.
-  - See "developer-fedora/mysql-community-server.sh" for an example.
