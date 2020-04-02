@@ -507,10 +507,13 @@ def install_program_in_place(src_path, caption=None, name=None,
                               " will be {} in title case (parts: {})."
                               "".format(try_name, parts))
                 if caption is None:
+                    part0 = captions.get(name.lower())
+                    if part0 is None:
+                        part0 = name.title()
                     if len(parts) > 1:
-                        caption = name.title() + " " + parts[1].title()
+                        caption = part0 + " " + parts[1].title()
                     else:
-                        caption = name.title()
+                        caption = part0
                         print("* WARNING: there is only 1 part, so the"
                               " caption \"{}\" may not be correct for"
                               " parts: {}".format(caption, parts))
