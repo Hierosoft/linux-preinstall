@@ -5,11 +5,17 @@ import os
 import shutil
 import tarfile
 import tempfile
+from zipfile import ZipFile
+import subprocess
 
 me = os.path.split(sys.argv[0])[-1]
 version_chars = "0123456789."
 icons = {}
 icons["freecad"] = "org.freecadweb.FreeCAD"
+captions = {}
+captions["umlet"] = "UMLet Standalone"  # as opposed to a plugin/web ver
+captions["freecad"] = "FreeCAD"
+captions["argouml"] = "ArgoUML"
 
 def is_version(s):
     for c in s:
@@ -307,11 +313,18 @@ def install_program_in_place(src_path, caption=None, name=None,
         shutil.rmtree(next_temp)
         print("* removed '{}'".format(next_temp))
         return result
-    endings = [".tar.bz2", ".tar.gz", ".tar.xz"]
-    for ending in endings:
-        if src_path.lower()[-(len(ending)):] == ending:
-            dirname = src_path[:-(len(ending))]
-            break
+    archive_categories = {}
+    archive_categories["tar"] = [".tar.bz2", ".tar.gz", ".tar.xz"]
+    archive_categories["zip"] = [".zip"]
+    found_ending = None
+    ar_cat = None
+    for category, endings in archive_categories.items():
+        for ending in endings:
+            if src_path.lower()[-(len(ending)):] == ending:
+                dirname = src_path[:-(len(ending))]
+                found_ending = ending
+                ar_cat = category
+                break
     if (dirname is not None) and (not do_uninstall):
         move_what = 'directory'
         ex_tmp = tempfile.mkdtemp()
@@ -319,10 +332,16 @@ def install_program_in_place(src_path, caption=None, name=None,
         print("* enabling move from directory '{}'".format(ex_tmp))
         sub_dirs = []
         sub_files = []
-        tar = tarfile.open(src_path)
         print("* extracting '{}'...".format(src_path))
-        tar.extractall(path=ex_tmp)
-        tar.close()
+        if ar_cat == "tar":
+            tar = tarfile.open(src_path)
+            tar.extractall(path=ex_tmp)
+            tar.close()
+        elif ar_cat == "zip":
+            with ZipFile(src_path, 'r') as zipfile:
+                zipfile.extractall(path=ex_tmp)
+        else:
+            raise NotImplementedError("There is no case for " + ar_cat)
         print("* extracted '{}'".format(ex_tmp))
         folder_path = ex_tmp
         for sub_name in os.listdir(folder_path):
@@ -466,6 +485,7 @@ def install_program_in_place(src_path, caption=None, name=None,
             version_flags = []
             for part in parts:
                 version_flags.append(False)
+            del part
             if version is None:
                 if (len(parts) > 1) and (is_version(parts[1])):
                     version = parts[1]
@@ -473,13 +493,31 @@ def install_program_in_place(src_path, caption=None, name=None,
                     print("* using '" + version + "' as version")
             if name is None:
                 name = parts[0]
+                if name.endswith(".sh"):
+                    name = name[:-3]
                 if caption is None:
-                    caption = parts[0].title() + " " + parts[1].title()
+                    try_name = parts[0].lower()
+                    if len(parts) > 1:
+                        try_name += " " + parts[1].lower()
+                    if try_name.endswith(".sh"):
+                        try_name = try_name[:-3]
+                    caption = captions.get(try_name)
+                    if caption is None:
+                        print("* The program is unknown, so the caption"
+                              " will be {} in title case (parts: {})."
+                              "".format(try_name, parts))
+                if caption is None:
+                    if len(parts) > 1:
+                        caption = name.title() + " " + parts[1].title()
+                    else:
+                        caption = name.title()
+                        print("* WARNING: there is only 1 part, so the"
+                              " caption \"{}\" may not be correct for"
+                              " parts: {}".format(caption, parts))
                 icon_name = name.lower()
                 if (len(parts) > 1) and (len(parts[1]) > 0) and (parts[1][0] == parts[1][0].upper()) and (not version_flags[1]):
                     name += " " + parts[1]
                 name = name.lower()
-
                 print("* using '" + name + "' as internal program name")
         else:
             usage()
@@ -624,14 +662,44 @@ def install_program_in_place(src_path, caption=None, name=None,
             print("* The shortcut was not present: {}".format(shortcut))
         return True
     else:
-        with open(shortcut, 'w') as outs:
+        icons_tmp = tempfile.mkdtemp()
+        tmp_shortcut = os.path.join(icons_tmp, shortcut_name)
+        ok = False
+        with open(tmp_shortcut, 'w') as outs:
             outs.write(shortcut_data)
-            print("Wrote '{}'".format(shortcut))
+            ok = True
+        if ok:
+            # NOTE: There is no vendor prefix but xdg specifies that
+            # there should be. The --novendor flag forces the install.
+            if os.path.isfile(shortcut):
+                # Remove the old one, otherwise xdg-desktop-menu install
+                # will not refresh the icon from storage.
+                print("* removing old \"{}\"".format(shortcut))
+                os.remove(shortcut)
+            install_proc = subprocess.run(["xdg-desktop-menu",
+                                           "install", "--novendor",
+                                           tmp_shortcut])
+            inst_msg = "OK"
+            if install_proc.returncode != 0:
+                inst_msg = "FAILED"
+            if os.path.isfile(shortcut):
+                os.chmod(shortcut,
+                         (stat.S_IROTH | stat.S_IREAD | stat.S_IRGRP
+                          | stat.S_IWUSR))
+                print("* installing '{}'...{}".format(shortcut,
+                                                      inst_msg))
+            else:
+                print("* installing '{}'...".format(shortcut_name,
+                                                  inst_msg))
             print("  Name={}".format(caption))
             print("  Exec={}".format(path))
             print("  Icon={}".format(icon_path))
-            os.chmod(shortcut, stat.S_IROTH | stat.S_IREAD | stat.S_IRGRP | stat.S_IWUSR)
-            return True
+            # print("")
+            # print("You may need to reload the application menu, such"
+            #      " as via one of the following commands:")
+            # print("  ")
+            # or xdg-desktop-menu install mycompany-myapp.desktop
+        return ok
     return False
 
 if __name__ == "__main__":
