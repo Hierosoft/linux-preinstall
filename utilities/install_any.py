@@ -16,6 +16,9 @@ captions = {}
 captions["umlet"] = "UMLet Standalone"  # as opposed to a plugin/web ver
 captions["freecad"] = "FreeCAD"
 captions["argouml"] = "ArgoUML"
+annotations = {}
+annotations[".deb"] = " (deb)"
+annotations[".appimage"] = " (AppImage)"
 
 def is_version(s):
     for c in s:
@@ -29,6 +32,12 @@ def usage():
     print(me + " <Program Name_version.AppImage>")
     print(me + " <file.AppImage> <Icon Caption>")
     print(me + " <file.deb> <Icon Caption>")
+    print(me + " <path> --move")
+    print(" "*len(me) + " ^ moves the directory to $HOME/.local/lib64")
+    print(me + " <path> --uninstall")
+    print(" "*len(me) + " ^ removes it from $HOME/.local/lib64")
+    print(me + " <path> --reinstall")
+    print(" "*len(me) + " ^ removes it from $HOME/.local/lib64 first")
     print("")
     print("")
 
@@ -56,6 +65,30 @@ Icon={icon}
 Terminal=false
 Type=Application
 """
+
+def get_annotation(s):
+    bad_endings = [".sh", ".appimage", ".deb"]
+    for ending in bad_endings:
+        if s.lower().endswith(ending):
+            annotation = annotations.get(ending)
+            if annotation is not None:
+                return annotation
+    # print("  - {} is ok.".format(s))
+    return ""
+
+
+
+def without_ender(s, enable_annotations):
+    bad_endings = [".sh", ".appimage", ".deb"]
+    for ending in bad_endings:
+        if s.lower().endswith(ending):
+            if enable_annotations:
+                annotation = annotations.get(ending)
+                if annotation is not None:
+                    return s[:-len(ending)] + annotation
+            return s[:-len(ending)]
+    # print("  - {} is ok.".format(s))
+    return s
 
 
 def install_program_in_place(src_path, caption=None, name=None,
@@ -444,6 +477,7 @@ def install_program_in_place(src_path, caption=None, name=None,
             if os.path.isfile(try_dest_path):
                 print("'{}' is already installed.".format(try_dest_path))
             return False
+    print("Install started.")
 
     filename = os.path.split(src_path)[-1]
     dirpath = os.path.split(src_path)[-2]
@@ -470,7 +504,6 @@ def install_program_in_place(src_path, caption=None, name=None,
 
     print("* using programs path: '{}'".format(dst_programs))
     dirname = os.path.split(dirpath)[-1]
-    version = None
     icon_name = None
 
     if (name is None) or (version is None):
@@ -486,42 +519,65 @@ def install_program_in_place(src_path, caption=None, name=None,
             for part in parts:
                 version_flags.append(False)
             del part
+            part1 = None
             if version is None:
-                if (len(parts) > 1) and (is_version(parts[1])):
-                    version = parts[1]
+
+                if len(parts) > 1:
+                    part1 = without_ender(parts[1], False)
+                if (part1 is not None) and (is_version(part1)):
+                    version = part1
                     version_flags[1] = True
                     print("* using '" + version + "' as version")
+                else:
+                    print("* INFO: \"{}\" is not a version"
+                          "".format(part1))
             if name is None:
                 name = parts[0]
-                if name.endswith(".sh"):
-                    name = name[:-3]
+                annotation = get_annotation(src_path)
+                if len(annotation) > 0:
+                    print("* appending \"{}\" to caption"
+                          "".format(annotation))
+                name = without_ender(name, False)
                 if caption is None:
                     try_name = parts[0].lower()
                     if len(parts) > 1:
                         try_name += " " + parts[1].lower()
-                    if try_name.endswith(".sh"):
-                        try_name = try_name[:-3]
+                    try_name = without_ender(try_name, False)
                     caption = captions.get(try_name)
-                    if caption is None:
-                        print("* The program is unknown, so the caption"
-                              " will be {} in title case (parts: {})."
-                              "".format(try_name, parts))
                 if caption is None:
                     part0 = captions.get(name.lower())
                     if part0 is None:
-                        part0 = name.title()
+                        part0 = without_ender(name, False)
+                        if part0.lower() == part0:
+                            print("* The program {} is unknown and"
+                                  " all lowercase, so the"
+                                  " caption will be {} in title case"
+                                  " (parts: {})."
+                                  "".format(name, try_name, parts))
+                            part0 = part0.title()
+                        # else Retain existing case (if any not lower).
                     if len(parts) > 1:
-                        caption = part0 + " " + parts[1].title()
+                        part1 = without_ender(parts[1], False)
+                        if part1.lower() == part1:
+                            part1 = part1.title()
+                        # else Retain existing case (if any not lower).
+                        caption = part0 + " " + part1
+                        caption += annotation
                     else:
                         caption = part0
+                        caption += annotation
                         print("* WARNING: there is only 1 part, so the"
                               " caption \"{}\" may not be correct for"
                               " parts: {}".format(caption, parts))
+                    # print("* generated caption: {}".format(caption))
+                    # TODO: remove redundant code above--see below.
                 icon_name = name.lower()
                 if (len(parts) > 1) and (len(parts[1]) > 0) and (parts[1][0] == parts[1][0].upper()) and (not version_flags[1]):
                     name += " " + parts[1]
                 name = name.lower()
                 print("* using '" + name + "' as internal program name")
+            else:
+                print("* using specified name: {}".format(name))
         else:
             usage()
             print("End of program name (any of '" + breakers
@@ -529,7 +585,9 @@ def install_program_in_place(src_path, caption=None, name=None,
             print("")
             print("")
             return False
-
+    else:
+        print("* The name was set to {}".format(name))
+        print("* The version was set to {}".format(version))
 
     applications = os.path.join(share_path, "applications")
     shortcut = None
@@ -546,8 +604,9 @@ def install_program_in_place(src_path, caption=None, name=None,
             shortcut_name = "org.blender"
         print("* using {} as shortcut name".format(shortcut_name))
     elif version is not None:
-        shortcut_name = "{}-{}".format(name.lower(),version)
+        shortcut_name = "{}-{}".format(name.lower(), version)
     else:
+        print("* no version is detected in {}".format(src_path))
         shortcut_name = "{}".format(name.lower())
     if is_appimage:
         shortcut_name += "-appimage"
@@ -706,6 +765,7 @@ def install_program_in_place(src_path, caption=None, name=None,
     return False
 
 if __name__ == "__main__":
+    print("")
     caption = None
     src_path = None
     if len(sys.argv) < 2:
