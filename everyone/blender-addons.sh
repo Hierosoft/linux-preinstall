@@ -89,7 +89,9 @@ simplifying the modeling of advanced shapes:
   Author: LeoMoon Studios
   Price: Free or Pay What You Want--Though the 2.8x version is free at the link, you can still "purchase" the add-on to support development here: https://blendermarket.com/products/leomoon-lightstudio?ref=2
   Description: This is a complete lighting solution including HDR textures that became public-licensed code and media in 2020.
-
+- [SpaceshipGenerator](https://github.com/a1studmuffin/SpaceshipGenerator)
+  Author: Michael Davies
+  Price: Free
 END
 
 cat <<END
