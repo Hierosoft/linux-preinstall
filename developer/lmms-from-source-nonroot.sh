@@ -145,6 +145,12 @@ customCleanup
 OpenGL_GL_PREFERENCE=GLVND
 # VST requires wine, so set WANT_VST to OFF (otherwise it shows error if missing):
 cmake "$LOCAL_REPO" -DCMAKE_INSTALL_PREFIX=$CMAKE_INSTALL_PREFIX -DFORCE_VERSION=$FORCE_VERSION -DWANT_VST=OFF -DOpenGL_GL_PREFERENCE=$OpenGL_GL_PREFERENCE || customShutdown "Compiling failed! See errors above"
+#-DWANT_QT5=ON  results in:
+#CMake Warning:
+#  Manually-specified variables were not used by the project:
+#
+#    WANT_QT5
+
 # make -j4
-make -j $(nproc)
+make -j$(nproc)
 make install  # This installs to ~/.local as long as that is set above.

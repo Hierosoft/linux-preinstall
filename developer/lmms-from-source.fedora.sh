@@ -2,6 +2,7 @@
 dnf -y remove lmms
 # See <https://github.com/LMMS/lmms/wiki/dependencies-fedora>
 dnf -y install \
+    jack-audio-connection-kit-devel \
     git \
     qt5-devel \
     qt5-qtbase-private-devel \
@@ -15,6 +16,7 @@ dnf -y install \
     fluidsynth-devel \
     alsa-lib-devel \
     pulseaudio-libs-devel \
+    qjackctl \
     gcc-c++ xcb-util-devel \
     xcb-util-keysyms-devel \
     wine.i686 wine-devel.i686 \
