@@ -34,6 +34,9 @@ except `*-nonroot.sh` scripts must run as `root` (or with `sudo bash`):
 * You can use utilities/install_any.py to install deb packages!
   - It seems to only be able to use tar to exctact xz files if you use
     Python 3 (Python 2 doesn't work).
+![Screenshot of using install_any.py and the resulting installed
+shortcuts from a directories, archive, deb, or appimage](media/screenshot-install_any.jpg)
+
 
 ## Developer notes
 * For silent installation, dealing with files marked
