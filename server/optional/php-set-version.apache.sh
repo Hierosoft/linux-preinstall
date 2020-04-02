@@ -4,7 +4,7 @@
 
 if [ -z "$1" ]; then
     echo
-    echo "You must specify by a PHP version (such as 7.1 if you are using Nextcloud)"
+    echo "You must specify by a PHP version (such as 7.4)"
     echo "php is using (so you should probably use what is shown from"
     echo "the output of 'sudo apache2ctl -M | grep php' below):"
     sudo apache2ctl -M | grep php
@@ -31,7 +31,7 @@ sudo a2dismod php7.3
 echo "enabling php$ver..."
 sudo a2enmod php$ver
 sudo apt install php$ver-pgsql
-#sudo apt install php$ver-sqlite3
+# sudo apt install php$ver-sqlite3
 sudo apt install php$ver-opcache
 sudo apt install php$ver-readline
 sudo apt install php$ver-memcached
