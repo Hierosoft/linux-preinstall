@@ -12,17 +12,18 @@ customDie() {
     echo
     exit $errorCode
 }
-if [ -z "PROGRAMS_PATH" ]; then
+if [ -z "$PROGRAMS_PATH" ]; then
     PROGRAMS_PATH=~/Downloads/git/poikilos
 fi
-if [ -z "PROGRAM_PATH" ]; then
+if [ -z "$PROGRAM_PATH" ]; then
     PROGRAM_PATH=~/Downloads/git/poikilos/linux-preinstall
 fi
 mkdir -p ~/Downloads/git/poikilos || customDie "mkdir -p ~/Downloads/git/poikilos failed."
 cd ~/Downloads/git/poikilos || customDie "cd ~/Downloads/git/poikilos failed."
 if [ ! -d "$PROGRAM_PATH" ]; then
+    echo "* cloning into $PROGRAM_PATH..."
     git clone https://github.com/poikilos/linux-preinstall $PROGRAM_PATH || customDie "git clone https://github.com/poikilos/linux-preinstall failed."
-    cd linux-preinstall || customDie "cd linux-preinstall failed in `pwd`."
+    cd "$PROGRAM_PATH" || customDie "cd linux-preinstall failed in `pwd`."
     echo "git pull finished cloning \"`pwd`\"."
 else
     cd "$PROGRAM_PATH" || customDie "cd \"$PROGRAM_PATH\" failed in `pwd`."
