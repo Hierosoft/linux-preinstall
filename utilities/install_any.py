@@ -39,6 +39,9 @@ def usage():
     print(me + " <path> --reinstall")
     print(" "*len(me) + " ^ removes it from $HOME/.local/lib64 first")
     print("")
+    print(me + " --help")
+    print(" "*len(me) + " ^ Show this help screen.")
+    print("")
     print("")
 
 def split_any(s, delimiters):
@@ -786,6 +789,9 @@ if __name__ == "__main__":
                 move_what = 'any'
             elif arg == "--reinstall":
                 enable_reinstall = True
+            elif arg == "--help":
+                usage()
+                exit(0)
             else:
                 print("ERROR: '{}' is not a valid option.".format(arg))
                 exit(1)
