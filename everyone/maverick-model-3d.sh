@@ -3,7 +3,7 @@
 # Misfit Model 3D was discontinued in 2009.
 # zturtleman's Maverick Model 3D is a modernize fork.
 
-customDie() {
+customExit() {
     errorCode=1
     if [ ! -z "$2" ]; then
         errorCode="$2"
