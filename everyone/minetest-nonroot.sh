@@ -1,17 +1,22 @@
 #!/bin/sh
 
-git pull
+# git pull
 
 # - Install to $HOME/minetest.
 # - Backs up skins and worlds before upgrade, then restore afterward.
 # - Put icon and shortcut in correct directories in $HOME/.local
 #   (as per XDG standard).
+MT_BASH_SCRIPT_NAME="update-minetest-linux64.sh"
+MT_BASH_SCRIPT_PATH="/tmp/$MT_BASH_SCRIPT_NAME"
+curl https://raw.githubusercontent.com/poikilos/EnlivenMinetest/master/$MT_BASH_SCRIPT_NAME -o $MT_BASH_SCRIPT_PATH
+bash $MT_BASH_SCRIPT_PATH
+exit $?
 
 killall minetest
 arcName=minetest-linux64.zip
-url=https://downloads.minetest.org/$arcName
+RELEASE_ARC_URL=https://downloads.minetest.org/$arcName
 installPath="`pwd`"
-customDie() {
+customExit() {
     echo
     echo "ERROR:"
     echo "$1"
@@ -31,7 +36,7 @@ do
         enableOffline=true
     fi
 done
-cd "$HOME/Downloads" || customDie "Cannot cd '$HOME/Downloads'"
+cd "$HOME/Downloads" || customExit "Cannot cd '$HOME/Downloads'"
 unzName=minetest-linux64
 if [ -f "$arcName" ]; then
     if [ `stat --format=%Y $arcName` -gt $(( `date +%s` - (24*60*60) )) ]; then
@@ -43,25 +48,25 @@ if [ -f "$arcName" ]; then
     fi
 fi
 if [ "@$enableOffline" = "@false" ]; then
-    wget -O "$arcName" $url || customDie "Cannot download $url"
+    wget -O "$arcName" $RELEASE_ARC_URL || customExit "Cannot download $RELEASE_ARC_URL"
     if [ -d "$unzName" ]; then
         rm -Rf $unzName
     fi
-    unzip "$arcName" || customDie "Cannot extract `pwd`/$arcName"
+    unzip "$arcName" || customExit "Cannot extract `pwd`/$arcName"
 else
     if [ ! -d "$unzName" ]; then
         if [ -f "$arcName" ]; then
             if [ -d "$unzName" ]; then
                 rm -Rf $unzName
             fi
-            unzip "$arcName" || customDie "Cannot extract `pwd`/$arcName"
+            unzip "$arcName" || customExit "Cannot extract `pwd`/$arcName"
         else
-            customDie "Missing $arcName (required for offline install)"
+            customExit "Missing $arcName (required for offline install)"
         fi
     fi
 fi
 if [ ! -d "$unzName" ]; then
-    customDie "Missing extracted '`pwd`/$unzName' (usually from '`pwd`/$arcName')"
+    customExit "Missing extracted '`pwd`/$unzName' (usually from '`pwd`/$arcName')"
 fi
 mytmp=/tmp/linux-preinstall/minetest
 if [ ! -d "$mytmp" ]; then
@@ -91,7 +96,7 @@ fi
 if [ -f "$HOME/arrowkeys.txt" ]; then
     echo "arrowkeys.txt" >> "$exFile"
 fi
-rsync -rt --info=progress2 --exclude-from "$exFile" $unzName/ $HOME/minetest || customDie "Cannot rsync from '$unzName' to '$HOME/minetest'."
+rsync -rt --info=progress2 --exclude-from "$exFile" $unzName/ $HOME/minetest || customExit "Cannot rsync from '$unzName' to '$HOME/minetest'."
 if [ -d "$mytmp/worlds" ]; then
     echo
     echo "Restoring worlds..."
