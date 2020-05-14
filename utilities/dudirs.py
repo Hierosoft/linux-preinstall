@@ -31,7 +31,7 @@ def main():
             sub_size = get_size(sub_path)
             total_mb += sub_size/1024.0/1024.0
             print("{}: {}".format(sub_path, sub_size))
-    print("{}: {}".format("TOTAL", "{}M".format(total_mb)))
+    print("{}: {}".format("TOTAL", "{} M".format(total_mb)))
 
 if __name__ == "__main__":
     main()
