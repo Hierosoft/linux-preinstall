@@ -1,15 +1,14 @@
 #!/usr/bin/env python3
 """
-Only checks the size of subdirectories (not files) in a given directory.
-See https://stackoverflow.com/questions/1392413/calculating-a-directorys-size-using-python
+Check the size of subdirectories (not files) in a given directory.
 """
 from __future__ import print_function
 from __future__ import division
 
 import os
 import sys
-valid_unit_names = ["bytes", "kb", "mb", "gb"]
-
+units = ["bytes", "kb", "mb", "gb"]
+default_un = "mb"
 
 def bytes_to(size_bytes, unit):
     unit_upper = unit.upper()
@@ -25,10 +24,14 @@ def bytes_to(size_bytes, unit):
         return size_bytes / 1024.0 / 1024.0 / 1024.0 / 1024.0
     else:
         raise ValueError("{} is not a valid unit. Try: {}"
-                         "".format(unit, valid_unit_names))
+                         "".format(unit, units))
 
 
 def get_size(start_path='.', unit="bytes"):
+    """
+    See <https://stackoverflow.com/questions/1392413/calculating-a-
+    directorys-size-using-python>.
+    """
     total_size = 0
     for dirpath, dirnames, filenames in os.walk(start_path):
         for sub in filenames:
@@ -38,6 +41,24 @@ def get_size(start_path='.', unit="bytes"):
                 total_size += bytes_to(os.path.getsize(sub_path), unit)
     return total_size
 
+def usage():
+    print(__doc__)
+    print("USAGE")
+    print("-----")
+    me = os.path.split(sys.argv[0])[-1]
+    print("")
+    print("{} <directory> [options]".format(me))
+    print("")
+    print("OPTIONS:")
+    print("")
+    opt_fmt = "{:<14}     {}"
+    print(opt_fmt.format("--help", "Show this screen."))
+    print(opt_fmt.format("--sort",
+                                 "Sort the results (ascending)."))
+    print(opt_fmt.format("--unit <unit>",
+                                 "Show sizes in: "+str(units)))
+    print(opt_fmt.format("", "(default: {})".format(default_un)))
+    print("")
 
 def main():
     root_path = "."
@@ -53,10 +74,13 @@ def main():
             unit = arg
         elif arg == "--sort":
             enable_sort = True
+        elif arg == "--help":
+            usage()
+            exit(0)
         else:
             root_path = sys.argv[1]
     total_as_unit = 0.0
-    unit = "MB"
+    unit = default_un.upper()
     stats = []
     if enable_sort:
         print("sorting...")
