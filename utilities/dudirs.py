@@ -14,15 +14,15 @@ valid_unit_names = ["bytes", "kb", "mb", "gb"]
 def bytes_to(size_bytes, unit):
     unit_upper = unit.upper()
     if unit_upper == "BYTES":
-        total_size += size_b
+        return size_bytes
     elif unit_upper == "KB":
-        total_size += size_b / 1024.0
+        return size_bytes / 1024.0
     elif unit_upper == "MB":
-        total_size += size_b / 1024.0 / 1024.0
+        return size_bytes / 1024.0 / 1024.0
     elif unit_upper == "GB":
-        total_size += size_b / 1024.0 / 1024.0 / 1024.0
+        return size_bytes / 1024.0 / 1024.0 / 1024.0
     elif unit_upper == "TB":
-        total_size += size_b / 1024.0 / 1024.0 / 1024.0 / 1024.0
+        return size_bytes / 1024.0 / 1024.0 / 1024.0 / 1024.0
     else:
         raise ValueError("{} is not a valid unit. Try: {}"
                          "".format(unit, valid_unit_names))
@@ -41,17 +41,39 @@ def get_size(start_path='.', unit="bytes"):
 
 def main():
     root_path = "."
-    if len(sys.argv) > 1:
-        root_path = sys.argv[1]
+    prev_arg = None
+    enable_sort = False
+    for i in range(1, len(sys.argv)):
+        arg = sys.argv[i]
+        parts = arg.split("=")
+        if arg.startswith("--") and (len(parts) > 1):
+            prev_arg = parts[0]
+            arg = parts[1]
+        if prev_arg == "--unit":
+            unit = arg
+        elif arg == "--sort":
+            enable_sort = True
+        else:
+            root_path = sys.argv[1]
     total_as_unit = 0.0
     unit = "MB"
+    stats = []
+    if enable_sort:
+        print("sorting...")
     for sub in os.listdir(root_path):
         sub_path = os.path.join(root_path, sub)
         if os.path.isdir(sub_path) and not sub.startswith("."):
             sub_size = get_size(sub_path, unit=unit)
             total_as_unit += sub_size
-            print("{}: {}".format(sub_path, sub_size))
-    print("{}: {}".format("TOTAL", "{} {}".format(total_as_unit, unit)))
+            if not enable_sort:
+                print("{}: {} {}".format(sub_path, sub_size, unit))
+            else:
+                stats.append({"size": sub_size, "path": sub_path})
+    if enable_sort:
+        sorted_stats = sorted(stats, key=lambda k: k['size'])
+        for stat in sorted_stats:
+            print("{}: {} {}".format(stat["path"], stat["size"], unit))
+    print("{}: {} {}".format("TOTAL",total_as_unit, unit))
 
 
 if __name__ == "__main__":
