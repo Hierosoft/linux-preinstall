@@ -12,6 +12,7 @@ me = os.path.split(sys.argv[0])[-1]
 version_chars = "0123456789."
 icons = {}
 icons["freecad"] = "org.freecadweb.FreeCAD"
+icons["ultimaker.cura"] = "cura"
 captions = {}
 captions["umlet"] = "UMLet Standalone"  # as opposed to a plugin/web ver
 captions["freecad"] = "FreeCAD"
@@ -523,13 +524,20 @@ def install_program_in_place(src_path, caption=None, name=None,
                 version_flags.append(False)
             del part
             part1 = None
+            part2 = None
             if version is None:
 
                 if len(parts) > 1:
                     part1 = without_ender(parts[1], False)
+                if len(parts) > 2:
+                    part2 = without_ender(parts[2], False)
                 if (part1 is not None) and (is_version(part1)):
                     version = part1
                     version_flags[1] = True
+                    print("* using '" + version + "' as version")
+                elif (part2 is not None) and (is_version(part2)):
+                    version = part2
+                    version_flags[2] = True
                     print("* using '" + version + "' as version")
                 else:
                     print("* INFO: \"{}\" is not a version"
@@ -578,6 +586,7 @@ def install_program_in_place(src_path, caption=None, name=None,
                 if (len(parts) > 1) and (len(parts[1]) > 0) and (parts[1][0] == parts[1][0].upper()) and (not version_flags[1]):
                     name += " " + parts[1]
                 name = name.lower()
+                name = name.replace(" ", ".")
                 print("* using '" + name + "' as internal program name")
             else:
                 print("* using specified name: {}".format(name))
@@ -618,10 +627,15 @@ def install_program_in_place(src_path, caption=None, name=None,
     if icon_name is None:
         icon_name = name.lower()
     try_icon = icons.get(name.lower())
+    print("* checking for known icon related to '{}'..."
+          "".format(name.lower()))
 
     if try_icon is not None:
         icon_name = try_icon
+        print("  * using known icon '{}'".format(icon_name))
     if caption is None:
+        icon_name = try_icon
+        print("  * using unknown icon '{}'".format(icon_name))
         caption = name
         if version is not None:
             caption += " " + version
