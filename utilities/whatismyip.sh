@@ -3,3 +3,6 @@
 echo "WAN address (in a common home, your router is visible to the internet from this address):"
 dig +short myip.opendns.com @resolver1.opendns.com
 # dig TXT +short o-o.myaddr.l.google.com @ns1.google.com
+# host myip.opendns.com resolver1.opendns.com
+# dig TXT +short o-o.myaddr.l.google.com @ns1.google.com | awk -F'"' '{ print $2}'
+# myip="$(dig +short myip.opendns.com @resolver1.opendns.com)"
