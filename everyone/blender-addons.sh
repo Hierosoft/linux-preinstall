@@ -22,6 +22,9 @@ cat <<END
   - Click Run Addon, Start
   - Click Build if there is a warning (usually necessary for
     first-time setup).
+- install Material Wizard from
+  https://www.blendernation.com/2020/09/14/material-wizard-v1-2-released/?utm_source=blenderartists&utm_campaign=ba-header&utm_content=item-1
+  - See [Baking Tutorial for Material Wizard](https://www.youtube.com/watch?v=ummBdrOZmso)
 
 ## Optional
 There are some addons on the Blender Market you may find helpful for
