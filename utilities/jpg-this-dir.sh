@@ -19,7 +19,7 @@ You must specify a directory or file.
 
 
 END
-open ~/jpg-this-dir.txt
+cat ~/jpg-this-dir.txt
 }
 
 
@@ -41,6 +41,9 @@ fi
 if [ ! -d "$parentDir/png" ]; then
     mkdir "$parentDir/png" || customDie "Cannot create png directory"
 fi
+if [ ! -d "$parentDir/tga" ]; then
+    mkdir "$parentDir/tga" || customDie "Cannot create tga directory"
+fi
 
 # see https://superuser.com/questions/71028/batch-converting-png-to-jpg-in-linux
 # ls -1 *.png | xargs -n 1 bash -c 'convert "$0" "${0%.*}.jpg"' # this is good too
@@ -52,9 +55,11 @@ echo "Converting (moving only successfully converted files)..."
 echo "#!/bin/sh" > ~/jpg-this-dir.txt
 echo "# `date`" > ~/jpg-this-dir.txt
 cd "$parentDir" || customDie "cd $parentDir  # FAILED"
-for i in *.png
-do
+
+convertOne() {
     failed=false
+    i=$1
+    ext="$2"
     convert "$i" "${i%.*}.jpg" || failed=true
     if [ "@$failed" = "@true" ]; then
         echo "convert \"$i\" \"${i%.*}.jpg\"" >> ~/jpg-this-dir.txt
@@ -65,23 +70,32 @@ do
         echo "# # ${i%.*}.jpg successful"
         convert_count=$((convert_count+1))
         failed=false
-        mv -f "$parentDir/$i" "$parentDir/png/" || failed=true
+        mv -f "$parentDir/$i" "$parentDir/$ext/" || failed=true
         if [ "@$failed" = "@true" ]; then
-            echo "mv -f \"$parentDir/$i\" \"$parentDir/png/\"" >> ~/jpg-this-dir.txt
+            echo "mv -f \"$parentDir/$i\" \"$parentDir/$ext/\"" >> ~/jpg-this-dir.txt
             echo "#     ^ failed" >> ~/jpg-this-dir.txt
             mv_failed_count=$((mv_failed_count+1))
         else
-            echo "# mv -f \"$parentDir/$i\" \"$parentDir/png/\"" >> ~/jpg-this-dir.txt
+            echo "# mv -f \"$parentDir/$i\" \"$parentDir/$ext/\"" >> ~/jpg-this-dir.txt
             echo "# # successful"
             mv_count=$((mv_count+1))
         fi
         # echo "Moving $i..."
-
     fi
+}
+
+for i in *.png
+do
+    convertOne $i "png"
+done
+for i in *.tga
+do
+    convertOne $i "tga"
 done
 echo "# Converted $convert_count ($convert_failed_count failed)." >> ~/jpg-this-dir.txt
 echo "# Moved $mv_count ($mv_failed_count failed)." >> ~/jpg-this-dir.txt
-open ~/jpg-this-dir.txt
+# open ~/jpg-this-dir.txt
+cat ~/jpg-this-dir.txt
 echo "Done."
 echo
 echo
