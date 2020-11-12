@@ -253,7 +253,12 @@ class LBRYLinkManager:
     def get_urls(self, verbose=False, must_contain=None):
         # self.parser.urls = []  # done automatically on BODY tag
         # python2 way: `urllib.urlopen(self.html_url)`
-        response = request.urlopen(self.html_url)
+        try:
+
+            response = request.urlopen(self.html_url)
+        except urllib.error.HTTPError as e:
+            print("Opening {}".format(e))
+            return None
         dat = response.read()
         self.parser.must_contain = must_contain
         self.parser.verbose = verbose
@@ -263,7 +268,7 @@ class LBRYLinkManager:
         #   TypeError: must be str not bytes
         self.parser.feed(dat.decode("UTF-8"))
         return self.parser.urls
-        
+
     def download(self, file_path, url, cb_progress=None, cb_done=None,
                  chunk_len=16*1024):
         response = request.urlopen(url)
@@ -282,7 +287,7 @@ class LBRYLinkManager:
                 f.write(chunk)
         if cb_done is not None:
             cb_done(evt)
-            
+
     def get_downloads_path(self):
         return os.path.join(self.profile_path, "Downloads")
 
@@ -333,7 +338,7 @@ def main():
         print("* downloading {}".format(url))
         mgr.download(src_path, url, cb_progress=d_progress, cb_done=d_done)
         print("* installing {}".format(src_path))
-        
+
         install_program_in_place(
             src_path,
             caption="LBRY",
