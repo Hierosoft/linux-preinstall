@@ -66,11 +66,12 @@ def booklet_order(n):
     n -- The total page count. You must provide an even number, so if
     the document has an odd number of pages, make it so (makes either
     front or back blank--unless you put a blank page before the back
-    or after the front).
+    or after the front). In this version, only counts divisible by 4
+    are implemented.
     """
     n = int(n)
     allow_any = False
-    if (n%2 != 0) and (not allow_any):
+    if (n%4 != 0) and (not allow_any):
 
         raise ValueError("You must provide an even number of pages."
                          " Add a blank page if the document does not"
