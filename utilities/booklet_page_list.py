@@ -19,6 +19,10 @@ duplex setting to "Flip on Short Side" and the "Pages" option (may be
 under "Range and Copies" depending on your desktop environment) to the
 booklet_order. Pages per sheet: 2. Multiple pages per sheet order: Left
 to Right, then down.
+
+In this version, only counts divisible by 4 are implemented
+completely--you have to cut the page printed last in half otherwise (it
+still goes in the middle but make sure you flip it properly.
 """
 
 # n,
@@ -66,12 +70,10 @@ def booklet_order(n):
     n -- The total page count. You must provide an even number, so if
     the document has an odd number of pages, make it so (makes either
     front or back blank--unless you put a blank page before the back
-    or after the front). In this version, only counts divisible by 4
-    are implemented.
+    or after the front).
     """
     n = int(n)
-    allow_any = False
-    if (n%4 != 0) and (not allow_any):
+    if (n%2 != 0):
 
         raise ValueError("You must provide an even number of pages."
                          " Add a blank page if the document does not"
@@ -99,6 +101,12 @@ def booklet_order(n):
                         ret.append(n - (offset - 1))
                 p += 1
         offset += 2
+    if (n%4 != 0):
+        print()
+        print("WARNING: You'll have to cut the page printed last in"
+              " half, throw away the incorrect half, then flip it"
+              " properly since page counts not divisible by 4 are not"
+              " fully implemented.")
     return ret
 
 
