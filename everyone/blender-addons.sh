@@ -28,7 +28,22 @@ cat <<END
 
 ## Optional
 There are some addons on the Blender Market you may find helpful for
-simplifying the modeling of advanced shapes:
+creating complex scenes quickly:
+
+### Scenery
+- [Tree And Grass Library Botaniq Trees+Grass Tree](https://blendermarket.com/products/botaniq-trees)
+  Price: $109 botaniq full, $39 botaniq lite (33% of assets)
+  Author: [polygoniq](https://blendermarket.com/creators/polygoniq)
+- [Citybuilder 3d](https://www.blendermarket.com/products/citybuilder-3d?ref=2)
+  Price: $76 CityBuilder3d Full Version (includes future asset packs);
+         $36-$39 for individual packs (Metropolitan, Cyberpunk future, derelict, soviet
+  Author: [LIGHTARCHITECT](https://www.blendermarket.com/creators/lightarchitect)
+- [Khaos Fire Shader: Straightforward Fire Shading](https://blendermarket.com/products/khaos-fire-shader-fire-shading-simplified?ref=2)
+  Price: $15 Fire Shader; $35 Ultimate Explosion Add-on
+  Description: Realistic fire; ultimate version includes explosions
+    creation.
+
+### Modeling
 - [Boxcutter](https://blendermarket.com/products/boxcutter)
   Price: ~$20
   Description: Easily add many shapes of divots and protrusions, such
