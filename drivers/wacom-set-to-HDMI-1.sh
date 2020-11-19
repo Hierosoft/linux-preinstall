@@ -19,3 +19,5 @@ echo
 echo "You only need to run xsetwacom on your wacom inputs if you have multiple monitors. Doing so will map your digitizing tablet to that monitor, so that the cursor will move at the same speed in the x and y direction, given that your tablet's aspect ratio is the same as your screen's."
 echo
 echo
+
+# Other method (choose a display and input device): See tablet-map-to-monitor.txt
