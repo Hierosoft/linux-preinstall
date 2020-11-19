@@ -110,6 +110,18 @@ creating complex scenes quickly:
 - [SpaceshipGenerator](https://github.com/a1studmuffin/SpaceshipGenerator)
   Author: Michael Davies
   Price: Free
+
+### Standalone (non-Blender) tools
+#### 2D to 3D
+- [PIFuHD](https://github.com/wjakob/instant-meshes)
+  Price: Free
+  Description: Single full-body photo of clothed human (with transparent
+  background) to 3D mesh.
+#### Retopology
+- [Instant Meshes](https://github.com/wjakob/instant-meshes)
+  Price: Free
+  Description: automatic retopology, with optional manual intervention
+    using loop guides.
 END
 
 cat <<END
