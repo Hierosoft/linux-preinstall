@@ -110,6 +110,10 @@ creating complex scenes quickly:
 - [SpaceshipGenerator](https://github.com/a1studmuffin/SpaceshipGenerator)
   Author: Michael Davies
   Price: Free
+- [Home Builder Asset Library](https://creativedesigner3d.com/2020/11/12/home-builder-asset-library/)
+  Description: Parametric indoor assets (requires Blender PyClone--see URL)
+  Author: Andrew Peel
+  Freemium: ($100 extended asset library)
 
 ### Standalone (non-Blender) tools
 #### 2D to 3D
