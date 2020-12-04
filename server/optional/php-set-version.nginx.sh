@@ -12,29 +12,36 @@ fi
 reqested_ver=$1
 # The next few lines are not for apache but are based on
 # https://docs.nextcloud.com/server/14/admin_manual/installation/source_installation.html#ubuntu-installation-label
-sudo apt install mariadb-server
+sudo apt install -y mariadb-server
 
 for ver in 5.0 5.1 5.2 5.3 5.3 5.4 5.5 5.6 5.7 5.8 5.9 6.0 6.1 6.2 6.3 6.4 6.5 6.6 6.7 6.8 6.9 7.0 7.1 7.2 7.3 7.4 7.5 7.6 7.7 7.8 7.9 8.0 8.1 8.2 8.3 8.4 8.5 8.6 8.7 8.8 8.9 9.0
 do
 if [ "$reqested_ver" != "$ver" ]; then
     sudo apt remove -y php$ver-gd php$ver-json php$ver-mysql php$ver-curl php$ver-mbstring
-    sudo apt remove php$ver-intl php-imagick php$ver-xml php$ver-zip
-    sudo apt remove php$ver-fpm
+    sudo apt remove -y php$ver-intl php-imagick php$ver-xml php$ver-zip
+    sudo apt remove -y php$ver-fpm
 fi
 done
+echo
+echo "Removing other versions of php-related packages is complete."
+echo
+echo "The following list should be empty (dpkg --get-selections | grep -i php): START"
+sudo dpkg --get-selections | grep -i php
+echo "END"
+echo
 
 ver=$reqested_ver
-sudo apt install php$ver-gd php$ver-json php$ver-mysql php$ver-curl php$ver-mbstring
-sudo apt install php$ver-intl php-imagick php$ver-xml php$ver-zip
+sudo apt install -y php$ver-gd php$ver-json php$ver-mysql php$ver-curl php$ver-mbstring
+sudo apt install -y php$ver-intl php-imagick php$ver-xml php$ver-zip
 # ^ This installs php-imagick php5.6-imagick php7.0-imagick php7.1-imagick php7.2-imagick php7.2-intl php7.2-xml php7.2-zip php7.3-imagick
 #     php7.4-imagick php8.0-imagick ttf-dejavu-core
 #   for some reason.
-sudo apt install php$ver-fpm
+sudo apt install -y php$ver-fpm
 # For WordPress plugins:
 ## As of 2020-04-01, sury is required for php7.4-mbstring (See https://github.com/wyveo/nginx-php-fpm/blob/master/Dockerfile)
 echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" > sudo tee /etc/apt/sources.list.d/php.list
 sudo apt update
-sudo apt install php$ver-mbstring
+sudo apt install -y php$ver-mbstring
 
 
 echo "enabling php$ver..."
