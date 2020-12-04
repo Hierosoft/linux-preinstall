@@ -20,9 +20,10 @@ if [ "@$CHANGE" = "@true" ]; then
     sudo apt install -y mariadb-server
 fi
 
-WARNING_SITES=""
 
 NL=$'\n'
+
+WARNING_SITES=""
 for ver in 5.0 5.1 5.2 5.3 5.3 5.4 5.5 5.6 5.7 5.8 5.9 6.0 6.1 6.2 6.3 6.4 6.5 6.6 6.7 6.8 6.9 7.0 7.1 7.2 7.3 7.4 7.5 7.6 7.7 7.8 7.9 8.0 8.1 8.2 8.3 8.4 8.5 8.6 8.7 8.8 8.9 9.0
 do
 if [ "$reqested_ver" != "$ver" ]; then
@@ -34,7 +35,8 @@ if [ "$reqested_ver" != "$ver" ]; then
     for SITE in `ls -t /etc/nginx/sites-available`
     do
         #echo "* checking $SITE"
-        ANY_OLD="`grep $ver-fpm /etc/nginx/sites-available/$SITE`"
+        ANY_OLD="`grep -F $ver-fpm /etc/nginx/sites-available/$SITE`"
+        # ^ -F is literal string (same as fgrep)
         if [ ! -z "$ANY_OLD" ]; then
             ANY_OLD=`echo $ANY_OLD | sed -r 's/( )+//g'`
             # ^ remove whitespace as per bruziuz' comment on
