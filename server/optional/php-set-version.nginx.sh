@@ -36,8 +36,19 @@ if [ "$reqested_ver" != "$ver" ]; then
         #echo "* checking $SITE"
         ANY_OLD="`grep $ver-fpm /etc/nginx/sites-available/$SITE`"
         if [ ! -z "$ANY_OLD" ]; then
+            ANY_OLD=`echo $ANY_OLD | sed -r 's/( )+//g'`
+            # ^ remove whitespace as per bruziuz' comment on
+            # https://stackoverflow.com/questions/369758/how-to-trim-whitespace-from-a-bash-variable
+            ANY_OLD_firstchar=${ANY_OLD:0:1}
+            # ^ as per https://stackoverflow.com/a/27791269
+            if [ "@$ANY_OLD_firstchar" = "@#" ]; then
+                ANY_OLD=""
+                # ^ ignore comments
+            fi
+        fi
+        if [ ! -z "$ANY_OLD" ]; then
             # echo "  * found $ANY_OLD"
-            WARNING_SITES="${WARNING_SITES}* ${SITE} uses: '${ANY_OLD}'${NL}"
+            WARNING_SITES="${WARNING_SITES}* /etc/nginx/sites-available/${SITE} uses: '${ANY_OLD}'${NL}"
             # STR="${H}"$'\n'"${W}"
             # ^ as per JDS's comment on https://stackoverflow.com/a/3182519
         #else
@@ -94,4 +105,10 @@ fi
 if [ ! -z "$WARNING_SITES" ]; then
     echo "WARNING: The following sites in /etc/nginx/sites-available still try to call old versions of php:"
     echo "$WARNING_SITES"
+    echo
+    echo "The correct location where the sock will be created is defined"
+    echo "in: /etc/php/$requested_ver/fpm/pool.d/www.conf:"
+    cat /etc/php/$requested_ver/fpm/pool.d/www.conf | grep sock
+    # ^ according to https://www.xspdf.com/resolution/58767959.html
+    echo
 fi
