@@ -21,11 +21,13 @@ annotations = {}
 annotations[".deb"] = " (deb)"
 annotations[".appimage"] = " (AppImage)"
 
+
 def is_version(s):
     for c in s:
         if c not in version_chars:
             return False
     return True
+
 
 def usage():
     print("")
@@ -101,23 +103,26 @@ def install_program_in_place(src_path, caption=None, name=None,
         detect_program_parent=False):
     """Install binary program src_path
 
-    If name is not specified, the name and version will be calculated from
-    either the filename at src_path or the path's parent directory's name.
-    Example: src_path=../Downloads/blender-2.79-e045fe53f1b0-linux-glibc217-x86_64/blender
+    If name is not specified, the name and version will be calculated
+    from either the filename at src_path or the path's parent
+    directory's name.
+    Example:
+    src_path=../Downloads/blender-2.79-e045fe53f1b0-linux-glibc217-x86_64/blender
     (In this case, this function will extract the name and version from
     blender-2.79-e045fe53f1b0-linux-glibc217-x86_64 since it has more
     delimiters than the filename "blender")
 
-    move_what: Only set this to 'file' if src_path is an AppImage or other
-    self-contained binary file. Otherwise you may set it to 'directory'. The
-    file or directory will be moved to ~/.local/lib64/ (or whatever programs
-    directory is detected as a parent of the directory if
-    detect_program_parent is True [automaticaly True by calling itself in
-    the case of deb]).
+    move_what: Only set this to 'file' if src_path is an AppImage or
+    other self-contained binary file. Otherwise you may set it to
+    'directory'. The file or directory will be moved to ~/.local/lib64/
+    (or whatever programs directory is detected as a parent of the
+    directory if detect_program_parent is True [automaticaly True by
+    calling itself in the case of deb]).
     move_what='file' example:
     If name is not specified, the name and version will be calculated from
     either the filename at src_path or the path's parent directory's name.
-    Example: src_path=../Downloads/FreeCAD_0.18-16131-Linux-Conda_Py3Qt5_glibc2.12-x86_64.AppImage
+    Example:
+    src_path=../Downloads/FreeCAD_0.18-16131-Linux-Conda_Py3Qt5_glibc2.12-x86_64.AppImage
     (In this case, this function will extract the name and version from
     FreeCAD_0.18-16131-Linux-Conda_Py3Qt5_glibc2.12-x86_64.AppImage)
     """
@@ -129,6 +134,7 @@ def install_program_in_place(src_path, caption=None, name=None,
     dirname = None
     ex_tmp = None
     new_tmp = None
+    verb = "uninstall" if do_uninstall else "install"
     ending = ".deb"
     if src_path.lower()[-(len(ending)):] == ending:
         ex_tmp = tempfile.mkdtemp()
@@ -180,7 +186,8 @@ def install_program_in_place(src_path, caption=None, name=None,
         if not found_any:
             print("ERROR: extracting '{}' from '{}' did not result in"
                   " any of the following:"
-                  " '{}'".format(next_temp, next_path, try_programs_paths))
+                  " '{}'".format(next_temp, next_path,
+                                 try_programs_paths))
             shutil.rmtree(next_temp)
             return False
         found_programs_paths = []
@@ -237,7 +244,7 @@ def install_program_in_place(src_path, caption=None, name=None,
             shutil.rmtree(next_temp)
             print("* removed '{}'".format(next_temp))
             print("")
-            print("Install did not complete.")
+            print("{} did not complete.".format(verb))
 
             print("")
             exit(1)
@@ -334,7 +341,8 @@ def install_program_in_place(src_path, caption=None, name=None,
             else:
                 print("* using '{}' as icon".format(icon_path))
         else:
-            print("INFO: No '{}' directory was found.".format(src_icons))
+            print("INFO: No '{}' directory was found."
+                  "".format(src_icons))
         # Now install the program:
         result = install_program_in_place(
             binary_path,
@@ -401,7 +409,7 @@ def install_program_in_place(src_path, caption=None, name=None,
             print("* changed temp program path to '{}'".format(dirpath))
         src_path = dirpath
         move_what = 'directory'
-        print("* changed install source to '{}'".format(src_path))
+        print("* changed {} source to '{}'".format(verb, src_path))
 
     if os.path.isdir(src_path):
         print("* trying to detect binary...")
@@ -459,9 +467,11 @@ def install_program_in_place(src_path, caption=None, name=None,
                 enable_force_script = True
             if enable_force_script and (len(scripts) == 1):
                 src_path = os.path.join(src_path, scripts[0])
-                print("* detected executable script: '{}'".format(src_path))
+                print("* detected executable script: '{}'"
+                      "".format(src_path))
             else:
-                print("* could not detect binary in {}".format(all_files))
+                print("* could not detect binary in {}"
+                      "".format(all_files))
                 print("  scripts: {}".format(scripts))
                 print("  jars: {}".format(jars))
                 return False
@@ -479,9 +489,10 @@ def install_program_in_place(src_path, caption=None, name=None,
         try_dest_path = os.path.join(dst_programs, src_name)
         if not do_uninstall:
             if os.path.isfile(try_dest_path):
-                print("'{}' is already installed.".format(try_dest_path))
+                print("'{}' is already {}ed.".format(try_dest_path,
+                                                     verb))
             return False
-    print("Install started.")
+    print("{} started.".format(verb.title()))
 
     filename = os.path.split(src_path)[-1]
     dirpath = os.path.split(src_path)[-2]
@@ -502,7 +513,7 @@ def install_program_in_place(src_path, caption=None, name=None,
                     shutil.rmtree(new_tmp)
                     print("* removed '{}'".format(new_tmp))
             print("")
-            print("Install did not complete.")
+            print("{} did not complete.".format(verb.title()))
             print("")
             exit(1)
 
@@ -650,7 +661,8 @@ def install_program_in_place(src_path, caption=None, name=None,
             if not do_uninstall:
                 os.makedirs(dst_programs)
             else:
-                print("'{}' does not exist, so there is nothing to uninstall.".format(dst_programs))
+                print("'{}' does not exist, so there is nothing to {}."
+                      "".format(dst_programs, verb))
                 return True
         path = os.path.join(dst_programs, filename)
         if src_path != path:
@@ -688,7 +700,8 @@ def install_program_in_place(src_path, caption=None, name=None,
 
 
     if not do_uninstall:
-        os.chmod(path, stat.S_IRWXU | stat.S_IXGRP | stat.S_IRGRP | stat.S_IROTH | stat.S_IXOTH)
+        os.chmod(path, stat.S_IRWXU | stat.S_IXGRP | stat.S_IRGRP
+                       | stat.S_IROTH | stat.S_IXOTH)
         # stat.S_IRWXU : Read, write, and execute by owner
         # stat.S_IEXEC : Execute by owner
         # stat.S_IXGRP : Execute by group
@@ -713,7 +726,8 @@ def install_program_in_place(src_path, caption=None, name=None,
     shortcut_append_lines = None
     if os.path.isfile(meta_path):
         with open(meta_path) as f:
-            print("* using shortcut metadata from '{}'".format(meta_path))
+            print("* using shortcut metadata from '{}'"
+                  "".format(meta_path))
             lines = f.readlines()  # includes newlines!
             shortcut_append_lines = []
             for line_original in lines:
