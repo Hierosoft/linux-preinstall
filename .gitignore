@@ -4,3 +4,4 @@ rpmfusion-*.noarch.rpm
 generated.md
 # only should exist in root of repo:
 /PostInstallInstructions.md
+/developer/testdisk.log
