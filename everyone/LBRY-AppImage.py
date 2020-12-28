@@ -1,5 +1,16 @@
 #!/usr/bin/env python
 
+deprecated = """
+This is deprecated.
+You must use LBRY-Flatpak.sh, because:
+- The page blocks this application.
+- This application makes a new icon for every version.
+- If you click "Yes" to upgrade LBRY using its own upgrade system, the
+  icon created by this application will no longer work since it points
+  to the old version and the updater removes the old version.
+"""
+exit(1)
+
 python_mr = 3  # major revision
 try:
     import urllib.request
