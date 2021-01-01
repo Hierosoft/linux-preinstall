@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=qwerty
+Comment=qwerty_x script from linux-preinstall by Poikilos
+Exec=/home/owner/git/linux-preinstall/utilities/keyboard-layouts/us/qwerty-nonroot.sh
+#Exec=/usr/local/bin/colemak_x.sh
+#X-GNOME-Autostart-enabled=true
+#X-KDE-autostart-after=panel
+#X-Desktop-File-Install-Version=0.23
