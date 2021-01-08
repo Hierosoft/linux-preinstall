@@ -613,8 +613,8 @@ def install_program_in_place(src_path, caption=None, name=None,
         print("* The version was set to {}".format(version))
 
     applications = os.path.join(share_path, "applications")
-    shortcut = None
-    shortcut_name = None
+    sc_path = None
+    sc_name = None
     is_appimage = False
     dotted_parts = src_path.split(".")
     if dotted_parts[-1].lower() == "appimage":
@@ -622,19 +622,19 @@ def install_program_in_place(src_path, caption=None, name=None,
 
     if name.lower() == "blender":
         if version is not None:
-            shortcut_name = "org.blender-{}".format(version)
+            sc_name = "org.blender-{}".format(version)
         else:
-            shortcut_name = "org.blender"
-        print("* using {} as shortcut name".format(shortcut_name))
+            sc_name = "org.blender"
+        print("* using {} as shortcut name".format(sc_name))
     elif version is not None:
-        shortcut_name = "{}-{}".format(name.lower(), version)
+        sc_name = "{}-{}".format(name.lower(), version)
     else:
         print("* no version is detected in {}".format(src_path))
-        shortcut_name = "{}".format(name.lower())
+        sc_name = "{}".format(name.lower())
     if is_appimage:
-        shortcut_name += "-appimage"
-    shortcut_name += ".desktop"
-    shortcut = os.path.join(applications, shortcut_name)
+        sc_name += "-appimage"
+    sc_name += ".desktop"
+    sc_path = os.path.join(applications, sc_name)
     if icon_name is None:
         icon_name = name.lower()
     try_icon = icons.get(name.lower())
@@ -746,50 +746,57 @@ def install_program_in_place(src_path, caption=None, name=None,
         if new_tmp is not None:
             if os.path.isdir(new_tmp):
                 shutil.rmtree(new_tmp)
-
+    desktop_installer = "xdg-desktop-menu"
+    u_cmd_parts = [desktop_installer, "uninstall", sc_path]
     if do_uninstall:
-        if os.path.isfile(shortcut):
-            print("rm \"{}\"".format(shortcut))
-            os.remove(shortcut)
+        if os.path.isfile(sc_path):
+            print(u_cmd_parts)
+            subprocess.run(u_cmd_parts)
+            print("rm \"{}\"".format(sc_path))
+            os.remove(sc_path)
         else:
-            print("* The shortcut was not present: {}".format(shortcut))
+            print("* The shortcut was not present: {}".format(sc_path))
         return True
     else:
-        icons_tmp = tempfile.mkdtemp()
-        tmp_shortcut = os.path.join(icons_tmp, shortcut_name)
+        tmp_sc_dir_path = tempfile.mkdtemp()
+        tmp_sc_path = os.path.join(tmp_sc_dir_path, sc_name)
         ok = False
-        with open(tmp_shortcut, 'w') as outs:
+        with open(tmp_sc_path, 'w') as outs:
             outs.write(shortcut_data)
             ok = True
         if ok:
             # NOTE: There is no vendor prefix but xdg specifies that
             # there should be. The --novendor flag forces the install.
-            if os.path.isfile(shortcut):
+            if os.path.isfile(sc_path):
                 # Remove the old one, otherwise xdg-desktop-menu install
                 # will not refresh the icon from storage.
-                print("* removing old \"{}\"".format(shortcut))
-                os.remove(shortcut)
-            install_proc = subprocess.run(["xdg-desktop-menu",
+                # print("* removing shortcut \"{}\"".format(sc_path))
+                # os.remove(sc_path)
+                print("* uninstalling shortcut \"{}\"".format(sc_path))
+                subprocess.run(u_cmd_parts)
+                # ^ using only the name also works: sc_name])
+                # ^ uninstall ensures that the name updates if existed
+            install_proc = subprocess.run([desktop_installer,
                                            "install", "--novendor",
-                                           tmp_shortcut])
+                                           tmp_sc_path])
             inst_msg = "OK"
             if install_proc.returncode != 0:
                 inst_msg = "FAILED"
-            if os.path.isfile(shortcut):
-                os.chmod(shortcut,
+            if os.path.isfile(sc_path):
+                os.chmod(sc_path,
                          (stat.S_IROTH | stat.S_IREAD | stat.S_IRGRP
                           | stat.S_IWUSR))
-                print("* installing '{}'...{}".format(shortcut,
+                print("* installing '{}'...{}".format(sc_path,
                                                       inst_msg))
             else:
-                print("* installing '{}'...".format(shortcut_name,
-                                                  inst_msg))
+                print("* installing '{}'...".format(sc_name,
+                                                    inst_msg))
             print("  Name={}".format(caption))
             print("  Exec={}".format(path))
             print("  Icon={}".format(icon_path))
             # print("")
             # print("You may need to reload the application menu, such"
-            #      " as via one of the following commands:")
+            # #     " as via one of the following commands:")
             # print("  ")
             # or xdg-desktop-menu install mycompany-myapp.desktop
         return ok
