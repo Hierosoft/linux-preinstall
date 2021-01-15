@@ -751,9 +751,15 @@ def install_program_in_place(src_path, caption=None, name=None,
     if do_uninstall:
         if os.path.isfile(sc_path):
             print(u_cmd_parts)
-            subprocess.run(u_cmd_parts)
-            print("rm \"{}\"".format(sc_path))
-            os.remove(sc_path)
+            install_proc = subprocess.run(u_cmd_parts)
+            if install_proc.returncode != 0:
+                if os.path.isfile(sc_path):
+                    print("rm \"{}\"".format(sc_path))
+                    os.remove(sc_path)
+                else:
+                    print("{} failed but \"{}\" was not present so no"
+                          " steps seem to be necessary."
+                          "".format(" ".join(u_cmd_parts)))
         else:
             print("* The shortcut was not present: {}".format(sc_path))
         return True
