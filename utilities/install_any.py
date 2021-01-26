@@ -7,6 +7,7 @@ import tarfile
 import tempfile
 from zipfile import ZipFile
 import subprocess
+import platform
 
 me = os.path.split(sys.argv[0])[-1]
 version_chars = "0123456789."
@@ -126,11 +127,28 @@ def install_program_in_place(src_path, caption=None, name=None,
     (In this case, this function will extract the name and version from
     FreeCAD_0.18-16131-Linux-Conda_Py3Qt5_glibc2.12-x86_64.AppImage)
     """
-    local_path = os.path.join(os.environ["HOME"], ".local")
-    share_path = os.path.join(local_path, "share")
-    icons_path = os.path.join(share_path, "pixmaps")
+    profile = os.environ.get("HOME")
+    if profile is None:
+        profile = os.environ.get("USERPROFILE")
+        AppDatas = os.path.join(profile, "AppData", "Local")
+        if not os.path.isdir(AppDatas):
+            raise RuntimeError("USERPROFILE {} is used (since HOME is"
+                               "not defined), but there is no {}"
+                               "".format(profile, AppDatas))
+        myAppData = os.path.join(AppDatas, "install_any")
+    else:
+        AppDatas = os.path.join(profile, ".config")
+        myAppData = os.path.join(AppDatas, "install_any")
+        local_path = os.path.join(profile, ".local")
+        share_path = os.path.join(local_path, "share")
+        icons_path = os.path.join(share_path, "pixmaps")
+    if not os.path.isdir(myAppData):
+        os.makedirs(myAppData)
     lib64 = os.path.join(local_path, "lib64")
+    lib = os.path.join(local_path, "lib")
     dst_programs = lib64  # changed if deb has a different programs dir
+    if '32' in platform.architecture()[0]:
+        dst_programs = lib
     dirname = None
     ex_tmp = None
     new_tmp = None
@@ -670,11 +688,20 @@ def install_program_in_place(src_path, caption=None, name=None,
                 print("mv \"{}\" \"{}\"".format(src_path, path))
                 if src_path != path:
                     shutil.move(src_path, path)
+                    with open(logPath, fm) as outs:
+                        outs.write("install_file:{}\n"
+                                   "".format(dst_dirpath))
                 else:
                     print("The file is already at '{}'.".format(path))
+                    with open(logPath, fm) as outs:
+                        outs.write("#install_file:{}\n"
+                                   "".format(dst_dirpath))
             else:
                 print("rm \"{}\"".format(path))
                 os.remove(path)
+                with open(logPath, fm) as outs:
+                    outs.write("uninstall_file:{}\n"
+                               "".format(dst_dirpath))
                 if src_path == path:
                     print("The source path"
                           " '{}' is removed.".format(path))
@@ -685,6 +712,8 @@ def install_program_in_place(src_path, caption=None, name=None,
                 shutil.rmtree(dst_dirpath)
             else:
                 print("There is no '{}'.".format(dst_dirpath))
+            with open(logPath, fm) as outs:
+                outs.write("uninstall_dir:{}\n".format(dst_dirpath))
         else:
             print("mv '{}' '{}'".format(dirpath, dst_dirpath))
             if os.path.isdir(dst_dirpath):
@@ -697,6 +726,8 @@ def install_program_in_place(src_path, caption=None, name=None,
                     return False
             shutil.move(dirpath, dst_dirpath)
             path = os.path.join(dst_dirpath, filename)
+            with open(logPath, fm) as outs:
+                outs.write("install_move_dir:{}\n".format(dst_dirpath))
 
 
     if not do_uninstall:
@@ -748,7 +779,13 @@ def install_program_in_place(src_path, caption=None, name=None,
                 shutil.rmtree(new_tmp)
     desktop_installer = "xdg-desktop-menu"
     u_cmd_parts = [desktop_installer, "uninstall", sc_path]
+    fm = 'w'
+    logPath = os.path.join(myAppData, "install_any.log")
+    if os.path.isfile(logPath):
+        fm = 'a'
     if do_uninstall:
+        with open(logPath, fm) as outs:
+            outs.write("uninstall_shortcut:{}\n".format(sc_path))
         if os.path.isfile(sc_path):
             print(u_cmd_parts)
             install_proc = subprocess.run(u_cmd_parts)
@@ -799,12 +836,17 @@ def install_program_in_place(src_path, caption=None, name=None,
                                                     inst_msg))
             print("  Name={}".format(caption))
             print("  Exec={}".format(path))
+            with open(logPath, fm) as outs:
+                outs.write("install_shortcut:{}\n".format(path))
             print("  Icon={}".format(icon_path))
             # print("")
             # print("You may need to reload the application menu, such"
             # #     " as via one of the following commands:")
             # print("  ")
             # or xdg-desktop-menu install mycompany-myapp.desktop
+        else:
+            with open(logPath, fm) as outs:
+                outs.write("install_shortcut_failed:{}\n".format(path))
         return ok
     return False
 
