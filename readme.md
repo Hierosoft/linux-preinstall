@@ -33,6 +33,6 @@ except `*-nonroot.sh` scripts must run as `root` (or with `sudo bash`):
 ### Modular Features
 #### install_any.py
 You can use utilities/install_any.py to install deb packages!
-It seems to only be able to use tar to exctact xz files if you use Python 3 (not Python 2).
+It seems to only be able to use tar to extract xz files if you use Python 3 (not Python 2).
 ![Screenshot of using install_any.py and the resulting installed
 shortcuts from a directories, archive, deb, or appimage](media/screenshot-install_any.jpg)

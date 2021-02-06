@@ -127,6 +127,7 @@ def install_program_in_place(src_path, caption=None, name=None,
     (In this case, this function will extract the name and version from
     FreeCAD_0.18-16131-Linux-Conda_Py3Qt5_glibc2.12-x86_64.AppImage)
     """
+    enable_force_script = False
     profile = os.environ.get("HOME")
     if profile is None:
         profile = os.environ.get("USERPROFILE")
@@ -144,9 +145,14 @@ def install_program_in_place(src_path, caption=None, name=None,
         icons_path = os.path.join(share_path, "pixmaps")
     if not os.path.isdir(myAppData):
         os.makedirs(myAppData)
+    enable_force_script = False
+    logPath = os.path.join(myAppData, "install_any.log")
     lib64 = os.path.join(local_path, "lib64")
     lib = os.path.join(local_path, "lib")
     dst_programs = lib64  # changed if deb has a different programs dir
+    fm = 'w'
+    if os.path.isfile(logPath):
+        fm = 'a'
     if '32' in platform.architecture()[0]:
         dst_programs = lib
     dirname = None
@@ -458,11 +464,14 @@ def install_program_in_place(src_path, caption=None, name=None,
             if len(scripts) >= 2:
                 bad_indices = []
                 good_indices = []
-                for script in scripts:
+                for i in range(len(scripts)):
+                    script = scripts[i]
                     if script.startswith(only_name):
-                        good_indices.append(only_name)
+                        good_indices.append(i)
+                    elif script == "monero-wallet-gui":
+                        good_indices.append(i)
                     else:
-                        bad_indices.append(only_name)
+                        bad_indices.append(i)
                 if len(good_indices) == 1:
                     for bad_ii in range(len(bad_indices)-1, -1, -1):
                         bad_i = bad_indices[bad_ii]
@@ -674,6 +683,7 @@ def install_program_in_place(src_path, caption=None, name=None,
         print("* using '" + caption + "' as caption")
     path = src_path
     # dst_programs = os.path.join(os.environ.get("HOME"), ".config")
+    dst_dirpath = os.path.join(dst_programs, dirname)
     if move_what == 'file':
         if not os.path.isdir(dst_programs):
             if not do_uninstall:
@@ -706,7 +716,6 @@ def install_program_in_place(src_path, caption=None, name=None,
                     print("The source path"
                           " '{}' is removed.".format(path))
     elif move_what == 'directory':
-        dst_dirpath = os.path.join(dst_programs, dirname)
         if do_uninstall:
             if os.path.isdir(dst_dirpath):
                 shutil.rmtree(dst_dirpath)
@@ -779,8 +788,8 @@ def install_program_in_place(src_path, caption=None, name=None,
                 shutil.rmtree(new_tmp)
     desktop_installer = "xdg-desktop-menu"
     u_cmd_parts = [desktop_installer, "uninstall", sc_path]
-    fm = 'w'
-    logPath = os.path.join(myAppData, "install_any.log")
+    
+    
     if os.path.isfile(logPath):
         fm = 'a'
     if do_uninstall:
