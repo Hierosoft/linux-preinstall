@@ -289,6 +289,9 @@ def install_program_in_place(src_path, caption=None, name=None,
                 if sub_name in try_program_names:
                     binary_path = sub_path
                     break
+                elif sub_name == "signal-desktop-beta":
+                    binary_path = sub_path
+                    break
         if binary_path is None:
             if len(binaries) == 1:
                 binary_path = os.path.join(program_path, binaries[0])
