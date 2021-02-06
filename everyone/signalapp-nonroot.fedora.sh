@@ -38,6 +38,43 @@ if [ ! -f "$PKG_NAME" ]; then
 fi
 $install_cmd $PKG_NAME
 
+cat <<END
+If you do not have a smartphon and are not registered on Signal, you
+must follow the directions at:
+
+https://ctrl.alt.coop/en/post/signal-without-a-smartphone/
+
+For adding the CAPTCHA code via terminal, see:
+
+https://github.com/AsamK/signal-cli/wiki/Registration-with-captcha
+
+Decoding the qrcode on Fedora requires zbarimg from zbar-tools:
+  sudo dnf install -y zbar
+
+Synchronizing contacts requires libunixsocket-java according to
+https://ctrl.alt.coop/en/post/signal-without-a-smartphone/
+but it shows no error message without it. Try installing Java then:
+  wget http://www.matthew.ath.cx/projects/java/libmatthew-java-0.8.1.tar.gz
+  tar -xf libmatthew-java-0.8.1.tar.gz
+  cd libmatthew-java-0.8.1
+  # Alternatively, https://github.com/tomerf/libunixsocket-java
+  # may work.
+  # The make command further down requires javac, so install the devel
+  # package:
+  sudo dnf install -y java-latest-openjdk-devel
+  sudo dnf install -y java-latest-openjdk
+  # ensure Java 11 or higher so is present: java --version
+  # if not, try installing java-11-openjdk. Alessio
+  # (https://ask.fedoraproject.org/t/javac-not-found/2027/3)
+  # says to ensure 11 is installed.
+  # then as per http://www.matthew.ath.cx/projects/java/INSTALL run:
+  make
+  sudo make install
+  
+
+If you have a smartphone, simply open Signal Desktop and scan the 
+QR-code using your phone's Signal app.
+END
 
 exit 0
 
