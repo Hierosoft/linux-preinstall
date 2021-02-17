@@ -1,5 +1,23 @@
-#!/bin/sh
-echo "Console:"
+#!/bin/bash
+# not  ! / b i n / s h:
+# ^ - Using sh makes `source` fail on Debian
+#   - On Ubuntu, dash shell doesn't support `source`.
+
+MY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+REPO_DIR=".."
+FLAG_SUB="utilities/keyboard-layouts"
+if [ ! -d "$REPO_DIR/$FLAG_SUB" ]; then
+    for try_layouts in "$HOME/git/linux-preinstall/utilities/keyboard-layouts" "./linux-preinstall/utilities/keyboard-layouts" "./linux-preinstall/utilities/keyboard-layouts" "$MY_DIR/.."
+    do
+        if [ -d "$try_layouts" ]; then
+            layouts="$try_layouts"
+            break
+        fi
+    done
+fi
+layouts="$REPO_DIR/utilities/keyboard-layouts"
+
+echo "* adding Colemak for command line interface:"
 
 # localectl subcommands:
 
@@ -36,7 +54,7 @@ echo "Console:"
 #            converted from the console to X11, or X11 to console, respectively.
 # from <https://www.linux.org/docs/man1/localectl.html>
 
-echo "* settings console to Colemak..."
+echo "  * settings console to Colemak..."
 kb_conf="/etc/X11/xorg.conf.d/00-keyboard.conf"
 line=
 if [ -f "$kb_conf" ]; then
@@ -45,24 +63,34 @@ fi
 if [ -z "$line" ]; then
     sudo localectl set-x11-keymap us pc104 colemak
 else
-    echo "  - $kb_conf already contains a colemak setting, skipping"
+    echo "    - $kb_conf already contains a colemak setting, skipping"
 fi
 # check result via:
 # cat /etc/X11/xorg.conf.d/00-keyboard.conf
 
 
-echo "* adding x11 Colemak startup setting..."
+echo "  * adding x11 Colemak startup setting..."
 # setxkbmap -model pc104 -layout cz,us -variant ,dvorak -option grp:alt_shift_toggle
 # sudo localectl set-keymap --no-convert us-colemak
 # sudo localectl set-keymap --no-convert us-colemak
 # 101 + Super keys = 104
 # colemak_x_cmd="setxkbmap -model pc104 -layout us -variant colemak"
 # colemak_x_cmd="setxkbmap us -variant colemak"
-try_layouts="$HOME/git/linux-preinstall/utilities/keyboard-layouts"
-layouts=..
-if [ -d "$try_layouts" ]; then
-    layouts="$try_layouts"
+#try_layouts="$HOME/git/linux-preinstall/utilities/keyboard-layouts"
+#if [ ! -d "try_layouts" ]; then
+#fi
+
+if [ ! -d "$layouts" ]; then
+    echo
+    echo
+    echo "Error:"
+    echo "The keyboard-layouts directory is not $layouts nor any known location such as \"..\"."
+    echo
+    exit 1
+else
+    echo "* Using layouts directory \"$layouts\"..."
 fi
+
 colemak_x_src="$layouts/us/bin/colemak_x.sh"
 colemak_x_dst="/usr/local/bin/colemak_x.sh"
 sh $colemak_x_src
@@ -82,10 +110,10 @@ if [ ! -f "$colemak_desktop_dst" ]; then
         sudo cp -f "$colemak_desktop_src" "$colemak_desktop_dst"
         sudo chmod 644 "$colemak_desktop_dst"
     else
-        echo "  - ERROR: missing $colemak_desktop_src"
+        echo "    - ERROR: missing $colemak_desktop_src"
     fi
 else
-    echo "  - $colemak_desktop_dst - is already present, skipping"
+    echo "    - $colemak_desktop_dst - is already present, skipping"
 fi
 
 cat <<END
@@ -104,7 +132,7 @@ END
 
 source /etc/os-release
 if [ -f "`command -v keyboardctl`" ]; then
-    echo "* Manjaro keyboardctl detected, setting system to Colemak..."
+    echo "  * Manjaro keyboardctl detected, setting system to Colemak..."
     sudo keyboardctl -l us colemak
 elif [ ! -z "$ID_LIKE" ]; then
     if [[ $ID_LIKE == *arch* ]]; then
