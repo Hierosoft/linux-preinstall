@@ -98,6 +98,7 @@ fi
 
 colemak_x_src="$layouts/us/bin/colemak_x.sh"
 colemak_x_dst="/usr/local/bin/colemak_x.sh"
+echo "* Running \"$colemak_x_src\"..."
 sh $colemak_x_src
 if [ ! -f "$colemak_x_dst" ]; then
     if [ -f "$colemak_x_src" ]; then
