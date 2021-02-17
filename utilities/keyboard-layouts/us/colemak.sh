@@ -9,13 +9,13 @@ FLAG_SUB="utilities/keyboard-layouts"
 if [ ! -d "$REPO_DIR/$FLAG_SUB" ]; then
     for try_layouts in "$HOME/git/linux-preinstall/utilities/keyboard-layouts" "./linux-preinstall/utilities/keyboard-layouts" "./linux-preinstall/utilities/keyboard-layouts" "$MY_DIR/.."
     do
-        if [ -d "$try_layouts" ]; then
-            layouts="$try_layouts"
+        if [ -d "$try_layouts/$FLAG_SUB" ]; then
+            layouts="$try_layouts/$FLAG_SUB"
             break
         fi
     done
 fi
-layouts="$REPO_DIR/utilities/keyboard-layouts"
+layouts="$REPO_DIR/$FLAG_SUB"
 
 echo "* adding Colemak for command line interface:"
 
