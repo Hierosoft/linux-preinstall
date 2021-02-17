@@ -4,15 +4,16 @@
 #   - On Ubuntu, dash shell doesn't support `source`.
 
 MY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-REPO_DIR=".."
+REPO_DIR="../../.."
 FLAG_SUB="utilities/keyboard-layouts"
 echo "* Detecting linux-preinstall layouts..."
 if [ ! -d "$REPO_DIR/$FLAG_SUB" ]; then
+    echo "  * The layouts directory is not \"$REPO_DIR/$FLAG_SUB\"..."
     for try_layouts in "$HOME/git/linux-preinstall/utilities/keyboard-layouts" "./linux-preinstall/utilities/keyboard-layouts" "./linux-preinstall/utilities/keyboard-layouts" "$MY_DIR/.."
     do
         if [ -d "$try_layouts/$FLAG_SUB" ]; then
             layouts="$try_layouts/$FLAG_SUB"
-            echo "  * The layouts directory is \"$try_layouts\"..."
+            echo "  * The layouts directory is \"$try_layouts\"."
             break
         else
             echo "  * The layouts directory is not \"$try_layouts\"..."
