@@ -1,4 +1,6 @@
 #!/bin/sh
+me=$0
+myName="Slic3r Nightly Installer"
 customDie(){
     echo
     echo "ERROR:"
@@ -27,7 +29,33 @@ if [ ! -d ~/Downloads ]; then
 fi
 cd ~/Downloads || customDie "'cd ~/Downloads' failed."
 latest_name=Slic3r-master-latest.AppImage
-url=https://dl.slic3r.org/dev/linux/$latest_name
-wget -O $latest_name $url || customDie "'wget $url' failed."
+DL_PAGE_URL=https://dl.slic3r.org/dev/linux/
+if [ -z "$SLICER_APPIMAGE_URL" ]; then
+    SLICER_APPIMAGE_URL=https://dl.slic3r.org/dev/linux/$latest_name
+fi
+if [ ! -z "$1" ]; then
+    SLICER_APPIMAGE_URL=$1
+fi
+if [ ! -f "`command -v wget`" ]; then
+    echo "Error: $myName $me requires wget."
+    exit 1
+fi
+wget -O $latest_name.tmp $SLICER_APPIMAGE_URL
+if [ $? -ne 0 ]; then
+    echo
+    echo
+    echo "Error: Downloading $SLICER_APPIMAGE_URL failed. Try specifying a URL can be found by right-clicking and copying a link from $DL_PAGE_URL using a param or by setting SLICER_APPIMAGE_URL in the environment."
+    echo "Example:"
+    echo "$me https://dl.slic3r.org/dev/linux/branches/Slic3r-1.3.1-dev-24fc045-PR5010-x86_64.AppImage"
+    echo
+    exit 1
+elif [ ! -s $latest_name.tmp ]; then
+    echo
+    echo
+    echo "Error: The file downloaded from $SLICER_APPIMAGE_URL is empty."
+    echo
+    exit 1
+fi
+mv -f $latest_name.tmp $latest_name
 latest_path="`pwd`/$latest_name"
 python3 "$installer_path" "$latest_path" || customDie "'python \"$installer_path\" \"$latest_name\"' failed."
