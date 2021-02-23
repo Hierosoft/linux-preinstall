@@ -1,27 +1,22 @@
-#!/bin/sh
-postinstall="generated.md"
-maindir=""
-if [ -f api.rc ]; then
-    maindir="."
-elif [ -f ../api.rc ]; then
-    maindir=".."
-elif [ -f ../../api.rc ]; then
-    maindir="../.."
-elif [ -f ../../../api.rc ]; then
-    maindir="../../.."
+#!/bin/bash
+# ^ bash since requires source
+source $HOME/.config/linux-preinstall/globals.rc
+if [ $? -ne 0 ]; then
+    echo "ERROR: 'source $HOME/.config/linux-preinstall/globals.rc' failed."
+    echo "You must run linux-preinstall/setup.sh first."
+    exit 1
 fi
-if [ ! -z "$maindir" ]; then
-    source $maindir/api.rc
-    postinstall="$maindir/$_POSTINSTALL_NAME"
-else
-    echo "WARNING: api.rc cannot be found in `pwd` nor up to ../../.."
-    echo "  tips will be placed in `pwd`/$postinstall instead."
-fi
-touch $postinstall
-if [ ! -d ~/.config/linux-preinstall ]; then
-    mkdir -p ~/.config/linux-preinstall
+source $LINUX_PREINSTALL/api.rc
+if [ $? -ne 0 ]; then
+    echo "ERROR: 'source $LINUX_PREINSTALL/api.rc' failed."
+    echo "You must run linux-preinstall/setup.sh first."
+    exit 1
 fi
 
+
+
+touch $POSTINSTALL
+# ^ from api.rc
 
 if [ -z "$plugin_name" ]; then
     plugin_name="$1"
@@ -32,15 +27,16 @@ if [ -z "$plugin_name" ]; then
     echo "Attemping to list packages (this may take a while)..."
     failed=true
 else
-    yum install geany-plugins-$plugin_name || failed=true
+    $INSTALL_CMD geany-plugin-$plugin_name || failed=true
     if [ "$failed" = "@true" ]; then
-	echo "geany-plugins-* is missing from the repo, you are not connected,"
-	echo "you did not run this script as root,"
-	echo "or the plugin $plugin_name doesn't exist."
+        echo "geany-plugin-* is missing from the repo, you are not connected,"
+        echo "you did not run this script as root,"
+        echo "or the plugin $plugin_name doesn't exist."
     fi
 fi
 if [ "$failed" = "@true" ]; then
-    dnf list available geany-plugins-\*
+    # dnf list available geany-plugins-\*
+    $PKG_SEARCH_CMD geany-plugin
     echo
     echo "You must specify one of the plugins listed above for this to work"
     echo "(excluding the geany-plugins- part)."
@@ -49,7 +45,7 @@ fi
 done_flag_path=~/.config/linux-preinstall/flag_done_install-geany-plugin-postinstall
 
 if [ ! -f "$done_flag_path" ]; then
-    cat >> $postinstall <<END
+    cat >> $POSTINSTALL <<END
 
 
 ## install-geany-plugin.sh $plugin_name
@@ -65,7 +61,7 @@ if [ ! -f "$done_flag_path" ]; then
 Don't forget to enable the $plugin_name plugin in Geany:
 Tools, Plugin Manager, then check the $plugin_name box.
 END
-    tail -n 14 $postinstall
+    tail -n 14 $POSTINSTALL
     touch "$done_flag_path"
 else
     echo "finished installing geany-plugins-$plugin_name"

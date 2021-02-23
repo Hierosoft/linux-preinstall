@@ -118,33 +118,39 @@ else
   echo "$audible_hostname" > "$audible_hostname_path"
 fi
 
-install_bin="dnf install -y"
-remove_bin="dnf remove -y"
-updates_cmd="dnf upgrade -y"
-list_installed_cmd="dnf list installed"
-p3tk="python3-tkinter"
+INSTALL_CMD="dnf install -y"
+REMOVE_CMD="dnf remove -y"
+UPGRADE_CMD="dnf upgrade -y"
+REFRESH_CMD="dnf --refresh"
+LIST_INSTALLED_CMD="dnf list installed"
+P3TK_PKG="python3-tkinter"
 if [ -f "`command -v pacman`" ]; then
-  install_bin="pacman -Syyu --noconfirm"
-  remove_bin="pacman -R --noconfirm"
-  updates_cmd="pacman -Syyu --noconfirm"
-  list_installed_cmd="pacman -Q"  # Qe lists packages explicitly installed (see pacman -Q --help)
-  p3tk="tk"  # python-tkinter is an integral part of python in arch
+  INSTALL_CMD="pacman -Syyu --noconfirm"
+  REMOVE_CMD="pacman -R --noconfirm"
+  UPGRADE_CMD="pacman -Syyu --noconfirm"
+  #REFRESH_CMD="pacman -Scc"
+  REFRESH_CMD="#nothing do refresh since using pacman (pacman -Scc clears cache but that's rather brutal)...  # "
+  LIST_INSTALLED_CMD="pacman -Q"  # Qe lists packages explicitly installed (see pacman -Q --help)
+  P3TK_PKG="tk"  # python-tkinter is an integral part of python in arch
 fi
 if [ -f "`command -v apt`" ]; then
-  install_bin="apt install -y"
-  remove_bin="apt remove -y"
-  updates_cmd="apt upgrade"
-  list_installed_cmd="apt list --installed"
-  p3tk="python3-tk"
+  INSTALL_CMD="apt install -y"
+  REMOVE_CMD="apt remove -y"
+  UPGRADE_CMD="apt upgrade"
+  REFRESH_CMD="apt update"
+  LIST_INSTALLED_CMD="apt list --installed"
+  P3TK_PKG="python3-tk"
   # and update cache immediately since using a dependency resolver with non-smart cache
   apt update
 fi
+# ^ pasted into https://github.com/linux-preinstall/api.rc
+# ^ should match policy-daily.sh
 echo
-echo "[ $me ] using package manager command: $install_bin"
+echo "[ $me ] using package manager command: $INSTALL_CMD"
 echo
 echo
 if [ ! -f "`command -v wget`" ]; then
-  $install_bin wget
+  $INSTALL_CMD wget
 fi
 
 #if [ ! -f "/usr/lib64/flash-plugin/libflashplayer.so" ]; then
@@ -231,15 +237,15 @@ if [ "$updates_enable" = "true" ]; then
     echo "$date_s" > "$update_date_path"
 
     #first update flatpak and packages its post-install scriptlet uses, to avoid permanent freeze on Fedora 27 (see <https://bugzilla.redhat.com/show_bug.cgi?id=1599332>)
-    $updates_cmd flatpak
-    $updates_cmd --refresh
-    $updates_cmd systemd
-    $updates_cmd --refresh
-    $updates_cmd dbus
-    $updates_cmd --refresh
-    $updates_cmd dbus flatpak systemd
+    $UPGRADE_CMD flatpak
+    $UPGRADE_CMD --refresh
+    $UPGRADE_CMD systemd
+    $UPGRADE_CMD --refresh
+    $UPGRADE_CMD dbus
+    $UPGRADE_CMD --refresh
+    $UPGRADE_CMD dbus flatpak systemd
 
-    $updates_cmd
+    $UPGRADE_CMD
     #if [ "`date '+%u'`" -gt "6" ]; then  # for %u (1-7), 1 is Monday (see also man date)
     if [ "`date '+%u'`" -lt "2" ]; then  # for %u (1-7), 1 is Monday (see also man date)
       if [ -f "command -v espeak" ]; then
@@ -305,77 +311,77 @@ echo "$msg"
 echo "$msg" >> "$LOCK_PATH"
 if [ ! -f "`command -v libreoffice`" ]; then
   # there is only one binary for libreoffice (run writer like libreoffice --writer)
-  $install_bin libreoffice
+  $INSTALL_CMD libreoffice
 fi
 if [ ! -f "`command -v blender`" ]; then
-  $install_bin blender
+  $INSTALL_CMD blender
 fi
 
-installed_package_tkinter=`$list_installed_cmd | grep $p3tk`
+installed_package_tkinter=`$LIST_INSTALLED_CMD | grep $P3TK_PKG`
 # TODO: find a way to check for tkinter, such as emitting a trivial python script
 # NOTE: python2-tkinter is a dep of something in this list already and was installed before adding this section
 if [ -z "$installed_package_tkinter" ]; then
-  $install_bin $p3tk
+  $INSTALL_CMD $P3TK_PKG
 fi
 if [ ! -f "`command -v FreeCAD`" ]; then
   #command is FreeCAD, but package is all lowercase
-  $install_bin freecad
+  $INSTALL_CMD freecad
 fi
 if [ ! -f "`command -v audacity`" ]; then
-  $install_bin audacity
+  $INSTALL_CMD audacity
 fi
 if [ ! -f "`command -v gedit`" ]; then
-  $install_bin gedit
+  $INSTALL_CMD gedit
 fi
 if [ ! -f "`command -v stage`" ]; then
-  $install_bin stage
+  $INSTALL_CMD stage
 fi
 if [ ! -f "`command -v gimp`" ]; then
-  $install_bin gimp
+  $INSTALL_CMD gimp
 fi
 if [ ! -f "`command -v lmms`" ]; then
-  $install_bin lmms
+  $INSTALL_CMD lmms
 fi
 if [ ! -f "`command -v geany`" ]; then
-  $install_bin geany
+  $INSTALL_CMD geany
 fi
 if [ ! -f "`command -v python2`" ]; then
-  $install_bin python2
+  $INSTALL_CMD python2
 fi
 if [ ! -f "`command -v python3`" ]; then
-  $install_bin python3
+  $INSTALL_CMD python3
 fi
 if [ ! -f "`command -v smbclient`" ]; then
-  $install_bin samba
+  $INSTALL_CMD samba
   # TODO: on CentOS, install via pkg install samba-smbclient
 fi
 if [ ! -f "`command -v xdotool`" ]; then
-  $install_bin xdotool
+  $INSTALL_CMD xdotool
   # TODO: on CentOS, install via pkg install samba-smbclient
 fi
 
 if [ ! -f "`command -v java`" ]; then
 # see https://fedoraproject.org/wiki/NetBeans
-  $install_bin java-1.8.0-openjdk
+  $INSTALL_CMD java-1.8.0-openjdk
   #cd /tmp
   # official installer is a GUI installer and says no jdk found after installing java-1.8.0-openjdk even if path is specified
   #wget http://download.netbeans.org/netbeans/8.2/final/bundles/netbeans-8.2-javase-linux.sh
   # sh netbeans-8.2-javase-linux.sh
 fi
 if [ ! -d "/usr/lib/jvm/java-openjdk" ]; then
-  $install_bin java-1.8.0-openjdk-devel
+  $INSTALL_CMD java-1.8.0-openjdk-devel
 fi
 #TODO: calligra package AND binary naming is DIFFERENT on Ubuntu Xenial: see below
 # if [ ! -f "`command -v calligrastage`" ]; then
-  # $install_bin calligra
+  # $INSTALL_CMD calligra
 # fi
 
 #if [ ! -f "`command -v minetest`" ]; then
-#  $install_bin minetest
+#  $INSTALL_CMD minetest
 #fi
 
 if [ ! -f "`command -v librecad`" ]; then
-  $install_bin librecad
+  $INSTALL_CMD librecad
 fi
 
 try_file=$LU_HOME/Desktop/setup-integratoredu-policy.sh
@@ -435,8 +441,8 @@ SHORTCUT_NAME="netbeans-8.2.desktop"
 if [ ! -f "`command -v netbeans`" ]; then
   echo "installing netbeans (this may take a while)..." >> "$LOCK_PATH"
   # must already have:
-  # $install_bin java-1.8.0-openjdk
-  # $install_bin java-1.8.0-openjdk-devel
+  # $INSTALL_CMD java-1.8.0-openjdk
+  # $INSTALL_CMD java-1.8.0-openjdk-devel
 
   # SHORTCUT HIDES--see:
   #   /root/Desktop/netbeans-8.2.desktop
@@ -482,7 +488,7 @@ if [ ! -f "`command -v netbeans`" ]; then
   # version below doesn't work with jdk-1.8.0-openjdk-devel (see note at bottom)
   #echo "find the link to the latest incubator build on https://builds.apache.org/job/incubator-netbeans-linux/"
   # if [ -f "`command -v java`" ]; then
-    # $remove_bin netbeans
+    # $REMOVE_CMD netbeans
   # fi
   # install devel as per https://ask.fedoraproject.org/en/question/59236/netbeans-8-wont-install-on-fedora-21/
   # wget https://builds.apache.org/job/incubator-netbeans-linux/lastSuccessfulBuild/artifact/nbbuild/NetBeans-dev-incubator-netbeans-linux-337-on-20180130-basic.zip
@@ -555,11 +561,11 @@ echo "$msg"
 echo "$msg" >> "$LOCK_PATH"
 
 if [ ! -f "`command -v clamscan`" ]; then
-  $install_bin clamav
+  $INSTALL_CMD clamav
 fi
 
 if [ ! -f "`command -v freshclam`" ]; then
-  $install_bin clamav-update
+  $INSTALL_CMD clamav-update
 fi
 
 if [ ! -f "`command -v zbstudio`" ]; then
@@ -730,14 +736,14 @@ if [ -f "$git_minetest_path" ]; then
 fi
 if [ -f "`command -v dnf`" ]; then
   # switch to git version of minetest:
-  installed_package_minetest=`$list_installed_cmd | grep minetest | grep -v minetestserver`
+  installed_package_minetest=`$LIST_INSTALLED_CMD | grep minetest | grep -v minetestserver`
   if [ ! -z "$installed_package_minetest" ]; then
-    $remove_bin minetest
+    $REMOVE_CMD minetest
   fi
-  installed_package_minetestserver=`$list_installed_cmd | grep minetestserver`
+  installed_package_minetestserver=`$LIST_INSTALLED_CMD | grep minetestserver`
   build_what="-DBUILD_SERVER=off -DBUILD_CLIENT=on"
   if [ ! -z "$installed_package_minetestserver" ]; then
-    $remove_bin minetestserver
+    $REMOVE_CMD minetestserver
     build_what="-DBUILD_SERVER=on -DBUILD_CLIENT=on"
   fi
   if [ -f "$git_minetest_path" ]; then
@@ -750,10 +756,10 @@ if [ -f "`command -v dnf`" ]; then
   fi
   if [ ! -f "`command -v minetest`" ]; then
     # packaged version is gone, and compiled version was not found, so compile:
-    $install_bin git
+    $INSTALL_CMD git
 
     #region based on one-line install
-    $install_bin doxygen luajit-devel jsoncpp-devel freetype-devel postgresql-devel spatialindex-devel gcc-c++ irrlicht-devel gettext freetype cmake bzip2-devel libpng libjpeg-turbo libXxf86vm mesa-libGLU libsqlite3x-devel libogg-devel libvorbis-devel openal-devel curl-devel luajit-devel lua-devel leveldb-devel ncurses-devel redis hiredis-devel gmp-devel
+    $INSTALL_CMD doxygen luajit-devel jsoncpp-devel freetype-devel postgresql-devel spatialindex-devel gcc-c++ irrlicht-devel gettext freetype cmake bzip2-devel libpng libjpeg-turbo libXxf86vm mesa-libGLU libsqlite3x-devel libogg-devel libvorbis-devel openal-devel curl-devel luajit-devel lua-devel leveldb-devel ncurses-devel redis hiredis-devel gmp-devel
     cd
     #git clone https://github.com/minetest/minetest.git
     #cd minetest/games
@@ -814,14 +820,14 @@ if [ -f "`command -v dnf`" ]; then
   fi
 elif [ -f "`command -v apt`" ]; then
   # switch to git version of minetest:
-  installed_package_minetest=`$list_installed_cmd | grep minetest | grep -v minetestserver`
+  installed_package_minetest=`$LIST_INSTALLED_CMD | grep minetest | grep -v minetestserver`
   if [ ! -z "$installed_package_minetest" ]; then
-    $remove_bin minetest
+    $REMOVE_CMD minetest
   fi
-  installed_package_minetestserver=`$list_installed_cmd | grep minetestserver`
+  installed_package_minetestserver=`$LIST_INSTALLED_CMD | grep minetestserver`
   build_what="-DBUILD_SERVER=off -DBUILD_CLIENT=on"
   if [ ! -z "$installed_package_minetestserver" ]; then
-    $remove_bin minetestserver
+    $REMOVE_CMD minetestserver
     build_what="-DBUILD_SERVER=on -DBUILD_CLIENT=on"
   fi
   if [ -f "$git_minetest_path" ]; then
@@ -834,9 +840,9 @@ elif [ -f "`command -v apt`" ]; then
   fi
 
   if [ ! -f "`command -v minetest`" ]; then
-    #echo "WARNING: minetest compiling is not scripted for package manager '$install_bin'"
-    #$install_bin git
-    $install_bin build-essential cmake git libirrlicht-dev libbz2-dev libgettextpo-dev libfreetype6-dev libpng12-dev libjpeg8-dev libxxf86vm-dev libgl1-mesa-dev libsqlite3-dev libogg-dev libvorbis-dev libopenal-dev libhiredis-dev libcurl3-dev
+    #echo "WARNING: minetest compiling is not scripted for package manager '$INSTALL_CMD'"
+    #$INSTALL_CMD git
+    $INSTALL_CMD build-essential cmake git libirrlicht-dev libbz2-dev libgettextpo-dev libfreetype6-dev libpng12-dev libjpeg8-dev libxxf86vm-dev libgl1-mesa-dev libsqlite3-dev libogg-dev libvorbis-dev libopenal-dev libhiredis-dev libcurl3-dev
     cd ~/Downloads
     if [ -d minetest-d6f2a1c4 ]; then
       #I'm not sure why this was here...
@@ -877,7 +883,7 @@ elif [ -f "`command -v apt`" ]; then
     sudo make install
   fi
 else
-    echo "WARNING: minetest compiling is not scripted for package manager '$install_bin'"
+    echo "WARNING: minetest compiling is not scripted for package manager '$INSTALL_CMD'"
 fi
 
 
@@ -901,7 +907,7 @@ if [ -f "`command -v dnf`" ]; then
   fi
   cd ~/Downloads
   rpm_name=rpmfusion-free-release-$VERSION_ID.noarch.rpm
-  installed_package_rpmfusion=`$list_installed_cmd | grep rpmfusion-free-release`
+  installed_package_rpmfusion=`$LIST_INSTALLED_CMD | grep rpmfusion-free-release`
   if [ -z "$installed_package_rpmfusion" ]; then
     if [ ! -f "$rpm_name" ]; then
       wget https://download1.rpmfusion.org/free/fedora/$rpm_name
@@ -928,8 +934,8 @@ fi
 
 if [ "$exfat_enable" = "false" ]; then
   # NOTE: requires rpmfusion repo above IF using rpm-based distro
-  $install_bin fuse-exfat
-  $install_bin exfat-utils
+  $INSTALL_CMD fuse-exfat
+  $INSTALL_CMD exfat-utils
   exfat_enable="true"
 fi
 
@@ -937,7 +943,7 @@ fi
 
 if [ ! -f "`command -v vlc`" ]; then
   # NOTE: requires rpmfusion repo above
-  $install_bin vlc
+  $INSTALL_CMD vlc
 fi
 
 # on Fedora, package is chromium, but command is chromium-browser:
@@ -952,11 +958,11 @@ this_pkg="chromium-libs-media-freeworld"
 #else
 #    echo "Installing $this_pkg..."
 #fi
-installed_pkg_clmf=`$list_installed_cmd | grep $this_pkg`
+installed_pkg_clmf=`$LIST_INSTALLED_CMD | grep $this_pkg`
 if [ -z "$installed_pkg_clmf" ]; then
 # if [ ! -f "/usr/lib64/chromium-browser/libmedia.so.freeworld" ]; then
     echo "Installing $this_pkg (MP4 support for Chromium)..."
-    $install_bin $this_pkg
+    $INSTALL_CMD $this_pkg
 fi
 
 

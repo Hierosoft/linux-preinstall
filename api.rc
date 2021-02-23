@@ -1,2 +1,126 @@
 #!/bin/sh
+echo "api.rc is running in `basename $0`"
+if [ "`basename $0`" = "api.rc" ]; then
+    echo
+    echo "WARNING: api.rc is not designed to run directly."
+    echo "To get the variables it provides, run it as:"
+    echo "  source \$HOME/.config/linux-preinstall/globals.rc"
+    echo "  # ^ If the file is missing, run linux-preinstall/setup.sh first."
+    echo "  source \$LINUX_PREINSTALL/api.rc"
+    echo
+fi
+L_P_CONFIG_DIR=$HOME/.config/linux-preinstall
+source "$L_P_CONFIG_DIR/globals.rc"
+if [ $? -ne 0 ]; then
+    echo
+    echo "ERROR: 'source $L_P_CONFIG_DIR/globals.rc' failed."
+    echo "You must run linux-preinstall/setup.sh first."
+    echo
+    exit 1
+fi
 _POSTINSTALL_NAME="PostInstallInstructions.md"
+POSTINSTALL="$HOME/Desktop/$_POSTINSTALL_NAME"
+if [ ! -d "$HOME/Desktop" ]; then
+    mkdir -p "$HOME/Desktop"
+fi
+if [ ! -d $L_P_CONFIG_DIR ]; then
+    mkdir -p $L_P_CONFIG_DIR
+fi
+if [ -z "$INSTALL_BIN" ]; then
+    if [ -f "`command -v dnf`" ]; then
+        INSTALL_BIN=dnf
+    elif [ -f "`command -v yum`" ]; then
+        INSTALL_BIN=yum
+    elif [ -f "`command -v apt`" ]; then
+        INSTALL_BIN=apt
+    elif [ -f "`command -v apt-get`" ]; then
+        INSTALL_BIN=apt-get
+    elif [ -f "`command -v pacman`" ]; then
+        INSTALL_BIN=pacman
+    fi
+    echo "* install command is $INSTALL_BIN. You can override this in $L_P_CONFIG_DIR/globals.rc"
+fi
+if [ -z "$PKG_TYPE" ]; then
+    if [ "$INSTALL_BIN" = "dnf" ]; then
+        PKG_TYPE=rpm
+    elif [ "$INSTALL_BIN" = "yum" ]; then
+        PKG_TYPE=rpm
+    elif [ "$INSTALL_BIN" = "apt" ]; then
+        PKG_TYPE=deb
+    elif [ "$INSTALL_BIN" = "apt-get" ]; then
+        PKG_TYPE=deb
+    elif [ "$INSTALL_BIN" = "pacman" ]; then
+        PKG_TYPE=pkg
+    else
+        echo "The PKG_TYPE for $INSTALL_BIN is not yet implemented."
+    fi
+fi
+
+
+if [ "@$PKG_TYPE" = "@rpm" ]; then
+    P3TK_PKG="python3-tkinter"
+    GTK3_DEV_PKG="gtk3-devel"
+    GLFW_DEV_PKG="glfw-devel"
+    # glfw-devel is glfw-devel-3.3.2 as of Fedora 31 2020-04-23
+elif [ "@$PKG_TYPE" = "@deb" ]; then
+    P3TK_PKG="python3-tk"
+    GLFW_DEV_PKG="libglfw3-dev"
+    GTK3_DEV_PKG="libgtk-3-dev"
+elif [ "@$PKG_TYPE" = "@pkg" ]; then
+    P3TK_PKG="tk"  # python-tkinter is an integral part of python in arch
+    echo "WARNING: The GLFW_DEV_PKG name is unknown for $PKG_TYPE."
+    echo "WARNING: The GTK3_DEV_PKG name is unknown for $PKG_TYPE."
+else
+    echo "The PKG_TYPE $PKG_TYPE is not yet implemented for $0."
+    echo " So that this script can determine package names,"
+    echo " PKG_TYPE should be set to deb or rpm even if you are not"
+    echo " using a repo."
+fi
+
+INSTALL_CMD="dnf install -y"
+REMOVE_CMD="dnf remove -y"
+UPGRADE_CMD="dnf -y upgrade"
+REFRESH_CMD="dnf --refresh"
+PKG_SEARCH_CMD="dnf search"
+LIST_INSTALLED_CMD="dnf list installed"
+if [ -f "`command -v pacman`" ]; then
+    INSTALL_CMD="pacman -Syyu --noconfirm"
+    REMOVE_CMD="pacman -R --noconfirm"
+    UPGRADE_CMD="pacman -Syyu --noconfirm"
+    #REFRESH_CMD="pacman -Scc"
+    REFRESH_CMD="#nothing do refresh since using pacman (pacman -Scc clears cache but that's rather brutal)...  # "
+    LIST_INSTALLED_CMD="pacman -Q"  # Qe lists packages explicitly installed (see pacman -Q --help)
+    PKG_SEARCH_CMD="pacman -Ss"
+    echo "WARNING: GTK3_DEV_PKG is unknown for $INSTALL_CMD"
+elif [ -f "`command -v apt`" ]; then
+    INSTALL_CMD="apt install -y"
+    REMOVE_CMD="apt remove -y"
+    UPGRADE_CMD="apt upgrade"
+    REFRESH_CMD="apt update"
+    LIST_INSTALLED_CMD="apt list --installed"
+    PKG_SEARCH_CMD="apt search"
+    # and update cache immediately since using a dependency resolver with non-smart cache
+    apt update
+else
+    echo "WARNING: P3TK_PKG (package name for python3 tk) is unknown for your package manager."
+fi
+
+
+
+distro_install(){
+    INSTALL_FAILED=""
+    for pkg_name in "$@"
+    do
+        $INSTALL_CMD $pkg_name
+        if [ $? -ne 0 ]; then
+            INSTALL_FAILED="$INSTALL_FAILED $pkg_name"
+        fi
+    done
+    # $REFRESH_CMD
+    # ^ there is no need to refresh. It is already done above when detected if present.
+    if [ ! -z "$INSTALL_FAILED" ]; then
+        echo "* install failed for: INSTALL_FAILED"
+        return 1
+    fi
+    return 0
+}

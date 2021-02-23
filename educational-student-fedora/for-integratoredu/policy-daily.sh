@@ -57,39 +57,41 @@ if [ -f "$lh_path" ]; then
 fi
 echo "using home path $LU_HOME"
 
-install_bin="dnf install -y"
-remove_bin="dnf remove -y"
-updates_cmd="dnf -y upgrade"
-refresh_cmd="dnf --refresh"
-list_installed_cmd="dnf list installed"
-p3tk="python3-tkinter"
+INSTALL_CMD="dnf install -y"
+REMOVE_CMD="dnf remove -y"
+UPGRADE_CMD="dnf upgrade -y"
+REFRESH_CMD="dnf --refresh"
+LIST_INSTALLED_CMD="dnf list installed"
+P3TK_PKG="python3-tkinter"
 if [ -f "`command -v pacman`" ]; then
-  install_bin="pacman -Syyu --noconfirm"
-  remove_bin="pacman -R --noconfirm"
-  updates_cmd="pacman -Syyu --noconfirm"
-  #refresh_cmd="pacman -Scc"
-  refresh_cmd="#nothing do refresh since using pacman (pacman -Scc clears cache but that's rather brutal)...  # "
-  list_installed_cmd="pacman -Q"  # Qe lists packages explicitly installed (see pacman -Q --help)
-  p3tk="tk"  # python-tkinter is an integral part of python in arch
+  INSTALL_CMD="pacman -Syyu --noconfirm"
+  REMOVE_CMD="pacman -R --noconfirm"
+  UPGRADE_CMD="pacman -Syyu --noconfirm"
+  #REFRESH_CMD="pacman -Scc"
+  REFRESH_CMD="#nothing do refresh since using pacman (pacman -Scc clears cache but that's rather brutal)...  # "
+  LIST_INSTALLED_CMD="pacman -Q"  # Qe lists packages explicitly installed (see pacman -Q --help)
+  P3TK_PKG="tk"  # python-tkinter is an integral part of python in arch
 fi
 if [ -f "`command -v apt`" ]; then
-  install_bin="apt install -y"
-  remove_bin="apt remove -y"
-  updates_cmd="apt upgrade"
-  refresh_cmd="apt update"
-  list_installed_cmd="apt list --installed"
-  p3tk="python3-tk"
+  INSTALL_CMD="apt install -y"
+  REMOVE_CMD="apt remove -y"
+  UPGRADE_CMD="apt upgrade"
+  REFRESH_CMD="apt update"
+  LIST_INSTALLED_CMD="apt list --installed"
+  P3TK_PKG="python3-tk"
   # and update cache immediately since using a dependency resolver with non-smart cache
   apt update
 fi
+# ^ pasted into https://github.com/linux-preinstall/api.rc
+# ^ should match policy-hourly.sh
 echo
-echo "[ $me ] using package manager command: $install_bin"
+echo "[ $me ] using package manager command: $INSTALL_CMD"
 echo
 echo
 
 
 if [ ! -f "`command -v wget`" ]; then
-  $install_bin wget
+  $INSTALL_CMD wget
 fi
 
 cd /tmp
@@ -163,23 +165,23 @@ fi
 
 # only do full system update if before 7am or after 5pm
 if [ "`date '+%-H'`" -lt 7 ]; then
-  $updates_cmd
+  $UPGRADE_CMD
 else
   if [ "`date '+%-H'`" -gt 17 ]; then
-    $updates_cmd
+    $UPGRADE_CMD
   fi
 fi
 echo "used $url_suffix"
 echo "updating OS (daily runs after computer is up for 5 mins between 3am-10pm)..."
-$updates_cmd flatpak
-$updates_cmd --refresh
-$updates_cmd systemd
-$updates_cmd --refresh
-$updates_cmd dbus
-$updates_cmd --refresh
-$updates_cmd dbus flatpak systemd
+$UPGRADE_CMD flatpak
+$UPGRADE_CMD --refresh
+$UPGRADE_CMD systemd
+$UPGRADE_CMD --refresh
+$UPGRADE_CMD dbus
+$UPGRADE_CMD --refresh
+$UPGRADE_CMD dbus flatpak systemd
 
-$updates_cmd
+$UPGRADE_CMD
 
 echo "finished ($me)"
 # exit

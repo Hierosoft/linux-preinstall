@@ -1,6 +1,18 @@
 #!/bin/sh
-#sudo apt-get update
-sudo apt-get install vsftpd
+source $HOME/.config/linux-preinstall/globals.rc
+if [ $? -ne 0 ]; then
+    echo "ERROR: 'source $HOME/.config/linux-preinstall/globals.rc' failed."
+    echo "You must run linux-preinstall/setup.sh first."
+    exit 1
+fi
+source $LINUX_PREINSTALL/api.rc
+if [ $? -ne 0 ]; then
+    echo "ERROR: 'source $LINUX_PREINSTALL/api.rc' failed."
+    echo "You must run linux-preinstall/setup.sh first."
+    exit 1
+fi
+distro_install \
+    vsftpd
 sudo useradd ftpuser --home /home/ftpuser
 sudo usermod --home /var/www/html ftpuser
 sudo chgrp -R www-data /var/www/html
@@ -15,7 +27,12 @@ sudo chmod -R g+w /var/www/html
 #Generated cert as per (used passphrase in plist): https://help.ubuntu.com/lts/serverguide/certificates-and-security.html
 #below is modified version of https://community.rackspace.com/products/f/25/t/172
 sudo su -
-mv /etc/vsftpd.conf /etc/vsftpd.conf.2nd
+if [ ! -f /etc/vsftpd.conf.1st ]; then
+    mv /etc/vsftpd.conf /etc/vsftpd.conf.1st
+else
+    mv /etc/vsftpd.conf /etc/vsftpd.conf.bak
+fi
+
 echo "" > /etc/vsftpd.conf
 echo "anonymous_enable=NO" >> /etc/vsftpd.conf
 echo "local_enable=YES" >> /etc/vsftpd.conf

@@ -30,6 +30,16 @@ except `*-nonroot.sh` scripts must run as `root` (or with `sudo bash`):
 * nonroot scripts (run as regular user without sudo, though some of the
   scripts call sudo but change settings for the current user).
 
+Folders named "unused" are not recommended, and there may be a better
+option. For example, VirtualBox is not recommended, and qemu install
+scripts are provided instead.
+
+Script names:
+- If the name includes .debian.*, then it is known to work on Debian and may work on Ubuntu.
+- If the name includes .ubuntu.*, then it is known to work on Ubuntu and probably will not work on Debian.
+- If the name includes .deb.*, then it may work on both Debian and Ubuntu.
+- If the name includes .fedora.*, then it will work on Fedora but may not work on other rpm distros.
+
 ### Modular Features
 #### install_any.py
 You can use utilities/install_any.py to install deb packages!

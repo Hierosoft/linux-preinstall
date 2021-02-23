@@ -2,6 +2,15 @@
 
 # see also https://github.com/nextcloud/server/issues/11638#issuecomment-483868535
 
+sudo systemctl status nginx
+code=$?
+if [ $code -ne 0 ]; then
+    echo
+    echo "The settings will not be attempted since systemctl status nginx returned with an error ($code)."
+    echo
+    exit 1
+fi
+
 if [ -z "$1" ]; then
     echo
     echo "You must specify by a PHP version (such as 7.4)"

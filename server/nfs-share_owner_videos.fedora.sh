@@ -1,7 +1,22 @@
 #!/bin/sh
 # See [NFS : Configure NFS Server](https://www.server-world.info/en/note?os=Fedora_31&p=nfs&f=1)
 # and [5.4.3. DO NOT USE THE NO_ROOT_SQUASH OPTION](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/4/html/security_guide/s2-server-nfs-noroot)
-dnf install -y nfs-utils
+
+source $HOME/.config/linux-preinstall/globals.rc
+if [ $? -ne 0 ]; then
+    echo "ERROR: 'source $HOME/.config/linux-preinstall/globals.rc' failed."
+    echo "You must run linux-preinstall/setup.sh first."
+    exit 1
+fi
+source $LINUX_PREINSTALL/api.rc
+if [ $? -ne 0 ]; then
+    echo "ERROR: 'source $LINUX_PREINSTALL/api.rc' failed."
+    echo "You must run linux-preinstall/setup.sh first."
+    exit 1
+fi
+
+distro_install \
+    nfs-utils
 firewall-cmd --add-service=nfs --permanent
 firewall-cmd --add-service={nfs3,mountd,rpc-bind} --permanent
 firewall-cmd --reload

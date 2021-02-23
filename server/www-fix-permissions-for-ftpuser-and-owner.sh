@@ -1,3 +1,4 @@
+#!/bin/sh
 echo "This script assumes that www-data is a supplimentary group of the apache user, such as on Ubuntu"
 #sudo usermod -g www-data ftpuser
 sudo usermod -a -G www-data ftpuser

@@ -1,5 +1,5 @@
 #!/bin/sh
-customDie() {
+customExit() {
     echo
     echo "ERROR:"
     echo "$1"
@@ -7,11 +7,14 @@ customDie() {
     echo
     exit 1
 }
-if [ -z "$1" ]; then
-    echo "You must specify an existing nextcloud directory name such as nextcloud (or owncloud if you migrated from owncloud)."
-    exit 1
+if [ -z "$nextcloudDirName" ]; then
+    if [ -z "$1" ]; then
+        echo "You must specify an existing nextcloud directory name such as nextcloud (or owncloud if you migrated from owncloud)."
+        exit 1
+    else
+        nextcloudDirName="$1"
+    fi
 fi
-nextcloudDirName="$1"
 src=""
 if [ -d /var/www/$nextcloudDirName ]; then
     src="etc/systemd/system/nextcloudcron (in var www $nextcloudDirName).service"
@@ -42,13 +45,13 @@ END
 elif [ -d /var/www/nextcloud ]; then
     src="etc/systemd/system/nextcloudcron.service"
 else
-    customDie "You don't have nextcloud in /var/www/$nextcloudDirName nor /var/www/nextcloud"
+    customExit "You don't have nextcloud in /var/www/$nextcloudDirName nor /var/www/nextcloud"
 fi
 
-sudo cp "$src" /etc/systemd/system/nextcloudcron.service
-sudo cp "etc/systemd/system/nextcloudcron.timer" /etc/systemd/system/nextcloudcron.timer
-sudo systemctl start nextcloudcron.timer
-sudo systemctl enable nextcloudcron.timer
+cp "$src" /etc/systemd/system/nextcloudcron.service
+cp "etc/systemd/system/nextcloudcron.timer" /etc/systemd/system/nextcloudcron.timer
+systemctl start nextcloudcron.timer
+systemctl enable nextcloudcron.timer
 echo "Remember to set Nextcloud settings to 'Cron' (if set to AJAX,"
 echo "  Nextcloud would still manually run jobs during every page load)"
 # systemctl list-timers --all

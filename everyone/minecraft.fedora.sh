@@ -10,3 +10,4 @@ fi
 
 dnf in rpm-build wget bsdtar bash
 
+echo "Not Implemented Error: Installing Minecraft on Fedora."
