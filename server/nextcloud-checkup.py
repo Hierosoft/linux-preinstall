@@ -93,3 +93,7 @@ print("")
 for r,v in goods.items():
     if v is False:
         print("{}: {}".format(r, v))
+
+print("Some things may say they are missing in Debian when they are not. This may be fixed in a future version of this script.")
+print("Running php-set-version... and nextcloud-deps-more.sh should install all dependencies. Follow instructions they output for more information.")
+print("")

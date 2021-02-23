@@ -45,6 +45,10 @@ if [ "$requested_ver" != "$ver" ]; then
     fi
     for SITE in `ls -t /etc/nginx/sites-available`
     do
+        if [ ! -f "/etc/nginx/sites-available/$SITE" ]; then
+            # It must be a directory, so ignore it.
+            continue
+        fi
         #echo "* checking $SITE"
         ANY_OLD="`grep -F $ver-fpm /etc/nginx/sites-available/$SITE`"
         # ^ -F is literal string (same as fgrep)
@@ -82,6 +86,7 @@ echo "END"
 echo
 
 ver=$requested_ver
+
 if [ "@$CHANGE" = "@true" ]; then
     apt install -y php$ver-gd php$ver-json php$ver-mysql php$ver-curl php$ver-mbstring
     apt install -y php$ver-intl php-imagick php$ver-xml php$ver-zip
@@ -106,13 +111,17 @@ if [ "@$CHANGE" = "@true" ]; then
 
 
     echo "enabling php$ver..."
-    apt install php$ver-pgsql
+    apt install -y postgresql postgresql-contrib
+    apt install -y php$ver-pgsql
     # apt install php$ver-sqlite3
-    apt install php$ver-opcache
-    apt install php$ver-readline
-    apt install php$ver-memcached
+    apt install -y php$ver-opcache
+    apt install -y php$ver-readline
+    apt install -y memcached
+    apt install -y php$ver-memcached
+    echo "* running 'update-alternatives --set php /usr/bin/php$ver'..."
     update-alternatives --set php /usr/bin/php$ver
     # systemctl reload nginx
+    echo "* restarting nginx..."
     systemctl restart nginx
 fi
 if [ ! -z "$WARNING_SITES" ]; then
@@ -125,3 +134,6 @@ if [ ! -z "$WARNING_SITES" ]; then
     # ^ according to https://www.xspdf.com/resolution/58767959.html
     echo
 fi
+echo "For Nextcloud (packages such as acpu, redis, etc) also run:"
+echo "linux-preinstall/server/nextcloud-deps-more.sh $ver"
+echo "Then reboot!"
