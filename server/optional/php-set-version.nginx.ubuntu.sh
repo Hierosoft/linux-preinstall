@@ -14,6 +14,7 @@ fi
 if [ -z "$1" ]; then
     echo
     echo "You must specify by a PHP version (such as 7.4)"
+    echo "  - buster is only <=7.3 unless you add a ppa (ondrej/php is not working as of 2021-02-23)."
     echo
     echo
     exit 1
@@ -37,9 +38,10 @@ for ver in 5.0 5.1 5.2 5.3 5.3 5.4 5.5 5.6 5.7 5.8 5.9 6.0 6.1 6.2 6.3 6.4 6.5 6
 do
 if [ "$requested_ver" != "$ver" ]; then
     if [ "@$CHANGE" = "@true" ]; then
-        apt remove -y php$ver-gd php$ver-json php$ver-mysql php$ver-curl php$ver-mbstring
-        apt remove -y php$ver-intl php-imagick php$ver-xml php$ver-zip
-        apt remove -y php$ver-fpm
+        echo "* removing $ver..."
+        apt remove -y php$ver-gd php$ver-json php$ver-mysql php$ver-curl php$ver-mbstring >& /dev/null
+        apt remove -y php$ver-intl php-imagick php$ver-xml php$ver-zip >& /dev/null
+        apt remove -y php$ver-fpm >& /dev/null
     fi
     for SITE in `ls -t /etc/nginx/sites-available`
     do
