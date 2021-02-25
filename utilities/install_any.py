@@ -17,14 +17,14 @@ version_chars = digits + "."
 icons = {}
 icons["freecad"] = "org.freecadweb.FreeCAD"
 icons["ultimaker.cura"] = "cura"
-captions = {}
-captions["umlet"] = "UMLet Standalone"  # as opposed to a plugin/web ver
-captions["freecad"] = "FreeCAD"
-captions["flashprint"] = "FlashPrint"
-captions["argouml"] = "ArgoUML"
+casedNames = {}
+casedNames["umlet"] = "UMLet Standalone"  # as opposed to a plugin/web ver
+casedNames["freecad"] = "FreeCAD"
+casedNames["flashprint"] = "FlashPrint"
+casedNames["argouml"] = "ArgoUML"
 annotations = {}
-annotations[".deb"] = " (deb)"
-annotations[".appimage"] = " (AppImage)"
+annotations[".deb"] = "deb"
+annotations[".appimage"] = "AppImage"
 
 def usage():
     print("")
@@ -45,14 +45,23 @@ def usage():
     print("")
 
 shortcut_data_template = """[Desktop Entry]
-Name={name}
-Exec={x}
-Icon={icon}
+Name={Name}
+Exec={Exec}
+Icon={Icon}
 Terminal=false
 Type=Application
 """
 
+
+def toLUID(name):
+    return name.replace(" ", ".").lower()
+
+
 def get_annotation(s):
+    '''
+    Get the annotation which separates the software from a differently-
+    packaged copy.
+    '''
     bad_endings = [".sh", ".appimage", ".deb"]
     for ending in bad_endings:
         if s.lower().endswith(ending):
@@ -60,21 +69,7 @@ def get_annotation(s):
             if annotation is not None:
                 return annotation
     # print("  - {} is ok.".format(s))
-    return ""
-
-
-
-def without_ender(s, enable_annotations):
-    bad_endings = [".sh", ".appimage", ".deb"]
-    for ending in bad_endings:
-        if s.lower().endswith(ending):
-            if enable_annotations:
-                annotation = annotations.get(ending)
-                if annotation is not None:
-                    return s[:-len(ending)] + annotation
-            return s[:-len(ending)]
-    # print("  - {} is ok.".format(s))
-    return s
+    return None
 
 
 def split_any(s, delimiters):
@@ -87,11 +82,31 @@ def split_any(s, delimiters):
         ret = parts
     return ret
 
+def is_version(s, allowLettersAtEnd, allowMore=None):
+    '''
+    Sequential arguments:
+    allowLettersAtEnd -- If True, allow letters (but no more numbers
+                         after the first letter) at the end if starts
+                         with a number (such as for "2.79b").
 
-def is_version(s):
+    Keyword arguments:
+    allowMore -- entire words to allow (case-insensive) such as
+                 "master" or "dev"
+    '''
+    startsWithNum = False
+    if s[:1] in digits:
+        startsWithNum = True
+    if allowMore:
+        for allow in allowMore:
+            if s.lower() == allow.lower():
+                return True
     for c in s:
         if c not in version_chars:
-            return False
+            if (allowLettersAtEnd and startsWithNum):
+                if (not c.isalpha()):
+                    return False
+            else:
+                return False
     return True
 
 
@@ -110,22 +125,73 @@ def is_digits(s):
 
 class PackageInfo:
     '''
-    The name is the unique program name without the version. To get a
-    globally unique name, use get_versioned_name().
-    If the constructor parameter is a directory, the extension will not
-    be removed.
+    To get a globally unique name based on whether multiVersion or
+    multiPackage installs can coexist, use get_coexisting_id(luid,
+    multiPackage, multiVersion). See the constructor documentation for
+    more info.
     '''
     DELIMITERS = "_- "
+    X64S = ["x64", "64bit", "linux64", "win64", "windows64", "64-bit"]
+    X32S = ["x32", "686", "386", "i386", "i686", "32bit", "32-bit",
+            "windows32", "win32"]
+    # ^ NOTE: x86_64 is handled manually below since it contains a
+    #   delimiter
+    LINS = ["linux", "linux64", "linux32"]
+    WINS = ["windows", "windows64", "windows32", "win64", "win32"]
+    VPARTS = ['master', 'dev']
+    verbosity = 1
+
     def __init__(self, src_path, **kwargs):
-        removeExt = kwargs.get('removeExt')
-        if removeExt is None:
-            removeExt = not os.path.isdir(src_path)
-        self.metas = ['name', 'version', 'caption', 'platform', 'arch']
-        self.name = kwargs.get('name')
+        '''
+        Sequential arguments:
+        src_path -- If the constructor parameter is a directory, the
+        extension will not be removed.
+
+        Keyword arguments
+        arch -- 64bit or 32bit, to match the first element in the tuple
+                returned by Python's platform.architecture(). If no
+                delimited segment of the filename is in X64S or X32S,
+                the arch will be None after the contructor call.
+
+        platform -- uppercase platform such as "Linux" or "Windows"
+                    to match the output of Python's platform.system(). If no
+                    delimited segment of the filename is in LINS or WINS,
+                    the platform will be None after the contructor call.
+
+        casedName -- The casedName is the human-readable name without the
+                     version, possibly including uppercase and spaces
+                     (generated if None).
+
+        luid -- the name ("locally unique identifier" uniquely identifying
+                the program (no version); ready to be used as an icon file
+                name; used as a key for the icons dict or casedNames dict
+                default: toLUID(casedName)
+        '''
+        if PackageInfo.verbosity > 0:
+            print()
+            print("Creating PackageInfo...")
+        self.metas = ['casedName', 'luid', 'version',
+                      'caption', 'platform', 'arch']
+        self.casedName = kwargs.get('casedName')
+        self.luid = kwargs.get("luid")
+        # ^ decided by transforming casedName below if None
         self.version = kwargs.get('version')
         self.platform = None
         self.arch = None
         self.path = src_path
+        self.suffix = ""
+        is_dir = kwargs.get('is_dir')
+        if is_dir is None:
+            if not os.path.exists(src_path):
+                raise ValueError(
+                    "src_path must exist or you must specify the is_dir"
+                    " keyword argument for the PackageInfo constructor"
+                    " (only if running a test)."
+                )
+            is_dir = os.path.isdir(src_path)
+        removeExt = kwargs.get('removeExt')
+        if removeExt is None:
+            removeExt = not is_dir
         self.fname = os.path.split(self.path)[-1]
         fnamePartial = self.fname
         if removeExt:
@@ -134,122 +200,289 @@ class PackageInfo:
                 fnamePartial = fnamePartial[:-4]
         self.caption = kwargs.get('caption')
         parts = split_any(fnamePartial, PackageInfo.DELIMITERS)
-        version_flags = []
         part1 = None
         part2 = None
+        archI = -1
+        if PackageInfo.verbosity > 0:
+            print("* name without extension: \"{}\""
+                  "".format(fnamePartial))
+        platformI = -1
+        versionI = -1
         if len(parts) < 2:
-            moreParts = fnamePartial.split(".")
+            # re-split
+            tmpParts = fnamePartial.split(".")
+            parts, versionI = PackageInfo.unsplit_version(tmpParts)
             # print("Split {} into {} len {}"
-            #       "".format(fnamePartial, moreParts, len(moreParts)))
-            firstNumI = -1
-            lastNumI = -1
-            for i in range(len(moreParts)):
-                if moreParts[i][:1].lower() == "v":
-                    # Remove v such as "v1" to "1".
-                    if is_digits(moreParts[i][1:]):
-                        moreParts[i] = moreParts[i][1:]
-                tmpPart = moreParts[i]
-                if is_digits(tmpPart):
-                    if firstNumI < 0:
-                        firstNumI = i
-                    lastNumI = i
-            if firstNumI > -1:
-                if firstNumI == 0:
-                    parts = ["", ".".join(moreParts)]
-                else:
-                    firstNameI = 0
-                    lastNameI = firstNumI - 1
-                    parts = [
-                        ".".join(moreParts[firstNameI:lastNameI+1]),
-                        ".".join(moreParts[firstNumI:lastNumI+1]),
-                    ]
-                print("Changed parts to {} since no {}"
-                      "".format(parts, PackageInfo.DELIMITERS))
-            else:
-                print("There are no version numbers in {}"
-                      "".format(moreParts))
+            #       "".format(fnamePartial, tmpParts, len(tmpParts)))
         else:
+            oldDelimiters = []
+            cI = 0
             for i in range(len(parts)):
+                cI += len(parts[i])
+                if cI < len(fnamePartial):
+                    oldDelimiters.append(fnamePartial[cI])
+                    cI += 1  # add the delimiter length
+                else:
+                    oldDelimiters.append("")
                 if parts[i][:1].lower() == "v":
                     # Remove v such as "v1.0" to "1.0".
                     if is_digits(parts[i][1:]):
                         parts[i] = parts[i][1:]
-        for part in parts:
-            version_flags.append(False)
-        del part
+                partL = parts[i].lower()
+                if partL in PackageInfo.X64S:
+                    self.arch = "64bit"
+                    archI = i
+                elif partL in PackageInfo.X32S:
+                    self.arch = "32bit"
+                    archI = i
+                elif partL == "x86":
+                    if (len(parts) > i + 1) and (parts[i+1] == "64"):
+                        self.arch = "64bit"
+                    else:
+                        self.arch = "32bit"
+
+                if partL in PackageInfo.LINS:
+                    self.platform = "Linux"
+                    platformI = i
+                elif partL in PackageInfo.WINS:
+                    self.platform = "Windows"
+                    platformI = i
+            parts, versionI = PackageInfo.unsplit_version(
+                parts,
+                oldDelimiters=oldDelimiters
+            )
+            # ^ still do unsplit_version, because the version may be
+            #   multiple parts such as in ['Slic3r', '1.3.1', 'dev']
+            del i
         if len(parts) < 2:
             usage()
             raise ValueError("End of program name (any of '{}' or '.')"
                              " is not in {}"
                              "".format(PackageInfo.DELIMITERS,
                                        fnamePartial))
-            print("")
-            print("")
-
         if self.version is None:
-            if len(parts) > 1:
-                part1 = without_ender(parts[1], False)
-            if len(parts) > 2:
-                part2 = without_ender(parts[2], False)
-            if (part1 is not None) and (is_version(part1)):
-                self.version = part1
-                version_flags[1] = True
-                print("* using '" + self.version + "' as version")
-            elif (part2 is not None) and (is_version(part2)):
-                self.version = part2
-                version_flags[2] = True
-                print("* using '" + self.version + "' as version")
-            else:
-                print("* INFO: element [1] (\"{}\") is not a"
-                      " version in {}".format(part1, parts))
-        if self.name is None:
-            self.name = parts[0]
-            annotation = get_annotation(src_path)
-            if len(annotation) > 0:
-                print("* appending \"{}\" to caption"
-                      "".format(annotation))
-            self.name = without_ender(self.name, False)
-            if self.caption is None:
-                fnamePartial = parts[0].lower()
-                if len(parts) > 1:
-                    fnamePartial += " " + parts[1].lower()
-                fnamePartial = without_ender(fnamePartial, False)
-                self.caption = captions.get(fnamePartial)
-            if self.caption is None:
-                part0 = captions.get(self.name.lower())
-                if part0 is None:
-                    part0 = without_ender(self.name, False)
-                    if part0.lower() == part0:
-                        print("* The program {} is unknown and"
-                              " all lowercase, so the"
-                              " caption will be {} in title case"
-                              " (parts: {})."
-                              "".format(self.name, fnamePartial, parts))
-                        part0 = part0.title()
-                    # else Retain existing case (if any not lower).
-                if len(parts) > 1:
-                    part1 = without_ender(parts[1], False)
-                    if part1.lower() == part1:
-                        part1 = part1.title()
-                    # else Retain existing case (if any not lower).
-                    self.caption = part0 + " " + part1
-                    self.caption += annotation
-                else:
-                    self.caption = part0
-                    self.caption += annotation
-                    print("* WARNING: there is only 1 part, so the"
-                          " caption \"{}\" may not be correct for"
-                          " parts: {}".format(self.caption, parts))
-                # print("* generated caption: {}".format(self.caption))
-                # TODO: remove redundant code above--see below.
-            icon_name = self.name.lower()
-            if (len(parts) > 1) and (len(parts[1]) > 0) and (parts[1][0] == parts[1][0].upper()) and (not version_flags[1]):
-                self.name += " " + parts[1]
-            self.name = self.name.lower()
-            self.name = self.name.replace(" ", ".")
-            print("* using '" + self.name + "' as internal program name")
+            # INFO: Any "v" prefix was already removed and multi-part
+            #       versions were already un-split into one part
+            #       using unsplit_version (in re-split code or the
+            #       `else` case).
+            if versionI > -1:
+                self.version = parts[versionI]
+                if PackageInfo.verbosity > 0:
+                    print("* using '" + self.version + "' as version")
         else:
-            print("* using specified name: {}".format(self.name))
+            if PackageInfo.verbosity > 0:
+                print("* using specified '{}' as version"
+                      "".format(self.version))
+
+        nameEnder = -1
+        if versionI > -1:
+            nameEnder = versionI
+            if PackageInfo.verbosity > 0:
+                print("* ending name at version \"{}\""
+                      "".format(parts[versionI]))
+        if platformI > -1:
+            if nameEnder < 0 or (platformI < nameEnder):
+                nameEnder = platformI
+        if versionI > -1:
+            if (nameEnder < 0) or (versionI < nameEnder):
+                nameEnder = versionI
+
+        if self.casedName is None:
+            self.casedName = parts[0]
+            if nameEnder > 0:
+                self.casedName = " ".join(parts[:nameEnder])
+            else:
+                print("WARNING: there is no name ender such as arch,"
+                      " platform or version, so the first part will be"
+                      " the name: \"{}\"."
+                      "".format(self.casedName))
+            if PackageInfo.verbosity > 0:
+                print("* using '{}' as human-readable name"
+                      " before adding version".format(self.casedName))
+        else:
+            if PackageInfo.verbosity > 0:
+                print("* using specified name: {}".format(self.casedName))
+
+        annotation = get_annotation(src_path)
+        if annotation is not None:
+            self.suffix = "-" + annotation
+
+        if self.luid is None:
+            self.luid = toLUID(self.casedName)
+
+        if kwargs.get('casedName') is None:
+            # only use a build-in cased name if not specified manually
+            # (a casedName may have been generated above, but the
+            # following can't be completed until LUID is generated if
+            # not present)
+            tryCasedName = casedNames.get(self.luid)
+            if tryCasedName is None:
+                if self.casedName.lower() == self.casedName:
+                    if PackageInfo.verbosity > 1:
+                        print("* The program \"{}\" is not in the"
+                              " casedNames dict and is all lowercase,"
+                              " so the caption \"{}\" will become"
+                              " title case (parts: {})."
+                              "".format(self.casedName, fnamePartial,
+                                        parts))
+                    self.casedName = self.casedName.title()
+                # else use self.casedName since not all lower.
+            else:
+                self.casedName = tryCasedName
+                if PackageInfo.verbosity > 1:
+                    print("* detected '{}' so changed case to '{}'"
+                          "".format(self.luid, tryCasedName))
+
+        if PackageInfo.verbosity > 0:
+            print("* using \"{}\" as icon filename prefix (luid)"
+                  "".format(self.luid))
+        if self.caption is None:
+            if versionI > -1:
+                self.caption = self.casedName + " " + parts[versionI]
+            else:
+                print("WARNING: the caption will not have a version"
+                      " since no version was detected in {}"
+                      "".format(parts))
+                self.caption = self.casedName
+            if annotation is not None:
+                suffix = " (" + annotation + ")"
+                if PackageInfo.verbosity > 1:
+                    print("* appending \" ({})\" to caption..."
+                          "".format(annotation))
+                if not self.caption.endswith(suffix):
+                    self.caption += suffix
+                    print("  OK")
+                else:
+                    if PackageInfo.verbosity > 0:
+                        print("  - skipped: it already ends with \"{}\""
+                              "".format(suffix))
+
+    def unsplit_version(tmpParts, TwoOnly=False, oldDelimiters=None):
+        '''
+        Get a ([], int) tuple of (parts, versionI) where versionI is the
+        index of the version and parts is the same list except where the
+        version is in one element.
+
+        Example: ['blender','2','9','3'] becomes
+                 (['blender', '2.9.3'], 1)
+
+        Sequential arguments:
+        TwoOnly -- Combine everything before the version and after the
+                   start of the version.
+        oldDelimiters -- Add old delimiters back when un-splitting.
+        '''
+        fn = 'unsplit_version'
+        firstNumI = -1
+        lastNumI = -1
+        letteredI = -1
+        versionI = -1
+        parts = tmpParts
+        for i in range(len(tmpParts)):
+            if tmpParts[i][:1].lower() == "v":
+                # Remove v such as "v1" to "1".
+                if is_version(tmpParts[i][1:], True,
+                              PackageInfo.VPARTS):
+                    tmpParts[i] = tmpParts[i][1:]
+                    if PackageInfo.verbosity > 1:
+                        print("  * unsplit_version removed a 'v'")
+                else:
+                    if PackageInfo.verbosity > 1:
+                        print("  * unsplit_version kept a 'v'")
+            tmpPart = tmpParts[i]
+            if is_version(tmpPart, False, PackageInfo.VPARTS):
+                if PackageInfo.verbosity > 1:
+                    print("  * {} ({}) is a version part."
+                          "".format(tmpPart, i))
+                if firstNumI < 0:
+                    firstNumI = i
+                lastNumI = i
+            elif is_version(tmpPart, True, PackageInfo.VPARTS):
+                if PackageInfo.verbosity > 1:
+                    print("  * {} is a lettered version part."
+                          "".format(tmpPart))
+                if letteredI < 0:
+                    letteredI = firstNumI
+                if firstNumI < 0:
+                    firstNumI = i
+                lastNumI = i
+            else:
+                if PackageInfo.verbosity > 1:
+                    print("  * {} ({}) is not a version part."
+                          "".format(tmpPart, i))
+                if firstNumI > -1:
+                    # end the version parts
+                    break
+        if firstNumI > -1:
+            if letteredI > -1:
+                if lastNumI > letteredI:
+                    print(
+                        "  [{}] WARNING: version numbers {} appear"
+                        " after the alphabetical suffix {} in {}."
+                        "".format(fn, tmpParts[lastNumI],
+                                  tmpParts[letteredI],
+                                  tmpParts)
+                    )
+            if firstNumI == 0:
+                parts = ["", ".".join(tmpParts)]
+                print("  [{}] WARNING: No name was detected in {}"
+                      "".format(fn, tmpParts))
+            else:
+                firstNameI = 0
+                lastNameI = firstNumI - 1
+                if TwoOnly:
+                    parts = [
+                        ".".join(tmpParts[firstNameI:lastNameI+1]),
+                        ".".join(tmpParts[firstNumI:lastNumI+1]),
+                    ]
+                    versionI = 1
+                    print("  [{}] TwoOnly is enabled, so version part"
+                          " is {}".format(fn, parts[versionI]))
+                else:
+                    if oldDelimiters is not None:
+                        parts = tmpParts[:firstNumI]
+                        i = len(parts)
+                        print("  [{}] firstNumI={}, lastNumI={}"
+                              "".format(fn, firstNumI, lastNumI))
+                        joined = ""
+                        while i <= lastNumI:
+                            oldDelimiter = oldDelimiters[i]
+                            # ^ last delimiter is ""
+                            # print("  [{}]re-adding '{}'"
+                            #       "".format(fn, oldDelimiter))
+                            if i == lastNumI:
+                                oldDelimiter = ""
+                                # ^ Don't add the ending delimiter.
+                            joined += tmpParts[i] + oldDelimiter
+                            i += 1
+                        parts.append(joined)
+                        parts += tmpParts[lastNumI+1:]
+                    else:
+                        parts = (
+                            tmpParts[:firstNumI]
+                            + [".".join(tmpParts[firstNumI:lastNumI+1])]
+                            + tmpParts[lastNumI+1:]
+                        )
+                    versionI = firstNumI
+            if PackageInfo.verbosity > 0:
+                print("  [{}] changed parts to {}".format(fn, parts))
+            # "since no "
+            # "".format(parts, PackageInfo.DELIMITERS))
+        else:
+            print("  [{}] There are no version strings in {}"
+                  "".format(fn, tmpParts))
+        return parts, versionI
+
+    def get_bits(self):
+        '''
+        Get 32 or 64 (integer) or None if unknown.
+        '''
+        if self.arch is None:
+            return None
+        if self.arch in PackageInfo.X64S:
+            return 64
+        elif self.arch in PackageInfo.X32S:
+            return 32
+        return None
 
     def toDict(self):
         ret = {}
@@ -257,14 +490,19 @@ class PackageInfo:
             ret[k] = self.__dict__[k]
         return ret
 
-    def get_versioned_name(self):
+    def get_coexisting_id(self, multiPackage, multiVersion):
         '''
         To allow multiple versions, append "-"+pkginfo.version to the
         name when naming the desktop file or for other uses requiring
         separating multiple versions. The output will always be
         lowercase.
         '''
-        return self.name.lower() + "-" + self.version
+        ret = self.luid
+        if multiPackage:
+            ret += self.suffix
+        if multiVersion:
+            ret += "-" + self.version
+        return ret
 
     def toList(self):
         return [self.__dict__[k] for k in self.metas]
@@ -279,34 +517,72 @@ def dir_is_empty(folder_path):
         count += 1
     return count < 1
 
-def install_program_in_place(src_path, caption=None, name=None,
-        version=None, move_what=None, do_uninstall=False,
-        icon_path=None, enable_reinstall=False,
-        detect_program_parent=False):
+def install_program_in_place(src_path, **kwargs):
+    version = kwargs.get("version")
+    casedName = kwargs.get("casedName")
+    caption = kwargs.get("caption")
+    luid = kwargs.get("luid")
+    do_uninstall = kwargs.get("do_uninstall")
+    if do_uninstall is None:
+        do_uninstall = False
+    enable_reinstall = kwargs.get("enable_reinstall")
+    if enable_reinstall is None:
+        enable_reinstall = False
+    detect_program_parent = kwargs.get("detect_program_parent")
+    if detect_program_parent is None:
+        detect_program_parent = False
+    multiVersion = kwargs.get("multiVersion")
+    icon_path = kwargs.get("icon_path")
+    move_what = kwargs.get("move_what")
     """Install binary program src_path
 
-    If name is not specified, the name and version will be calculated
-    from either the filename at src_path or the path's parent
-    directory's name.
+    Keyword arguments:
+    casedName --
+    If casedName is not specified, the name and version will be
+    calculated from either the filename at src_path or the path's
+    parent directory's name.
     Example:
-    src_path=../Downloads/blender-2.79-e045fe53f1b0-linux-glibc217-x86_64/blender
+    src_path = \
+    ../Downloads/blender-2.79-e045fe53f1b0-linux-glibc217-x86_64/blender
     (In this case, this function will extract the name and version from
     blender-2.79-e045fe53f1b0-linux-glibc217-x86_64 since it has more
     delimiters than the filename "blender")
 
-    move_what: Only set this to 'file' if src_path is an AppImage or
+    move_what -- Only set this to 'file' if src_path is an AppImage or
     other self-contained binary file. Otherwise you may set it to
     'directory'. The file or directory will be moved to ~/.local/lib64/
     (or whatever programs directory is detected as a parent of the
     directory if detect_program_parent is True [automaticaly True by
     calling itself in the case of deb]).
     move_what='file' example:
-    If name is not specified, the name and version will be calculated from
-    either the filename at src_path or the path's parent directory's name.
+    If name is not specified, the name and version will be calculated
+    from either the filename at src_path or the path's parent
+    directory's name.
     Example:
-    src_path=../Downloads/FreeCAD_0.18-16131-Linux-Conda_Py3Qt5_glibc2.12-x86_64.AppImage
+    src_path=(
+    "../Downloads/"
+    "FreeCAD_0.18-16131-Linux-Conda_Py3Qt5_glibc2.12-x86_64.AppImage"
+    )
     (In this case, this function will extract the name and version from
     FreeCAD_0.18-16131-Linux-Conda_Py3Qt5_glibc2.12-x86_64.AppImage)
+
+    multiVersion -- Allow the version to be in the installed directory
+                    name and the icon name so that multiple versions of
+                    the same program (with same luid such as "blender"
+                    or "ultimaker.cura") can be installed at once.
+                    If None, will be set to True if "blender" is the
+                    luid.
+
+                    Even if false, If the file is an appimage, it can
+                    coexist with other non-appimage installs, since the
+                    non- appimage install will be a directory or
+                    non-appimage binary and since -appimage will be
+                    appended to the icon filename.
+
+    luid -- This is the unique program name without the version, with
+            dots instead of spaces and all lowercase.
+            It is detected automatically from the file or directory name
+            if None.
     """
     enable_force_script = False
     profile = os.environ.get("HOME")
@@ -338,6 +614,7 @@ def install_program_in_place(src_path, caption=None, name=None,
         dst_programs = lib
     dirname = None
     ex_tmp = None
+    suffix = ""
     new_tmp = None
     verb = "uninstall" if do_uninstall else "install"
     ending = ".deb"
@@ -551,18 +828,31 @@ def install_program_in_place(src_path, caption=None, name=None,
                   "".format(src_icons))
         # Now install the program:
         is_file = False
-        pkginfo = PackageInfo(src_path, name=name,
+        pkginfo = PackageInfo(src_path, casedName=casedName,
                               version=version, caption=caption)
+        if casedName is None:
+            casedName = pkginfo.casedName
         if version is None:
             version = pkginfo.version
-        print("* forwarding version for recursion: {}".format(version))
+        if caption is None:
+            caption = pkginfo.caption
+        if luid is None:
+            luid = pkginfo.luid
+        suffix = pkginfo.suffix
+        # ^ Get the info now, because the extracted directory name will
+        #   not contain the version.
+        print("* forwarding info for recursion: {} luid:{}"
+              "".format([casedName, version, caption], luid))
+        print("")
+        print("")
         result = install_program_in_place(
             binary_path,
             caption=program+" (deb)",
-            name=name,
+            casedName=casedName,
             version=version,
             move_what='directory',
             do_uninstall=do_uninstall,
+            luid=luid,
             icon_path=icon_path,
             enable_reinstall=enable_reinstall,
             detect_program_parent=True
@@ -734,15 +1024,15 @@ def install_program_in_place(src_path, caption=None, name=None,
 
     print("* using programs path: '{}'".format(dst_programs))
     dirname = os.path.split(dirpath)[-1]
-    icon_name = None
+    # luid = None
 
-    if (name is None) or (version is None):
+    if (casedName is None) or (version is None):
         # try_names = [filename, dirname]
         try_sources = [src_path, dirpath]
         pkg = None
         pkgs = []
         for try_source in try_sources:
-            pkgs.append(PackageInfo(try_source, name=name,
+            pkgs.append(PackageInfo(try_source, casedName=casedName,
                                     version=version, caption=caption))
         for thisPkg in pkgs:
             if pkg is None:
@@ -750,63 +1040,92 @@ def install_program_in_place(src_path, caption=None, name=None,
             if thisPkg.version is not None:
                 if version is None:
                     version = pkg.version
-            if thisPkg.name is not None:
-                if name is None:
-                    name = pkg.name
-                elif len(name) < len(thisPkg.name):
+            if thisPkg.casedName is not None:
+                if casedName is None:
+                    casedName = pkg.casedName
+                elif len(casedName) < len(thisPkg.casedName):
                     print("WARNING: the previously collected name"
                           " \"{}\ is shorter than the detected name"
                           " \"{}\" (tries: {})".format(pkgs))
-                    name = pkg.name
+                    casedName = pkg.casedName
+                    if luid is None:
+                        if thisPkg.luid is None:
+                            print("WARNING: converting casedName to"
+                                  " LUID in install_program_in_place")
+                            luid = toLUID(pkg.casedName)
+            if len(pkginfo.suffix) > 0:
+                suffix = pkginfo.suffix
+            if thisPkg.luid is not None:
+                if luid is None:
+                    luid = pkg.luid
             if thisPkg.caption is not None:
                 if caption is None:
                     caption = thisPkg.caption
+            if thisPkg.luid is not None:
+                if luid is None:
+                    luid = thisPkg.luid
     else:
-        print("* The name was set to {}".format(name))
-        print("* The version was set to {}".format(version))
+        print("* The casedName was set to \"{}\"".format(casedName))
+        print("* The version was set to \"{}\"".format(version))
+        print("* The luid was set to \"{}\"".format(luid))
+        print("* The icon filename suffix was set to \"{}\""
+              "".format(suffix))
 
     applications = os.path.join(share_path, "applications")
     sc_path = None
     sc_name = None
-    is_appimage = False
-    dotted_parts = src_path.split(".")
-    if dotted_parts[-1].lower() == "appimage":
-        is_appimage = True
-
-    if name.lower() == "blender":
+    old_sc_name = None
+    if luid == "blender":
+        if multiVersion is None:
+            multiVersion = True
+            print("* enabling multiVersion since using Blender")
         if version is not None:
-            sc_name = "org.blender-{}".format(version)
+            sc_name = "blender{}-{}".format(suffix, version)
+            if do_uninstall:
+                old_sc_name = "org.blender-{}".format(version)
         else:
-            sc_name = "org.blender"
+            if multiVersion is True:
+                print("  but the version was not detected!")
+            sc_name = "blender" + suffix
+            if do_uninstall:
+                old_sc_name = "org.blender"
         print("* using {} as shortcut name".format(sc_name))
     elif version is not None:
-        sc_name = "{}-{}".format(name.lower(), version)
+        if multiVersion is True:
+            sc_name = "{}{}-{}".format(luid, suffix, version)
+        else:
+            sc_name = "{}{}".format(luid, suffix)
     else:
         print("* no version is detected in {}".format(src_path))
-        sc_name = "{}".format(name.lower())
-    if is_appimage:
-        sc_name += "-appimage"
+        sc_name = "{}".format(luid)
+
     sc_name += ".desktop"
     sc_path = os.path.join(applications, sc_name)
-    if icon_name is None:
-        icon_name = name.lower()
-    try_icon = icons.get(name.lower())
+    old_sc_path = None
+    if old_sc_name is not None:
+        old_sc_name += ".desktop"
+        print("* WARNING: legacy name before git 2021-02-25) name"
+              " was {} as shortcut name".format(sc_name))
+        old_sc_path = os.path.join(applications, old_sc_name)
+    if luid is None:
+        print("WARNING: luid was never set, so setting to:")
+        luid = toLUID(casedName)
+        print("  " + luid)
+    try_icon = icons.get(luid)
     print("* checking for known icon related to '{}'..."
-          "".format(name.lower()))
+          "".format(luid))
 
     if try_icon is not None:
-        icon_name = try_icon
-        print("  * using known icon '{}'".format(icon_name))
+        luid = try_icon
+        print("  * using known icon luid '{}'".format(luid))
     if caption is None:
-        icon_name = try_icon
-        print("  * using unknown icon '{}'".format(icon_name))
-        caption = name
+        luid = try_icon
+        print("  * using unknown icon luid '{}'".format(luid))
+        caption = luid
         if version is not None:
             caption += " " + version
         caption = caption[:1].upper() + caption[1:].lower()
-        if is_appimage:
-            caption += " (AppImage)"
-        print("* using '" + caption + "' as caption")
+        print("* using '" + caption + "' as caption (from luid)")
     path = src_path
     # dst_programs = os.path.join(os.environ.get("HOME"), ".config")
     dst_dirpath = os.path.join(dst_programs, dirname)
@@ -879,15 +1198,15 @@ def install_program_in_place(src_path, caption=None, name=None,
         # stat.S_IXOTH : Execute by others
 
     if icon_path is None:
-        icon_path = icon_name
+        icon_path = luid
 
-    shortcut_data = shortcut_data_template.format(x=path,
-                                                  name=caption,
-                                                  icon=icon_path)
+    shortcut_data = shortcut_data_template.format(Exec=path,
+                                                  Name=caption,
+                                                  Icon=icon_path)
 
     my_dir = os.path.dirname(os.path.realpath(__file__))
     meta_dir = os.path.join(my_dir, "shortcut-metadata")
-    meta_path = os.path.join(meta_dir, "{}.txt".format(name))
+    meta_path = os.path.join(meta_dir, "{}.txt".format(luid))
 
     shortcut_append_lines = None
     if os.path.isfile(meta_path):
@@ -914,7 +1233,14 @@ def install_program_in_place(src_path, caption=None, name=None,
                 shutil.rmtree(new_tmp)
     desktop_installer = "xdg-desktop-menu"
     u_cmd_parts = [desktop_installer, "uninstall", sc_path]
-
+    if old_sc_path is not None:
+        if os.path.isfile(old_sc_path):
+            u_cmd_parts = [desktop_installer, "uninstall", old_sc_path]
+            if os.path.isfile(sc_path):
+                print("WARNING: You'll have to run uninstall again"
+                      " because both shortcut path \"{}\" and legacy"
+                      " shortcut path \"{}\" are present."
+                      "".format(sc_path, old_sc_path))
 
     if os.path.isfile(logPath):
         fm = 'a'
@@ -991,7 +1317,7 @@ if __name__ == "__main__":
     src_path = None
     if len(sys.argv) < 2:
         usage()
-        print("You must specify a binary file.")
+        print("You must specify a directory or binary file.")
         print("")
         print("")
         exit(1)

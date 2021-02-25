@@ -3,6 +3,21 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+
+## [git] - 2021-02-25
+### Fixed
+- Generate the luid for the icon name more consistently.
+  - Detect name and version better when either are comprised of an
+    arbitrary number of delimited parts.
+  - Combine redundant code.
+  - Generate the suffix such as "-appimage" in PackageInfo.
+  - Always get the metadata from PackageInfo except values that the
+    client code specifies.
+
+### Changed
+- Add a verbosity level to the new PackageInfo class (0 to 2).
+
+
 ## [git] - 2021-02-22
 ### Added
 - Add package installer variables from `goxel.sh` and `policy-daily.sh`
