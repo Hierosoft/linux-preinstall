@@ -1,5 +1,7 @@
 #!/bin/sh
 me=$0
+myPath="`realpath "$0"`"
+myDir="`dirname "$myPath"`"
 myName="Slic3r Nightly Installer"
 customDie(){
     echo
@@ -9,17 +11,22 @@ customDie(){
     echo
     exit 1
 }
-installer_path=../utilities/install_any.py
+linux_preinstall_repo_path=".."
+#DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+trylinux_preinstall_repo_path=`dirname "$myDir"`
+if [ -f "$trylinux_preinstall_repo_path/utilities/install_any.py" ]; then
+    linux_preinstall_repo_path="$trylinux_preinstall_repo_path"
+fi
+installer_path="$linux_preinstall_repo_path/utilities/install_any.py"
 
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-linux_preinstall_repo_path="$( dirname $DIR )"
+#linux_preinstall_repo_path="$( dirname $DIR )"
 #if [ ! -f "$installer_path" ]; then
 # always get absolute path
     # See https://stackoverflow.com/questions/59895/get-the-source-directory-of-a-bash-script-from-within-the-script-itself
-    try_path="$linux_preinstall_repo_path/utilities/install_any.py"
-    if [ -f "$try_path" ]; then
-        installer_path="$try_path"
-    fi
+    #try_path="$linux_preinstall_repo_path/utilities/install_any.py"
+    #if [ -f "$try_path" ]; then
+    #    installer_path="$try_path"
+    #fi
 #fi
 if [ ! -f "$installer_path" ]; then
     customDie "You must run this from the utilities directory so \"$installer_path\" can be found."
