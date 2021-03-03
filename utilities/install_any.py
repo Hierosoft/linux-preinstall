@@ -35,15 +35,33 @@ except:
 # from subprocess import CalledProcessError
 # from subprocess import SubprocessError
 
+def assertEqual(v1, v2):
+    '''
+    Show the values if they differ before the assertion error stops the
+    program.
+    '''
+    if ((v1 is True) or (v2 is True) or (v1 is False) or (v2 is False)
+            or (v1 is None) or (v2 is None)):
+        if v1 is not v2:
+            print("")
+            print("{} is not {}".format(toPythonLiteral(v1),
+                                        toPythonLiteral(v2)))
+        assert(v1 is v2)
+    else:
+        if v1 != v2:
+            print("")
+            print("{} != {}".format(toPythonLiteral(v1),
+                                    toPythonLiteral(v2)))
+        assert(v1 == v2)
+
+
 import subprocess
 try:
-    from subprocess import run as sp_run
+    # from subprocess import run as sp_run
     from subprocess import CompletedProcess
 except ImportError:
     # Python 2
-
     class CompletedProcess:
-
         _custom_impl = True
 
         def __init__(self, args, returncode, stdout=None, stderr=None):
@@ -54,23 +72,11 @@ except ImportError:
 
         def check_returncode(self):
             if self.returncode != 0:
-                outs = self.stdout
-                errs = self.stderr
-                output = []
-                try:
-                    output = list(outs) if (outs is not None) else []
-                except: # "IOError: File not open for reading"
-                    pass
-                try:
-                    output += list(errs) if (errs is not None) else []
-                except: # "IOError: File not open for reading"
-                    pass
                 err = subprocess.CalledProcessError(self.returncode,
                                                     self.args,
-                                                    output=output)
+                                                    output=self.stdout)
                 raise err
             return self.returncode
-
 
     def sp_run(*popenargs, **kwargs):
         '''
@@ -99,42 +105,19 @@ except ImportError:
         # print("check: {}".format(check))
         # print("returncode: {}".format(returncode))
         if check and returncode:
-            output = outs if (outs is not None) else []
-            output += errs if (errs is not None) else []
-            raise subprocess.CalledProcessError(returncode,
-                                                list(popenargs),
-                                                output=output)
-        return CompletedProcess(list(popenargs), returncode, stdout=outs,
+            raise subprocess.CalledProcessError(returncode, popenargs,
+                                                output=outs)
+        return CompletedProcess(popenargs, returncode, stdout=outs,
                                 stderr=errs)
+    subprocess.run = sp_run
 
 
-def test_CompletedProcess(code):
-    if hasattr(CompletedProcess, "_custom_impl"):
-        # args, returncode, stdout=None, stderr=None
-        proc = CompletedProcess(["(tests)"], code, sys.stdout, sys.stderr)
-        try:
-            proc.check_returncode()
-            raise ValueError("* The exception test failed (running"
-                             " check_returncode on returncode {} didn't"
-                             " succeed in producing CalledProcessError)"
-                             "".format(proc.returncode))
-        except subprocess.CalledProcessError:
-            pass
-            # print("* The exception test passed.")
-    else:
-        print("* The exception test was skipped since you are using"
-              " Python's implementation of CompletedProcess.")
-
-
-def tests():
-    test_CompletedProcess(1)
-
-
-tests()
 digits = "0123456789"
 # me = os.path.split(sys.argv[0])[-1]
 # ^ doesn't work correctly if used as a module
 me = "install_any.py"
+myDir = os.path.dirname(os.path.abspath(__file__))
+repoDir = os.path.dirname(myDir)
 version_chars = digits + "."
 icons = {}
 icons["freecad"] = "org.freecadweb.FreeCAD"
@@ -175,6 +158,53 @@ Icon={Icon}
 Terminal=false
 Type=Application
 """
+
+def test_CompletedProcessException(code):
+    proc = CompletedProcess(["(tests)"], code, sys.stdout,
+                            sys.stderr)
+    try:
+        proc.check_returncode()
+        raise ValueError("* The exception test failed (running"
+                         " check_returncode on returncode {} didn't"
+                         " succeed in producing CalledProcessError)"
+                         "".format(proc.returncode))
+    except subprocess.CalledProcessError:
+        pass
+        print("* The exception test passed.")
+
+def test_subprocess_run(argsOrString):
+    fn_msg = (" (Python {}'s standard implementation)"
+              "".format(sys.version_info[0]))
+    if hasattr(CompletedProcess, '_custom_impl'):
+        fn_msg = " (Python 2 monkeypatch)"
+    print("* Testing subprocess.run{} with {}..."
+          "".format(fn_msg, type(argsOrString).__name__))
+    proc = subprocess.run(argsOrString)
+    print("* proc.returncode: {}".format(proc.returncode))
+    print("* proc.stdout: {}".format(proc.stdout))
+    print("* proc.stderr: {}".format(proc.stdout))
+
+
+def tests():
+    # if hasattr(CompletedProcess, "_custom_impl"):
+    test_CompletedProcessException(1)
+    test_subprocess_run("ls")
+    test_subprocess_run(["ls", "-l"])
+    test_subprocess_run(
+        os.path.join(repoDir, "tests", "data", "exit1.sh")
+    )
+    # else:
+    #     print("* The exception test was skipped since you are using"
+    #           " Python's implementation of CompletedProcess.")
+
+    # if failures == 0:
+    print("* All tests passed.")
+    # else:
+    #     print("* Tests completed with {} failure(s).".format(failures))
+
+
+tests()
+
 
 
 def toLUID(name):
@@ -254,7 +284,8 @@ def dl_progress(evt):
     dl_msg_w = 80
     if downloading:
         sys.stderr.write("\r")
-    line = "{}".format(evt['loaded']).ljust(dl_msg_w, dl_msg_w)
+    line = "{}".format(evt['loaded']).ljust(dl_msg_w)
+    # ^ 2nd param of ljust (,`character`) is optional
     sys.stderr.write(line)
     pass
 
@@ -1493,7 +1524,7 @@ def install_program_in_place(src_path, **kwargs):
             outs.write("uninstall_shortcut:{}\n".format(sc_path))
         if os.path.isfile(sc_path):
             print(u_cmd_parts)
-            install_proc = sp_run(u_cmd_parts)
+            install_proc = subprocess.run(u_cmd_parts)
             if install_proc.returncode != 0:
                 if os.path.isfile(sc_path):
                     print("rm \"{}\"".format(sc_path))
@@ -1521,15 +1552,15 @@ def install_program_in_place(src_path, **kwargs):
                 # print("* removing shortcut \"{}\"".format(sc_path))
                 # os.remove(sc_path)
                 print("* uninstalling shortcut \"{}\"".format(sc_path))
-                sp_run(u_cmd_parts)
+                subprocess.run(u_cmd_parts)
                 # ^ using only the name also works: sc_name])
                 # ^ uninstall ensures that the name updates if existed
-            install_proc = sp_run([desktop_installer,
-                                   "install", "--novendor",
-                                   tmp_sc_path])
+            install_proc = subprocess.run([desktop_installer,
+                                          "install", "--novendor",
+                                          tmp_sc_path])
             inst_msg = "OK"
-            print("sp_run's returned process {} has {}"
-                  "".format(install_proc, dir(install_proc)))
+            # print("sp_run's returned process {} has {}"
+            #       "".format(install_proc, dir(install_proc)))
             if install_proc.returncode != 0:
                 inst_msg = "FAILED"
             if os.path.isfile(sc_path):
