@@ -3,6 +3,15 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [git] - 2021-03-03
+### Added
+- Recover the installer if the destination appimage exists but the
+  source appimage doesn't exist when using the `--uninstall` option
+  (This is best since the default currently moves the appimage instead
+  of copying it).
+- Make subprocess handling compatible with Python 2.
+- Download the icon if the icon path is known (if in `iconLinks`).
+
 
 ## [git] - 2021-02-25
 ### Fixed

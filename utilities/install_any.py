@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 import sys
 import stat
 import os
@@ -6,9 +6,131 @@ import shutil
 import tarfile
 import tempfile
 from zipfile import ZipFile
-import subprocess
 import platform
 
+python_mr = 3  # major revision
+try:
+    import urllib.request
+    request = urllib.request
+except:
+    # python2
+    python_mr = 2
+    import urllib2 as urllib
+    request = urllib
+
+'''
+    class SubprocessError(Exception):
+        pass
+
+
+    class CalledProcessError(SubprocessError):
+        def __init__(self, returncode, cmd, output=None):
+            self.returncode = returncode
+            self.cmd = cmd
+            self.output = output
+            self.stdout = None
+            self.stderr = None
+        # commented since same in Python 2 & 3
+'''
+# from subprocess import CalledProcessError
+# from subprocess import SubprocessError
+
+import subprocess
+try:
+    from subprocess import run as sp_run
+    from subprocess import CompletedProcess
+except ImportError:
+    # Python 2
+
+    class CompletedProcess:
+
+        _custom_impl = True
+
+        def __init__(self, args, returncode, stdout=None, stderr=None):
+            self.args = args
+            self.returncode = returncode
+            self.stdout = stdout
+            self.stderr = stderr
+
+        def check_returncode(self):
+            if self.returncode != 0:
+                outs = self.stdout
+                errs = self.stderr
+                output = []
+                try:
+                    output = list(outs) if (outs is not None) else []
+                except: # "IOError: File not open for reading"
+                    pass
+                try:
+                    output += list(errs) if (errs is not None) else []
+                except: # "IOError: File not open for reading"
+                    pass
+                err = subprocess.CalledProcessError(self.returncode,
+                                                    self.args,
+                                                    output=output)
+                raise err
+            return self.returncode
+
+
+    def sp_run(*popenargs, **kwargs):
+        '''
+        CC BY-SA 4.0
+        by Martijn Pieters
+        https://stackoverflow.com/a/40590445
+        and Poikilos
+        '''
+        input = kwargs.pop("input", None)
+        check = kwargs.pop("handle", False)
+
+        if input is not None:
+            if 'stdin' in kwargs:
+                raise ValueError('stdin and input arguments may not '
+                                 'both be used.')
+            kwargs['stdin'] = subprocess.PIPE
+
+        process = subprocess.Popen(*popenargs, **kwargs)
+        try:
+            outs, errs = process.communicate(input)
+        except:
+            process.kill()
+            process.wait()
+            raise
+        returncode = process.poll()
+        # print("check: {}".format(check))
+        # print("returncode: {}".format(returncode))
+        if check and returncode:
+            output = outs if (outs is not None) else []
+            output += errs if (errs is not None) else []
+            raise subprocess.CalledProcessError(returncode,
+                                                list(popenargs),
+                                                output=output)
+        return CompletedProcess(list(popenargs), returncode, stdout=outs,
+                                stderr=errs)
+
+
+def test_CompletedProcess(code):
+    if hasattr(CompletedProcess, "_custom_impl"):
+        # args, returncode, stdout=None, stderr=None
+        proc = CompletedProcess(["(tests)"], code, sys.stdout, sys.stderr)
+        try:
+            proc.check_returncode()
+            raise ValueError("* The exception test failed (running"
+                             " check_returncode on returncode {} didn't"
+                             " succeed in producing CalledProcessError)"
+                             "".format(proc.returncode))
+        except subprocess.CalledProcessError:
+            pass
+            # print("* The exception test passed.")
+    else:
+        print("* The exception test was skipped since you are using"
+              " Python's implementation of CompletedProcess.")
+
+
+def tests():
+    test_CompletedProcess(1)
+
+
+tests()
 digits = "0123456789"
 # me = os.path.split(sys.argv[0])[-1]
 # ^ doesn't work correctly if used as a module
@@ -17,6 +139,8 @@ version_chars = digits + "."
 icons = {}
 icons["freecad"] = "org.freecadweb.FreeCAD"
 icons["ultimaker.cura"] = "cura"
+iconLinks = {}
+iconLinks["ultimaker.cura"] = "https://github.com/Ultimaker/Cura/raw/master/icons/cura-48.png"
 casedNames = {}
 casedNames["umlet"] = "UMLet Standalone"  # as opposed to a plugin/web ver
 casedNames["freecad"] = "FreeCAD"
@@ -123,6 +247,46 @@ def is_digits(s):
     return True
 
 
+downloading = False
+
+def dl_progress(evt):
+    global downloading
+    dl_msg_w = 80
+    if downloading:
+        sys.stderr.write("\r")
+    line = "{}".format(evt['loaded']).ljust(dl_msg_w, dl_msg_w)
+    sys.stderr.write(line)
+    pass
+
+def dl_done(evt):
+    global downloading
+    downloading = False
+    print("  DONE")
+
+def download(file_path, url, cb_progress=None, cb_done=None,
+             chunk_len=16*1024):
+    '''
+    Download a file in binary mode (based on download from
+    LinkManager from blendernightly).
+    '''
+    response = request.urlopen(url)
+    evt = {}
+    evt['loaded'] = 0
+    # evt['total'] is not implemented (would be from contentlength
+    # aka content-length)
+    with open(file_path, 'wb') as f:
+        while True:
+            chunk = response.read(chunk_len)
+            if not chunk:
+                break
+            evt['loaded'] += chunk_len
+            if cb_progress is not None:
+                cb_progress(evt)
+            f.write(chunk)
+    if cb_done is not None:
+        cb_done(evt)
+
+
 class PackageInfo:
     '''
     To get a globally unique name based on whether multiVersion or
@@ -167,6 +331,8 @@ class PackageInfo:
                 name; used as a key for the icons dict or casedNames dict
                 default: toLUID(casedName)
         '''
+        print("[PackageInfo __init__] * checking src_path {}..."
+              "".format(src_path))
         if PackageInfo.verbosity > 0:
             print()
             print("Creating PackageInfo...")
@@ -184,9 +350,10 @@ class PackageInfo:
         if is_dir is None:
             if not os.path.exists(src_path):
                 raise ValueError(
-                    "src_path must exist or you must specify the is_dir"
-                    " keyword argument for the PackageInfo constructor"
-                    " (only if running a test)."
+                    "src_path \"{}\" must exist or you must specify the"
+                    " is_dir keyword argument for the PackageInfo"
+                    " constructor (only if running a test)."
+                    "".format(src_path)
                 )
             is_dir = os.path.isdir(src_path)
         removeExt = kwargs.get('removeExt')
@@ -335,6 +502,7 @@ class PackageInfo:
 
         if PackageInfo.verbosity > 0:
             print("* using \"{}\" as icon filename prefix (luid)"
+                  " (The version will be added later if multiVersion)"
                   "".format(self.luid))
         if self.caption is None:
             if versionI > -1:
@@ -357,7 +525,8 @@ class PackageInfo:
                         print("  - skipped: it already ends with \"{}\""
                               "".format(suffix))
 
-    def unsplit_version(tmpParts, TwoOnly=False, oldDelimiters=None):
+    @classmethod
+    def unsplit_version(cls, tmpParts, TwoOnly=False, oldDelimiters=None):
         '''
         Get a ([], int) tuple of (parts, versionI) where versionI is the
         index of the version and parts is the same list except where the
@@ -377,6 +546,9 @@ class PackageInfo:
         letteredI = -1
         versionI = -1
         parts = tmpParts
+        if not hasattr(tmpParts, 'append'):
+            raise ValueError("tmpParts must be a list but is {}"
+                             "".format(tmpParts))
         for i in range(len(tmpParts)):
             if tmpParts[i][:1].lower() == "v":
                 # Remove v such as "v1" to "1".
@@ -534,6 +706,7 @@ def install_program_in_place(src_path, **kwargs):
     multiVersion = kwargs.get("multiVersion")
     icon_path = kwargs.get("icon_path")
     move_what = kwargs.get("move_what")
+    pull_back = kwargs.get("pull_back")
     """Install binary program src_path
 
     Keyword arguments:
@@ -617,6 +790,17 @@ def install_program_in_place(src_path, **kwargs):
     suffix = ""
     new_tmp = None
     verb = "uninstall" if do_uninstall else "install"
+    is_dir = None
+    pull_back = None
+    if src_path.lower().endswith(".appimage"):
+        is_dir = False
+        # ^ ONLY manually set this for files that won't be
+        # extracted!
+        pull_back = True
+        if not os.path.exists(src_path):
+            print("* attempting to recover to \"{}\"..."
+                  "".format(src_path))
+
     ending = ".deb"
     if src_path.lower()[-(len(ending)):] == ending:
         ex_tmp = tempfile.mkdtemp()
@@ -827,9 +1011,15 @@ def install_program_in_place(src_path, **kwargs):
             print("INFO: No '{}' directory was found."
                   "".format(src_icons))
         # Now install the program:
-        is_file = False
-        pkginfo = PackageInfo(src_path, casedName=casedName,
-                              version=version, caption=caption)
+
+        pkginfo = PackageInfo(
+            src_path,
+            casedName=casedName,
+            version=version,
+            caption=caption,
+        )
+        # ^ Do NOT specify is_dir (The program must exist since it was
+        #   extracted from a package)
         if casedName is None:
             casedName = pkginfo.casedName
         if version is None:
@@ -855,11 +1045,14 @@ def install_program_in_place(src_path, **kwargs):
             luid=luid,
             icon_path=icon_path,
             enable_reinstall=enable_reinstall,
-            detect_program_parent=True
+            detect_program_parent=True,
+            pull_back=pull_back,
         )
         shutil.rmtree(next_temp)
         print("* removed '{}'".format(next_temp))
         return result
+        # ^ return archive within extracted archive
+
     archive_categories = {}
     archive_categories["tar"] = [".tar.bz2", ".tar.gz", ".tar.xz"]
     archive_categories["zip"] = [".zip"]
@@ -1028,12 +1221,22 @@ def install_program_in_place(src_path, **kwargs):
 
     if (casedName is None) or (version is None):
         # try_names = [filename, dirname]
-        try_sources = [src_path, dirpath]
+        try_sources = [src_path]
+        if not src_path.lower().endswith(".appimage"):
+            try_sources.append(dirpath)
         pkg = None
         pkgs = []
         for try_source in try_sources:
-            pkgs.append(PackageInfo(try_source, casedName=casedName,
-                                    version=version, caption=caption))
+            print("[install_program_in_place] * try_source {}"
+                  "".format(try_source))
+            thisPkg = PackageInfo(
+                try_source,
+                casedName=casedName,
+                version=version,
+                caption=caption,
+                is_dir=is_dir,
+            )
+            pkgs.append(thisPkg)
         for thisPkg in pkgs:
             if pkg is None:
                 pkg = thisPkg
@@ -1053,8 +1256,8 @@ def install_program_in_place(src_path, **kwargs):
                             print("WARNING: converting casedName to"
                                   " LUID in install_program_in_place")
                             luid = toLUID(pkg.casedName)
-            if len(pkginfo.suffix) > 0:
-                suffix = pkginfo.suffix
+            if len(thisPkg.suffix) > 0:
+                suffix = thisPkg.suffix
             if thisPkg.luid is not None:
                 if luid is None:
                     luid = pkg.luid
@@ -1112,6 +1315,7 @@ def install_program_in_place(src_path, **kwargs):
         luid = toLUID(casedName)
         print("  " + luid)
     try_icon = icons.get(luid)
+    try_icon_url = iconLinks.get(luid)
     print("* checking for known icon related to '{}'..."
           "".format(luid))
 
@@ -1126,6 +1330,28 @@ def install_program_in_place(src_path, **kwargs):
             caption += " " + version
         caption = caption[:1].upper() + caption[1:].lower()
         print("* using '" + caption + "' as caption (from luid)")
+    if icon_path is None:
+        if try_icon_url is not None:
+            icon_name = try_icon_url.split('/')[-1]
+            icon_path = os.path.join(icons_path, icon_name)
+            if not do_uninstall:
+                if not os.path.isdir(icons_path):
+                    os.makedirs(icons_path)
+                if os.path.isfile(icon_path):
+                    if os.stat(icon_path).st_size == 0:
+                        print("* removing bad 0-size icon \"{}\""
+                              "".format(icon_path))
+                        os.remove(icon_path)
+                if not os.path.isfile(icon_path):
+                    print("* downloading \"{}\" to \"{}\"..."
+                          "".format(try_icon_url, icon_path))
+                    download(icon_path, try_icon_url,
+                             cb_progress=dl_progress,
+                             cb_done=dl_done)
+                else:
+                    print("* \"{}\" already exists (skipping download)"
+                          "".format(icon_path))
+    print("    (The version will be added later if multiVersion)")
     path = src_path
     # dst_programs = os.path.join(os.environ.get("HOME"), ".config")
     dst_dirpath = os.path.join(dst_programs, dirname)
@@ -1152,14 +1378,32 @@ def install_program_in_place(src_path, **kwargs):
                         outs.write("#install_file:{}\n"
                                    "".format(dst_dirpath))
             else:
-                print("rm \"{}\"".format(path))
-                os.remove(path)
-                with open(logPath, fm) as outs:
-                    outs.write("uninstall_file:{}\n"
-                               "".format(dst_dirpath))
-                if src_path == path:
-                    print("The source path"
-                          " '{}' is removed.".format(path))
+                if os.path.isfile(path):
+                    if not os.path.isfile(src_path) and pull_back:
+                        print("mv \"{}\" \"{}\"".format(path, src_path))
+                        shutil.move(path, src_path)
+                        with open(logPath, fm) as outs:
+                            outs.write("uninstall_file:{}\n"
+                                       "".format(path))
+                            outs.write("recovered_to:{}\n"
+                                       "".format(src_path))
+                        if src_path == path:
+                            print("The source path"
+                                  " \"{}\" was moved to \"{}\"."
+                                  "".format(path, src_path))
+                    else:
+                        print("rm \"{}\"".format(path))
+                        os.remove(path)
+                        with open(logPath, fm) as outs:
+                            outs.write("uninstall_dir:{}\n"
+                                       "".format(dst_dirpath))
+                        if src_path == path:
+                            print("The source path"
+                                  " '{}' is removed.".format(path))
+                else:
+                    print("'{}' does not exist, so there is nothing to"
+                          " {}.".format(path, verb))
+
     elif move_what == 'directory':
         if do_uninstall:
             if os.path.isdir(dst_dirpath):
@@ -1249,7 +1493,7 @@ def install_program_in_place(src_path, **kwargs):
             outs.write("uninstall_shortcut:{}\n".format(sc_path))
         if os.path.isfile(sc_path):
             print(u_cmd_parts)
-            install_proc = subprocess.run(u_cmd_parts)
+            install_proc = sp_run(u_cmd_parts)
             if install_proc.returncode != 0:
                 if os.path.isfile(sc_path):
                     print("rm \"{}\"".format(sc_path))
@@ -1277,13 +1521,15 @@ def install_program_in_place(src_path, **kwargs):
                 # print("* removing shortcut \"{}\"".format(sc_path))
                 # os.remove(sc_path)
                 print("* uninstalling shortcut \"{}\"".format(sc_path))
-                subprocess.run(u_cmd_parts)
+                sp_run(u_cmd_parts)
                 # ^ using only the name also works: sc_name])
                 # ^ uninstall ensures that the name updates if existed
-            install_proc = subprocess.run([desktop_installer,
-                                           "install", "--novendor",
-                                           tmp_sc_path])
+            install_proc = sp_run([desktop_installer,
+                                   "install", "--novendor",
+                                   tmp_sc_path])
             inst_msg = "OK"
+            print("sp_run's returned process {} has {}"
+                  "".format(install_proc, dir(install_proc)))
             if install_proc.returncode != 0:
                 inst_msg = "FAILED"
             if os.path.isfile(sc_path):
@@ -1324,6 +1570,7 @@ if __name__ == "__main__":
     do_uninstall = False
     enable_reinstall = False
     move_what = None
+    multiVersion = None
     for i in range(1, len(sys.argv)):
         arg = sys.argv[i]
         if arg[:2] == "--":
@@ -1333,6 +1580,8 @@ if __name__ == "__main__":
                 move_what = 'any'
             elif arg == "--reinstall":
                 enable_reinstall = True
+            elif arg == "--multi-version":
+                multiVersion = True
             elif arg == "--help":
                 usage()
                 exit(0)
@@ -1370,5 +1619,6 @@ if __name__ == "__main__":
         caption=caption,
         move_what=move_what,
         do_uninstall=do_uninstall,
-        enable_reinstall=enable_reinstall
+        enable_reinstall=enable_reinstall,
+        multiVersion=multiVersion,
     )
