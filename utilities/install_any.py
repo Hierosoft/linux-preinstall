@@ -124,6 +124,7 @@ icons["freecad"] = "org.freecadweb.FreeCAD"
 icons["ultimaker.cura"] = "cura"
 iconLinks = {}
 iconLinks["ultimaker.cura"] = "https://github.com/Ultimaker/Cura/raw/master/icons/cura-48.png"
+iconLinks["prusaslicer"] = "https://github.com/prusa3d/PrusaSlicer/raw/master/resources/icons/PrusaSlicer.png"
 casedNames = {}
 casedNames["umlet"] = "UMLet Standalone"  # as opposed to a plugin/web ver
 casedNames["freecad"] = "FreeCAD"
@@ -132,6 +133,7 @@ casedNames["argouml"] = "ArgoUML"
 annotations = {}
 annotations[".deb"] = "deb"
 annotations[".appimage"] = "AppImage"
+
 
 def usage():
     print("")
@@ -151,6 +153,7 @@ def usage():
     print("")
     print("")
 
+
 shortcut_data_template = """[Desktop Entry]
 Name={Name}
 Exec={Exec}
@@ -158,6 +161,7 @@ Icon={Icon}
 Terminal=false
 Type=Application
 """
+
 
 def test_CompletedProcessException(code):
     proc = CompletedProcess(["(tests)"], code, sys.stdout,
@@ -172,11 +176,12 @@ def test_CompletedProcessException(code):
         pass
         print("* The exception test passed.")
 
+
 def test_subprocess_run(argsOrString):
     fn_msg = (" (Python {}'s standard implementation)"
               "".format(sys.version_info[0]))
     if hasattr(CompletedProcess, '_custom_impl'):
-        fn_msg = " (Python 2 monkeypatch)"
+        fn_msg = " (Python 2 polyfill)"
     print("* Testing subprocess.run{} with {}..."
           "".format(fn_msg, type(argsOrString).__name__))
     proc = subprocess.run(argsOrString)
@@ -212,7 +217,6 @@ def tests():
 tests()
 
 
-
 def toLUID(name):
     return name.replace(" ", ".").lower()
 
@@ -232,15 +236,149 @@ def get_annotation(s):
     return None
 
 
-def split_any(s, delimiters):
+def find_all_cs(haystack, needle):
+    '''get indices of every match of the needle (case sensitive)'''
+    results = []
+    i = 0
+    nLen = len(needle)
+    while i < len(haystack):
+        if haystack[i:i+nLen] == needle:
+            results.append(i)
+            i += nLen
+            continue
+        i += 1
+    return results
+
+
+def find_all_ci(haystack, needle):
+    '''get indices of every match of the needle (case insensitive)'''
+    haystack = haystack.lower()
+    needle = needle.lower()
+    return find_all_cs(haystack, needle)
+    # ^ lower so ok to call *_cs
+
+
+def find_all_any_cs(haystack, needles):
+    '''
+    Get a list of tuples where each pair is an index of a match of every
+    needle (case sensitive) paired with the needle in the second slot.
+    '''
+    results = []
+    for needle in needles:
+        found = find_all_cs(haystack, needle)
+        results += list(zip(found, [needle]*len(found)))
+    return results
+
+
+def find_all_any_ci(haystack, needles):
+    '''
+    Get a list of tuples where each pair is an index of a match of every
+    needle (case insensitive) paired with the needle in the second slot.
+    '''
+    results = []
+    haystackL = haystack.lower()
+    for needle in needles:
+        found = find_all_cs(haystackL, needle.lower())
+        results += list(zip(found, [needle]*len(found)))
+        # ^ lower so ok to call *_cs
+    return results
+
+
+def find_tuple_with(tuples, index, needle):
+    '''
+    Find the index where element 'index' of the tuple is needle
+    (case-sensitive).
+    '''
+    for i in range(len(tuples)):
+        if tuples[i][index] == needle:
+            return i
+    return -1
+
+
+def has_tuple_with(tuples, index, needle):
+    '''
+    Determine if needle is in any element 'index' of any tuple in the
+    list of tuples.
+    '''
+    return find_tuple_with(tuples, index, needle) > -1
+
+
+def split_any(s, delimiters, blobs=None):
+    '''
+    Sequential arguments:
+    delimiters -- a list of one-character delimiters at which to split s
+
+    Keyword arguments:
+    blobs -- a list of strings to never split (for example, include
+             'x86_64' as a blob when '_' is in delimiters but you want
+             to not split at '_' in cases where it is in that blob)
+    '''
     ret = []
+    start = 0
+    blobIs = None
+    oldS = s
+    print("[split_any] checking for {}".format(blobs))
+    if blobs is not None:
+        # replace bad dots with delimiters (example: change .i386 to
+        # _i386.
+        i = -1
+        while i + 1 < len(s):
+            i += 1
+            for blob in blobs:
+                if i == 0:
+                    continue
+                elif s[i-1] != '.':
+                    continue
+                if s[i:i+len(blob)].lower() == blob.lower():
+                    # if s[i-1] == '.':
+                    if len(delimiters[0]) > 1:
+                        raise ValueError("delimiter[0] ('{}') is too"
+                                         " long (should be 1"
+                                         " character)."
+                                         "".format(delimiters[0]))
+                    s = s[:i-1] + delimiters[0] + s[i:]
+                # else:
+                #     print("[split_any] {} is not {}"
+                #           "".format(s[i:i+len(blob)].lower(),
+                #                     blob.lower()))
+        del i
+    if s != oldS:
+        print("[split_any] preprocessed {} to {}".format(oldS, s))
+    else:
+        print("[split_any] There was nothing to preprocess in {}"
+              "".format(s))
+    if blobs is not None:
+        blobIs = find_all_any_ci(s, blobs)
+    i = 0
+    while i < len(s):
+        c = s[i]
+        if blobIs is not None:
+            # print("[split_any] checking in {}".format(blobIs))
+            foundI = find_tuple_with(blobIs, 0, i)
+            if foundI > -1:
+                # print("[split_any] {} is in {}".format(i, blobIs))
+                # If a blob had been found at i, skip i to end of blob.
+                # Do not end here.
+                i += len(blobIs[foundI][1])
+                continue
+        if c in delimiters:
+            print("[split_any] {} is in {}".format(c, delimiters))
+            ret.append(s[start:i])
+            start = i + 1
+        i += 1
+    # Add the last slice, whether ends in delimiter or not.
+    ret.append(s[start:i])
+    '''
     parts = s.split(delimiters[0])
     if len(delimiters) > 1:
         for part in parts:
             ret += split_any(part, delimiters[1:])
     else:
         ret = parts
+    '''
+    # print("[split_any] split into {}".format(ret))
     return ret
+
 
 def is_version(s, allowLettersAtEnd, allowMore=None):
     '''
@@ -250,16 +388,22 @@ def is_version(s, allowLettersAtEnd, allowMore=None):
                          with a number (such as for "2.79b").
 
     Keyword arguments:
-    allowMore -- entire words to allow (case-insensive) such as
-                 "master" or "dev"
+    allowMore -- a list such as PackageInfo.VPARTS of entire words to
+                 allow (case-insensive) such as "master" or "dev"
     '''
+    # if s.lower in version_strings:
+    if allowMore is not None:
+        for vPart in allowMore:
+            vOpener = vPart.lower()
+            if s.lower() == vOpener:
+                return True
+            elif s.startswith(vOpener) and s[len(vOpener):].isnumeric():
+                return True
+
     startsWithNum = False
     if s[:1] in digits:
         startsWithNum = True
-    if allowMore:
-        for allow in allowMore:
-            if s.lower() == allow.lower():
-                return True
+
     for c in s:
         if c not in version_chars:
             if (allowLettersAtEnd and startsWithNum):
@@ -285,6 +429,7 @@ def is_digits(s):
 
 downloading = False
 
+
 def dl_progress(evt):
     global downloading
     dl_msg_w = 80
@@ -295,10 +440,12 @@ def dl_progress(evt):
     sys.stderr.write(line)
     pass
 
+
 def dl_done(evt):
     global downloading
     downloading = False
     print("  DONE")
+
 
 def download(file_path, url, cb_progress=None, cb_done=None,
              chunk_len=16*1024):
@@ -331,15 +478,18 @@ class PackageInfo:
     multiPackage, multiVersion). See the constructor documentation for
     more info.
     '''
-    DELIMITERS = "_- "
-    X64S = ["x64", "64bit", "linux64", "win64", "windows64", "64-bit"]
+    DELIMITERS = "_- +"
+    X64S = ["x64", "64bit", "linux64", "win64", "windows64", "64-bit",
+            "x86_64", "amd64"]
     X32S = ["x32", "686", "386", "i386", "i686", "32bit", "32-bit",
-            "windows32", "win32"]
+            "windows32", "win32", "x86"]
+    NOARCHES = ["noarch"]
+    ARCHES = X64S + X32S + NOARCHES
     # ^ NOTE: x86_64 is handled manually below since it contains a
     #   delimiter
     LINS = ["linux", "linux64", "linux32"]
     WINS = ["windows", "windows64", "windows32", "win64", "win32"]
-    VPARTS = ['master', 'dev']
+    VPARTS = ['master', 'dev', 'prealpha', 'alpha', 'beta', 'rc']
     verbosity = 1
 
     def __init__(self, src_path, **kwargs):
@@ -371,7 +521,7 @@ class PackageInfo:
         print("[PackageInfo __init__] * checking src_path {}..."
               "".format(src_path))
         if PackageInfo.verbosity > 0:
-            print()
+            print("")
             print("Creating PackageInfo...")
         self.metas = ['casedName', 'luid', 'version',
                       'caption', 'platform', 'arch']
@@ -403,7 +553,8 @@ class PackageInfo:
             if fnamePartial.lower().endswith(".tar"):
                 fnamePartial = fnamePartial[:-4]
         self.caption = kwargs.get('caption')
-        parts = split_any(fnamePartial, PackageInfo.DELIMITERS)
+        parts = split_any(fnamePartial, PackageInfo.DELIMITERS,
+                          blobs=PackageInfo.ARCHES)
         part1 = None
         part2 = None
         archI = -1
@@ -436,6 +587,8 @@ class PackageInfo:
                 if partL in PackageInfo.X64S:
                     self.arch = "64bit"
                     archI = i
+                    # Always do 64-bit first so that x86_64 is found
+                    # before x86.
                 elif partL in PackageInfo.X32S:
                     self.arch = "32bit"
                     archI = i
@@ -444,7 +597,8 @@ class PackageInfo:
                         self.arch = "64bit"
                     else:
                         self.arch = "32bit"
-
+                elif partL in PackageInfo.NOARCHES:
+                    self.arch = "noarch"
                 if partL in PackageInfo.LINS:
                     self.platform = "Linux"
                     platformI = i
@@ -562,8 +716,13 @@ class PackageInfo:
                         print("  - skipped: it already ends with \"{}\""
                               "".format(suffix))
 
+    # @classmethod
+    # def unsplitArch(cls, tmpParts):
+
+
     @classmethod
-    def unsplit_version(cls, tmpParts, TwoOnly=False, oldDelimiters=None):
+    def unsplit_version(cls, tmpParts, TwoOnly=False,
+                        oldDelimiters=None):
         '''
         Get a ([], int) tuple of (parts, versionI) where versionI is the
         index of the version and parts is the same list except where the
@@ -573,6 +732,8 @@ class PackageInfo:
                  (['blender', '2.9.3'], 1)
 
         Sequential arguments:
+        cls -- Class (Don't specify this--Call
+               PackageInfo.unsplit_version to prepend the class)
         TwoOnly -- Combine everything before the version and after the
                    start of the version.
         oldDelimiters -- Add old delimiters back when un-splitting.
@@ -583,6 +744,8 @@ class PackageInfo:
         letteredI = -1
         versionI = -1
         parts = tmpParts
+        if PackageInfo.verbosity > 1:
+            print("[unsplit_version] tmpParts={}".format(tmpParts))
         if not hasattr(tmpParts, 'append'):
             raise ValueError("tmpParts must be a list but is {}"
                              "".format(tmpParts))
@@ -719,12 +882,48 @@ class PackageInfo:
     def __str__(self):
         return str(self.toDict())
 
+
 def dir_is_empty(folder_path):
     count = 0
     sub_names = os.listdir(folder_path)
     for sub_name in sub_names:
         count += 1
     return count < 1
+
+
+profile = os.environ.get("HOME")
+if profile is None:
+    profile = os.environ.get("USERPROFILE")
+    AppDatas = os.path.join(profile, "AppData", "Local")
+    if not os.path.isdir(AppDatas):
+        raise RuntimeError("USERPROFILE {} is used (since HOME is"
+                           "not defined), but there is no {}"
+                           "".format(profile, AppDatas))
+    myAppData = os.path.join(AppDatas, "install_any")
+else:
+    AppDatas = os.path.join(profile, ".config")
+    myAppData = os.path.join(AppDatas, "install_any")
+    local_path = os.path.join(profile, ".local")
+    share_path = os.path.join(local_path, "share")
+    icons_path = os.path.join(share_path, "pixmaps")
+if not os.path.isdir(myAppData):
+    os.makedirs(myAppData)
+logPath = os.path.join(myAppData, "install_any.log")
+lib64 = os.path.join(local_path, "lib64")
+lib = os.path.join(local_path, "lib")
+fm = None
+
+
+def logLn(line, path=logPath):
+    global fm
+    if fm is None:
+        fm = 'w'
+        if os.path.isfile(path):
+            fm = 'a'
+    with open(path, 'a') as outs:
+        outs.write(line + "\n")
+        fm = 'a'
+
 
 def install_program_in_place(src_path, **kwargs):
     version = kwargs.get("version")
@@ -795,31 +994,7 @@ def install_program_in_place(src_path, **kwargs):
             if None.
     """
     enable_force_script = False
-    profile = os.environ.get("HOME")
-    if profile is None:
-        profile = os.environ.get("USERPROFILE")
-        AppDatas = os.path.join(profile, "AppData", "Local")
-        if not os.path.isdir(AppDatas):
-            raise RuntimeError("USERPROFILE {} is used (since HOME is"
-                               "not defined), but there is no {}"
-                               "".format(profile, AppDatas))
-        myAppData = os.path.join(AppDatas, "install_any")
-    else:
-        AppDatas = os.path.join(profile, ".config")
-        myAppData = os.path.join(AppDatas, "install_any")
-        local_path = os.path.join(profile, ".local")
-        share_path = os.path.join(local_path, "share")
-        icons_path = os.path.join(share_path, "pixmaps")
-    if not os.path.isdir(myAppData):
-        os.makedirs(myAppData)
-    enable_force_script = False
-    logPath = os.path.join(myAppData, "install_any.log")
-    lib64 = os.path.join(local_path, "lib64")
-    lib = os.path.join(local_path, "lib")
     dst_programs = lib64  # changed if deb has a different programs dir
-    fm = 'w'
-    if os.path.isfile(logPath):
-        fm = 'a'
     if '32' in platform.architecture()[0]:
         dst_programs = lib
     dirname = None
@@ -1367,6 +1542,7 @@ def install_program_in_place(src_path, **kwargs):
             caption += " " + version
         caption = caption[:1].upper() + caption[1:].lower()
         print("* using '" + caption + "' as caption (from luid)")
+    logLn("luid=\"{}\"".format(luid))
     if icon_path is None:
         if try_icon_url is not None:
             icon_name = try_icon_url.split('/')[-1]
@@ -1406,24 +1582,18 @@ def install_program_in_place(src_path, **kwargs):
                 print("mv \"{}\" \"{}\"".format(src_path, path))
                 if src_path != path:
                     shutil.move(src_path, path)
-                    with open(logPath, fm) as outs:
-                        outs.write("install_file:{}\n"
-                                   "".format(dst_dirpath))
+                    logLn("install_file:{}".format(dst_dirpath))
                 else:
                     print("The file is already at '{}'.".format(path))
-                    with open(logPath, fm) as outs:
-                        outs.write("#install_file:{}\n"
-                                   "".format(dst_dirpath))
+                    logLn("#install_file:{}".format(dst_dirpath))
             else:
                 if os.path.isfile(path):
                     if not os.path.isfile(src_path) and pull_back:
                         print("mv \"{}\" \"{}\"".format(path, src_path))
                         shutil.move(path, src_path)
-                        with open(logPath, fm) as outs:
-                            outs.write("uninstall_file:{}\n"
-                                       "".format(path))
-                            outs.write("recovered_to:{}\n"
-                                       "".format(src_path))
+                        logLn("uninstall_file:{}\n"
+                              "recovered_to:{}"
+                              "".format(path, src_path))
                         if src_path == path:
                             print("The source path"
                                   " \"{}\" was moved to \"{}\"."
@@ -1431,9 +1601,7 @@ def install_program_in_place(src_path, **kwargs):
                     else:
                         print("rm \"{}\"".format(path))
                         os.remove(path)
-                        with open(logPath, fm) as outs:
-                            outs.write("uninstall_dir:{}\n"
-                                       "".format(dst_dirpath))
+                        path("uninstall_dir:{}\n".format(dst_dirpath))
                         if src_path == path:
                             print("The source path"
                                   " '{}' is removed.".format(path))
@@ -1447,8 +1615,7 @@ def install_program_in_place(src_path, **kwargs):
                 shutil.rmtree(dst_dirpath)
             else:
                 print("There is no '{}'.".format(dst_dirpath))
-            with open(logPath, fm) as outs:
-                outs.write("uninstall_dir:{}\n".format(dst_dirpath))
+            logLn("uninstall_dir:{}".format(dst_dirpath))
         else:
             print("mv '{}' '{}'".format(dirpath, dst_dirpath))
             if os.path.isdir(dst_dirpath):
@@ -1461,8 +1628,7 @@ def install_program_in_place(src_path, **kwargs):
                     return False
             shutil.move(dirpath, dst_dirpath)
             path = os.path.join(dst_dirpath, filename)
-            with open(logPath, fm) as outs:
-                outs.write("install_move_dir:{}\n".format(dst_dirpath))
+            logLn("install_move_dir:{}".format(dst_dirpath))
 
 
     if not do_uninstall:
@@ -1523,11 +1689,8 @@ def install_program_in_place(src_path, **kwargs):
                       " shortcut path \"{}\" are present."
                       "".format(sc_path, old_sc_path))
 
-    if os.path.isfile(logPath):
-        fm = 'a'
     if do_uninstall:
-        with open(logPath, fm) as outs:
-            outs.write("uninstall_shortcut:{}\n".format(sc_path))
+        logLn("uninstall_shortcut:{}".format(sc_path))
         if os.path.isfile(sc_path):
             print(u_cmd_parts)
             install_proc = subprocess.run(u_cmd_parts)
@@ -1580,8 +1743,7 @@ def install_program_in_place(src_path, **kwargs):
                                                     inst_msg))
             print("  Name={}".format(caption))
             print("  Exec={}".format(path))
-            with open(logPath, fm) as outs:
-                outs.write("install_shortcut:{}\n".format(path))
+            logLn("install_shortcut:{}".format(path))
             print("  Icon={}".format(icon_path))
             # print("")
             # print("You may need to reload the application menu, such"
@@ -1589,8 +1751,7 @@ def install_program_in_place(src_path, **kwargs):
             # print("  ")
             # or xdg-desktop-menu install mycompany-myapp.desktop
         else:
-            with open(logPath, fm) as outs:
-                outs.write("install_shortcut_failed:{}\n".format(path))
+            logLn("install_shortcut_failed:{}".format(path))
         return ok
     return False
 
