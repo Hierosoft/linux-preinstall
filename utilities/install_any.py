@@ -35,26 +35,6 @@ except:
 # from subprocess import CalledProcessError
 # from subprocess import SubprocessError
 
-def assertEqual(v1, v2):
-    '''
-    Show the values if they differ before the assertion error stops the
-    program.
-    '''
-    if ((v1 is True) or (v2 is True) or (v1 is False) or (v2 is False)
-            or (v1 is None) or (v2 is None)):
-        if v1 is not v2:
-            print("")
-            print("{} is not {}".format(toPythonLiteral(v1),
-                                        toPythonLiteral(v2)))
-        assert(v1 is v2)
-    else:
-        if v1 != v2:
-            print("")
-            print("{} != {}".format(toPythonLiteral(v1),
-                                    toPythonLiteral(v2)))
-        assert(v1 == v2)
-
-
 import subprocess
 try:
     # from subprocess import run as sp_run

@@ -4,7 +4,7 @@ import sys
 
 FLAG_NAME = "api.rc"
 REPO_DIR = os.path.realpath(".")
-FLAG_PATH = os.path.join(REPO_DIR, "api.rc")
+FLAG_PATH = os.path.join(REPO_DIR, FLAG_NAME)
 issuesByType = {}
 if not os.path.isfile(FLAG_NAME):
     print("You must run {} from the linux-preinstall directory."

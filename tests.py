@@ -4,6 +4,9 @@ import sys
 import os
 
 def toPythonLiteral(v):
+    '''
+    [copied from pycodetools.parsing by author]
+    '''
     if v is None:
         return None
     elif v is False:
@@ -29,6 +32,7 @@ def toPythonLiteral(v):
 
 def assertEqual(v1, v2, tbs=None):
     '''
+    [copied from pycodetools.parsing by author]
     Show the values if they differ before the assertion error stops the
     program.
 
@@ -51,10 +55,15 @@ def assertEqual(v1, v2, tbs=None):
             print("")
             print("{} != {}".format(toPythonLiteral(v1),
                                     toPythonLiteral(v2)))
+            if tbs is not None:
+                print("for {}".format(tbs))
         assert(v1 == v2)
 
 
 def assertAllEqual(list1, list2, tbs=None):
+    '''
+    [copied from pycodetools.parsing by author]
+    '''
     if len(list1) != len(list2):
         print("The lists are not the same length: list1={}"
               " and list2={}".format(list1, list2))
