@@ -59,16 +59,17 @@ echo "* adding Colemak for command line interface:"
 #            converted from the console to X11, or X11 to console, respectively.
 # from <https://www.linux.org/docs/man1/localectl.html>
 
-echo "  * settings console to Colemak..."
+printf "    * Checking $kb_conf..."
 kb_conf="/etc/X11/xorg.conf.d/00-keyboard.conf"
 line=
 if [ -f "$kb_conf" ]; then
     line="`cat $kb_conf | grep colemak`"
 fi
 if [ -z "$line" ]; then
-    sudo localectl set-x11-keymap us pc104 colemak
+    localectl set-x11-keymap us pc104 colemak
+    echo "OK (set temporarily since not present in conf)"
 else
-    echo "    - $kb_conf already contains a colemak setting, skipping"
+    echo "OK ($kb_conf already contains a colemak setting, skipping)"
 fi
 # check result via:
 # cat /etc/X11/xorg.conf.d/00-keyboard.conf
@@ -76,8 +77,8 @@ fi
 
 echo "  * adding x11 Colemak startup setting..."
 # setxkbmap -model pc104 -layout cz,us -variant ,dvorak -option grp:alt_shift_toggle
-# sudo localectl set-keymap --no-convert us-colemak
-# sudo localectl set-keymap --no-convert us-colemak
+# localectl set-keymap --no-convert us-colemak
+# localectl set-keymap --no-convert us-colemak
 # 101 + Super keys = 104
 # colemak_x_cmd="setxkbmap -model pc104 -layout us -variant colemak"
 # colemak_x_cmd="setxkbmap us -variant colemak"
@@ -102,7 +103,7 @@ echo "* Running \"$colemak_x_src\"..."
 sh $colemak_x_src
 if [ ! -f "$colemak_x_dst" ]; then
     if [ -f "$colemak_x_src" ]; then
-        sudo cp -f "$colemak_x_src" "$colemak_x_dst"
+        cp -f "$colemak_x_src" "$colemak_x_dst"
     else
         echo "  - ERROR: missing $colemak_x_src"
     fi
@@ -113,8 +114,8 @@ colemak_desktop_src="$layouts/us/etc/xdg/autostart/colemak_x.desktop"
 colemak_desktop_dst="/etc/xdg/autostart/colemak_x.desktop"
 if [ ! -f "$colemak_desktop_dst" ]; then
     if [ -f "$colemak_desktop_src" ]; then
-        sudo cp -f "$colemak_desktop_src" "$colemak_desktop_dst"
-        sudo chmod 644 "$colemak_desktop_dst"
+        cp -f "$colemak_desktop_src" "$colemak_desktop_dst"
+         chmod 644 "$colemak_desktop_dst"
     else
         echo "    - ERROR: missing $colemak_desktop_src"
     fi
@@ -138,15 +139,16 @@ END
 
 source /etc/os-release
 if [ -f "`command -v keyboardctl`" ]; then
-    echo "  * Manjaro keyboardctl detected, setting system to Colemak..."
-    sudo keyboardctl -l us colemak
+    echo "  * Manjaro keyboardctl was detected."
+    echo "    * setting system to Colemak..."
+    keyboardctl -l us colemak
 elif [ ! -z "$ID_LIKE" ]; then
     if [[ $ID_LIKE == *arch* ]]; then
         cat <<END
 On Arch-based distros, alternate TTYs may not respect '$kb_conf',
 so you may need to check respective forums for any solutions.
 
-This script can use Manjaro keyboardctl if present.
+This script can use Manjaro keyboardctl when present but it was not.
 
 END
     fi
@@ -170,9 +172,9 @@ fi
         #tar xzf "$HOME/Download/$colemak_arc"
         #popd
     #fi
-    #sudo cp -f "$HOME/Download/$colemak_unz/$colemak_map_rel" "$colemak_map_dst"
+    #cp -f "$HOME/Download/$colemak_unz/$colemak_map_rel" "$colemak_map_dst"
 #fi
-#sudo loadkeys -b "$colemak_map_dst" || echo "* Loading '$colemak_map_dst' failed."
+#loadkeys -b "$colemak_map_dst" || echo "* Loading '$colemak_map_dst' failed."
 ## WARNING: If the command above fails, it resets the x11 layout to Qwerty!
 echo "Done."
 echo
