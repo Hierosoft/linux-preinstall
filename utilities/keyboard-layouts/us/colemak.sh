@@ -176,6 +176,7 @@ fi
 #fi
 #loadkeys -b "$colemak_map_dst" || echo "* Loading '$colemak_map_dst' failed."
 ## WARNING: If the command above fails, it resets the x11 layout to Qwerty!
+echo "* Next, you must install xdotool to ensure that the UN-CAPSLOCK script works when alternatives are not available to the Python script."
 echo "Done."
 echo
 echo

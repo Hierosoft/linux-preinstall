@@ -1,0 +1,45 @@
+#!/usr/bin/env python
+import fcntl
+import os
+import subprocess
+
+KDSETLED = 0x4B32
+
+
+try:
+    console_fd = os.open('/dev/console', os.O_NOCTTY)
+
+    # Turn on caps lock
+    # fcntl.ioctl(console_fd, KDSETLED, 0x04)
+    # Turn off caps lock
+    fcntl.ioctl(console_fd, KDSETLED, 0)
+    exit(0)
+except OSError as ex:
+    pass
+
+try:
+    import SendKeys
+    SendKeys.SendKeys("""
+{CAPSLOCK}
+""")
+
+except ImportError as ex:
+    # CC BY-SA 3.0 Gilles `SO- stop being evil`
+    # https://askubuntu.com/a/80301/766334
+    # causes "Segmentation fault" and no other output:
+    # from ctypes import *
+    # X11 = cdll.LoadLibrary("libX11.so.6")
+    # display = X11.XOpenDisplay(None)
+    # X11.XkbLockModifiers(display, c_uint(0x0100), c_uint(2), c_uint(0))
+    # X11.XCloseDisplay(display)
+    # exit(0)
+    try:
+        subprocess.call(["xdotool", "key", "Caps_Lock"])
+        exit(0)
+    except OSError as ex:
+        if "No such file or directory" in str(ex):
+            print("Error: You must first install xdotool.")
+        else:
+            raise ex
+        exit(1)
+
