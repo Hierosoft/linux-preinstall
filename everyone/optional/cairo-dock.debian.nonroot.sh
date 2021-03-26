@@ -258,6 +258,7 @@ appendif(){
 
 autostart_dir=~/.config/openbox
 autostart_path=~/.config/openbox/autostart.sh
+# ^ ~/.config/openbox/autostart.sh never runs in LXQt
 # if [ -d "$autostart_dir" ]; then
 if [ -f "$autostart_path" ]; then
     # echo "* \"$autostart_dir\" was present so that will be used instead of X-GNOME- variables in shortcuts."
