@@ -63,26 +63,123 @@ EOF
 
 echo "You must install everyone.sh files first, or the repositories or programs may be missing."
 
-#source /etc/os-release
+. /etc/os-release
 
-dnf -y install \
+PACKAGE_TYPE=rpm
+INSTALL_CMD=="dnf -y install"
+if [ ! -f "`command -v dnf`" ]; then
+    if [ ! -f "`command -v yum`" ]; then
+        if [ -f "`command -v apt`" ]; then
+            INSTALL_CMD=="apt -y install"
+            PACKAGE_TYPE=deb
+        elif [ -f "`command -v apt-get`" ]; then
+            INSTALL_CMD=="apt-get -y install"
+            PACKAGE_TYPE=deb
+        fi
+    else
+        INSTALL_CMD="yum -y install"
+    fi
+fi
+
+CODEBLOCKS_PKG=codeblocks
+if [ "@$VERSION_CODENAME" = "@buster" ]; then
+    CODEBLOCKS_PKG=
+    echo "* You are using buster and codeblocks is very old and crashy on that."
+    if [ -f "`command -v flatpak`" ]; then
+        # ^ Use flatpak if Debian 10 it is really old and crashes.
+        flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+        flatpak install -y flathub org.codeblocks.codeblocks
+        # TODO: Remove above then in nonroot addendum to this script, install with the --user option:
+        # flatpak install -y --user flathub org.codeblocks.codeblocks
+        if [ $? -ne 0 ]; then
+            echo "Error: 'flatpak install -y flathub org.codeblocks.codeblocks' failed."
+            exit 1
+        fi
+    else
+        echo " Error: flatpak is not installed."
+    fi
+fi
+
+NEXTCLOUD_CLIENT_PKG=nextcloud-client
+
+GEANY_SPELL_PKG=geany-plugins-spellcheck
+# E: Unable to locate package ladspa-cmt-plugins
+# ^ Debian 10
+PY2_PIL_PKG=python2-pillow
+AVIDEMUX_PKG=avidemux
+# E: Package 'avidemux' has no installation candidate
+# ^ Debian 10
+QT_CREATOR_PKG=qt-creator
+PY2_PYGAME_PKG=python2-pygame
+PROJECTM_PA_PKG=projectM-pulseaudio
+ECLIPSE_JDT_PKG=eclipse-jdt
+
+# TODO: Make package variables for stuff below too to improve compatibility with other distros.
+_PKG=icedtea-web
+_PKG=shotcut
+_PKG=chromium-libs-media-freeworld
+_PKG=fuse-exfat
+_PKG=unetbootin
+_PKG=gimp-elsamuko
+_PKG=gimp-wavelet-denoise-plugin
+_PKG=gimp-paint-studio
+_PKG=gimp-lqr-plugin
+_PKG=gimp-normalmap
+_PKG=GREYCstoration-gimp
+STAR_PKG=star
+# E: Package 'star' has no installation candidate
+# ^ Debian 10
+_PKG=ladspa-cmt-plugins
+_PKG=ladspa-autotalent-plugins
+_PKG=ladspa-zam-plugins
+_PKG=ladspa-rev-plugins
+_PKG=PersonalCopy-Lite-soundfont
+_PKG=ardour5
+_PKG=remarkable
+_PKG=discord
+_PKG=git-credential-libsecret
+_PKG=gstreamer-ffmpeg
+_PKG=gmic-gimp
+
+skip_msg(){
+    echo "* skipping \"$1\" since its package name is unknown on your package system ($PACKAGE_TYPE)"
+}
+
+if [ "@$PACKAGE_TYPE" = "@deb" ]; then
+    GEANY_SPELL_PKG=geany-plugin-spellcheck
+    NEXTCLOUD_CLIENT_PKG=nextcloud-desktop
+    PY2_PIL_PKG=python-pillow
+    AVIDEMUX_PKG=
+    skip_msg avidemux
+    QT_CREATOR_PKG=qtcreator
+    PY2_PYGAME_PKG=python-pygame
+    PROJECTM_PA_PKG=projectm-pulseaudio
+    ECLIPSE_JDT_PKG=
+    echo "* skipping \"eclipse-jdt\" since the package is not in Debian 10 and later and an automated install method is unknown on Debian 10 or later. See <https://linuxhint.com/install_eclipse_ide_debian_10/>"
+
+    STAR_PKG=
+    skip_msg star
+
+fi
+
+$INSTALL_CMD \
     blender \
     inkscape \
-    owncloud-client \
+    $NEXTCLOUD_CLIENT_PKG \
     git-cola \
     obs-studio \
     keepassxc \
     geany \
-    geany-plugins-spellcheck \
+    $GEANY_SPELL_PKG \
     python \
-    python2-pillow \
+    $PY2_PIL_PKG \
     python3-pillow \
     speedcrunch \
     filezilla \
     darktable \
     avidemux \
-    codeblocks \
-    qt-creator \
+    $CODEBLOCKS_PKG \
+    $QT_CREATOR_PKG \
     mypaint \
     krita \
     kate \
@@ -108,7 +205,7 @@ dnf -y install \
     redshift \
     redshift-gtk \
     plasma-applet-redshift-control \
-    projectM-pulseaudio \
+    $PROJECTM_PA_PKG \
     eclipse-jdt \
     icedtea-web \
     maven \
@@ -126,7 +223,7 @@ dnf -y install \
     gimp-lensfun \
     gimp-data-extras \
     GREYCstoration-gimp \
-    star \
+    $STAR_PKG \
     sloccount \
     icoutils \
     ladspa-cmt-plugins \
@@ -143,7 +240,7 @@ dnf -y install \
     icoutils \
     pandoc \
     git \
-    git-credential-libsecret \  # remember password securely in terminal
+    git-credential-libsecret \
     gstreamer-ffmpeg \
     sqlitebrowser \
     python3-pycodestyle \
@@ -151,7 +248,8 @@ dnf -y install \
     gnome-terminal \
     screen \
     ;
-
+# ^ Don't put any comment mark above or it will comment the rest of the packages!
+# git-credential-libsecret: remember password securely in terminal
 
 # gstreamer-ffmpeg: should allow dragon player to play the files it opens by default but can't play by default (mkv, mp4, mov)
 
@@ -375,15 +473,15 @@ fi
 cat >> $postinstall <<END
 
 see also Downloads/1.InstallManually
-see also $HOME/ownCloud/Downloads
+see also $HOME/Nextcloud/Downloads
 and try:
-  cd ~/ownCloud/Downloads/Graphics,2D/gimp-stuff/
+  cd ~/Nextcloud/Downloads/Graphics,2D/gimp-stuff/
   chmod +x install-plugins
   ./install-plugins
 
 To to via GUI"
 * Install color profile from
-  $HOME/ownCloud/Downloads/Drivers/Monitor/W2361VV-Windows7/
+  $HOME/Nextcloud/Downloads/Drivers/Monitor/W2361VV-Windows7/
   or <https://www.lg.com/us/support-product/lg-W2361V-PF>
 * Open your linux Desktop's System Settings,
   Color Corrections, Add Profile,
