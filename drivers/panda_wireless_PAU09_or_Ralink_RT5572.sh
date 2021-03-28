@@ -8,15 +8,15 @@
 
 #Copyright (c) 2010-2013 Panda Wireless, Inc. All rights reserved.
 #Fedora Download Link
-mkdir -p $HOME/Downloads
+mkdir -p /opt/Downloads
 if [ $? -ne 0 ]; then
-    echo "Error: 'mkdir -p $HOME/Downloads' failed."
+    echo "Error: 'mkdir -p opt/Downloads' failed."
     exit 1
 fi
 VER="2.5.0.3"
 DL_NAME=LinuxDriver4Fedora_v$VER.tar.bz2
 EX_NAME=LinuxDriver4Fedora_v$VER
-DL_PATH=$HOME/Downloads/$DL_NAME
+DL_PATH=/opt/Downloads/$DL_NAME
 DAT_NAME=RT2870STA.dat
 DAT_REL=$DAT_NAME
 # ^ DAT_REL is relative to EX_PATH
@@ -30,9 +30,9 @@ if [ ! -f "$DL_PATH" ]; then
 else
     echo "* using existing \"$DL_PATH\""
 fi
-cd $HOME/Downloads
+cd /opt/Downloads
 if [ $? -ne 0 ]; then
-    echo "Error: 'cd $HOME/Downloads' failed."
+    echo "Error: 'cd /opt/Downloads' failed."
     exit 1
 fi
 EX_PATH="`realpath $EX_NAME`"
@@ -142,14 +142,14 @@ END
     FORK_REPO="https://github.com/maroviher/DPO_RT5572_LinuxSTA_2.6.1.3_20121022_mod.git"
     REPO_NAME="DPO_RT5572_LinuxSTA_2.6.1.3_20121022_mod"
     echo "* attempting to use a fork at $FORK_REPO"
-    mkdir -p "$HOME/Downloads/git/maroviher"
+    mkdir -p "/opt/Downloads/git/maroviher"
     if [ $? -ne 0 ]; then
-        echo "Error: 'mkdir -p \"$HOME/Downloads/git/maroviher\"' failed."
+        echo "Error: 'mkdir -p \"/opt/Downloads/git/maroviher\"' failed."
         exit 1
     fi
-    cd "$HOME/Downloads/git/maroviher"
+    cd "/opt/Downloads/git/maroviher"
     if [ $? -ne 0 ]; then
-        echo "Error: 'cd \"$HOME/Downloads/git/maroviher\"' failed."
+        echo "Error: 'cd \"/opt/Downloads/git/maroviher\"' failed."
         exit 1
     fi
     if [ -d "$REPO_NAME" ]; then
