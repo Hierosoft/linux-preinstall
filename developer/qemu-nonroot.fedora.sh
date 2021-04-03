@@ -13,6 +13,18 @@ END
     exit $code
 }
 
+GUI=true
+
+for var in "$@"
+do
+    if [ "@$var" = "@--cli" ]; then
+        GUI=false
+    else
+        echo "Error: unknown option '$var'"
+        exit 1
+    fi
+done
+
 # Some Ubuntu release dates from <https://wiki.ubuntu.com/Releases>:
 # Ubuntu 16.04 LTS; Xenial Xerus; April 21, 2016
 # Ubuntu 14.04.6 LTS; Trusty Tahr; March 7, 2019
@@ -80,7 +92,12 @@ echo "  * Boot options"
 echo "    * check \"IDE CDROM 1\""
 echo "  * Apply"
 echo "  * Begin Install (top left button)"
-exit 0
+echo
+echo "Specify --cli for command line interface instructions."
+echo
+if [ "$GUI" = "@true" ]; then
+    exit 0
+fi
 
 
 # qemu is not a command unless you symlink it, so:
@@ -106,11 +123,6 @@ if [ -z "$QEMU" ]; then
     echo "QEMU=$QEMU"
 fi
 
-
-
-
-
-
 echo "QEMU_INITIALIZE=$QEMU_INITIALIZE"
 if [ "@$QEMU_INITIALIZE" = "@true" ]; then
     if [ -f "$QEMU_CDROM" ]; then
@@ -128,4 +140,11 @@ if [ "@$QEMU_INITIALIZE" = "@true" ]; then
     fi
 else
     echo "* skipping install since QEMU_INITIALIZE is not true."
+    echo "  Try 'cd `pwd`' then:"
+    echo "  $QEMU -f $QEMU_HDA -c $QEMU_CDROM -net nic -net user -m 196 -rtc base=localtime"
+    echo "  # or"
+    if [ ! -f "`command -v qemu-system-x86_64`" ]; then
+        echo "# install qemu-system-x86 then"
+    fi
+    echo "  qemu-system-x86_64 -drive file=$QEMU_HDA -net nic -net user -m 196 -rtc base=localtime"
 fi
