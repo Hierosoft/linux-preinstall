@@ -995,6 +995,12 @@ def install_program_in_place(src_path, **kwargs):
 
     ending = ".deb"
     if src_path.lower()[-(len(ending)):] == ending:
+        logLn("* switching to --reinstall mode automatically...")
+        if enable_reinstall:
+            logLn("  * already done")
+        else:
+            enable_reinstall = True
+            logLn("  * OK")
         ex_tmp = tempfile.mkdtemp()
         print("* extracting '{}' to '{}'...".format(src_path, ex_tmp))
         ex_command = "cd '{}' && ar xv '{}'".format(ex_tmp, src_path)
@@ -1602,7 +1608,7 @@ def install_program_in_place(src_path, **kwargs):
                 if enable_reinstall:
                     shutil.rmtree(dst_dirpath)
                 else:
-                    print("ERROR: '{}' already exists. Use the"
+                    logLn("ERROR: '{}' already exists. Use the"
                           " --reinstall option to ERASE the"
                           " directory.".format(dst_dirpath))
                     return False
@@ -1664,7 +1670,7 @@ def install_program_in_place(src_path, **kwargs):
         if os.path.isfile(old_sc_path):
             u_cmd_parts = [desktop_installer, "uninstall", old_sc_path]
             if os.path.isfile(sc_path):
-                print("WARNING: You'll have to run uninstall again"
+                logLn("WARNING: You'll have to run uninstall again"
                       " because both shortcut path \"{}\" and legacy"
                       " shortcut path \"{}\" are present."
                       "".format(sc_path, old_sc_path))
@@ -1741,7 +1747,7 @@ if __name__ == "__main__":
     src_path = None
     if len(sys.argv) < 2:
         usage()
-        print("You must specify a directory or binary file.")
+        logLn("You must specify a directory or binary file.")
         print("")
         print("")
         exit(1)
