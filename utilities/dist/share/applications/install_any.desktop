@@ -1,0 +1,22 @@
+[Desktop Entry]
+Version=1.0
+Encoding=UTF-8
+Name=install_any
+Name[en_US]=install_any
+GenericName=install_any
+GenericName[en_US]=install_any
+Categories=System;
+Comment=install_any
+Comment[en_US]=
+Exec=/home/owner/git/linux-preinstall/utilities/install_any.py
+#Icon=/home/owner/.icons/MacOS-X/48x48/apps/gnome-globe.png
+MimeType=;
+Path=/home/owner/git/linux-preinstall
+StartupNotify=true
+Terminal=false
+TerminalOptions=--noclose
+Type=Application
+X-DCOP-ServiceType=
+#X-KDE-SubstituteUID=false
+#X-KDE-Username=
+
