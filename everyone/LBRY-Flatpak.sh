@@ -9,7 +9,7 @@ flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flath
 # ^ as per <https://flatpak.org/setup/Fedora/> + --user
 flatpak install --user -y flathub io.lbry.lbry-app
 # ^ as per <https://flathub.org/apps/details/io.lbry.lbry-app> + --user -y
-if [ $? -neq 0 ]; then
+if [ $? -ne 0 ]; then
     echo "The flatpak install command failed as $USER."
     echo "Try the following (if no sudo run as root) then try again:"
     echo "sudo chown -R $USER:$USER $HOME/.local/share/flatpak"
