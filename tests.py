@@ -77,6 +77,18 @@ from install_any import PackageInfo
 
 from install_any import find_all_any_ci
 
+from install_any import tests
+
+print()
+print()
+print()
+print("BEGIN install_any.py self tests")
+tests()
+print("END install_any.py self tests")
+print()
+print()
+print()
+
 PackageInfo.verbosity = 2
 
 fn = "blender-2.79b-linux-glibc219-x86_64"

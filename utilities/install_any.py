@@ -105,6 +105,7 @@ icons["ultimaker.cura"] = "cura"
 iconLinks = {}
 iconLinks["ultimaker.cura"] = "https://github.com/Ultimaker/Cura/raw/master/icons/cura-48.png"
 iconLinks["prusaslicer"] = "https://github.com/prusa3d/PrusaSlicer/raw/master/resources/icons/PrusaSlicer.png"
+iconLinks["pycharm.community"] = "https://github.com/JetBrains/intellij-community/raw/master/python/resources/PyCharmCore128.png"
 casedNames = {}
 casedNames["umlet"] = "UMLet Standalone"  # as opposed to a plugin/web ver
 casedNames["freecad"] = "FreeCAD"
@@ -194,8 +195,7 @@ def tests():
     #     print("* Tests completed with {} failure(s).".format(failures))
 
 
-tests()
-
+# TODO: Run tests() using nose.
 
 def toLUID(name):
     return name.replace(" ", ".").lower()
@@ -497,6 +497,10 @@ class PackageInfo:
                 the program (no version); ready to be used as an icon file
                 name; used as a key for the icons dict or casedNames dict
                 default: toLUID(casedName)
+        version -- You must specify a version if the name has no
+                   version. This script should automatically pass along
+                   the version such as if the archive but not directory
+                   (or directory but not not binary) has the version.
         '''
         print("[PackageInfo __init__] * checking src_path {}..."
               "".format(src_path))
@@ -547,8 +551,9 @@ class PackageInfo:
             # re-split
             tmpParts = fnamePartial.split(".")
             parts, versionI = PackageInfo.unsplit_version(tmpParts)
-            # print("Split {} into {} len {}"
-            #       "".format(fnamePartial, tmpParts, len(tmpParts)))
+            print("* split {} into {} len {} (version is at [{}])"
+                  "".format(fnamePartial, tmpParts, len(tmpParts),
+                            versionI))
         else:
             oldDelimiters = []
             cI = 0
@@ -592,12 +597,14 @@ class PackageInfo:
             # ^ still do unsplit_version, because the version may be
             #   multiple parts such as in ['Slic3r', '1.3.1', 'dev']
             del i
-        if len(parts) < 2:
+        if (len(parts) < 2) and (self.version is None):
             usage()
-            raise ValueError("End of program name (any of '{}' or '.')"
-                             " is not in {}"
+            raise ValueError("The end of the program name (any of '{}'"
+                             " or '.' is not in {} and you didn't"
+                             " specify a version such as:\n"
+                             " install_any.py {} --version x"
                              "".format(PackageInfo.DELIMITERS,
-                                       fnamePartial))
+                                       fnamePartial, src_path))
         if self.version is None:
             # INFO: Any "v" prefix was already removed and multi-part
             #       versions were already un-split into one part
@@ -605,10 +612,10 @@ class PackageInfo:
             #       `else` case).
             if versionI > -1:
                 self.version = parts[versionI]
-                if PackageInfo.verbosity > 0:
+                if True:  # TODO: if PackageInfo.verbosity > 0:
                     print("* using '" + self.version + "' as version")
         else:
-            if PackageInfo.verbosity > 0:
+            if True:  # TODO: PackageInfo.verbosity > 0:
                 print("* using specified '{}' as version"
                       "".format(self.version))
 
@@ -895,6 +902,7 @@ fm = None
 
 
 def logLn(line, path=logPath):
+    print("[logged]:" + line)
     global fm
     if fm is None:
         fm = 'w'
@@ -978,6 +986,7 @@ def install_program_in_place(src_path, **kwargs):
     if '32' in platform.architecture()[0]:
         dst_programs = lib
     dirname = None
+    dirpath = None
     ex_tmp = None
     suffix = ""
     new_tmp = None
@@ -1250,6 +1259,7 @@ def install_program_in_place(src_path, **kwargs):
         print("* removed '{}'".format(next_temp))
         return result
         # ^ return archive within extracted archive
+        # end if deb (containing tar.xz)
 
     archive_categories = {}
     archive_categories["tar"] = [".tar.bz2", ".tar.gz", ".tar.xz"]
@@ -1262,6 +1272,27 @@ def install_program_in_place(src_path, **kwargs):
                 dirname = src_path[:-(len(ending))]
                 found_ending = ending
                 ar_cat = category
+                pkginfo = PackageInfo(
+                    src_path,
+                    casedName=casedName,
+                    version=version,
+                    caption=caption,
+                )
+                # ^ Do NOT specify is_dir
+                if casedName is None:
+                    casedName = pkginfo.casedName
+                if version is None:
+                    version = pkginfo.version
+                    print("* version from archive name is: {}"
+                          "".format(version))
+                if caption is None:
+                    caption = pkginfo.caption
+                if luid is None:
+                    luid = pkginfo.luid
+                suffix = pkginfo.suffix
+                # ^ Get the info now, because the extracted directory
+                #   name may not contain the version.
+
                 break
     if (dirname is not None) and (not do_uninstall):
         move_what = 'directory'
@@ -1305,16 +1336,32 @@ def install_program_in_place(src_path, **kwargs):
         print("* changed {} source to '{}'".format(verb, src_path))
 
     if os.path.isdir(src_path):
+        dirpath = src_path
         print("* trying to detect binary...")
         src_name = os.path.split(src_path)[-1]
         only_name = src_name.strip("-0123456789. ")
         try_name = src_name.split("-")[0]
-        try_path = os.path.join(src_path, try_name)
+        try_names = []
+        name_partial = src_name.split("-")[0]
+        try_names.append(name_partial + ".sh")
+        # ^ sh takes priority in case environment vars are necessary
+        try_names.append(name_partial)
         print("  src_name: {}".format(src_name))
         print("  only_name: {}".format(only_name))
-        if os.path.isfile(try_path):
-            print("* detected binary: '{}'".format(try_path))
-            src_path = try_path
+        print("  name_partial: {}".format(name_partial))
+        got_path = None
+        try_paths = []
+        for try_name in try_names:
+            try_paths.append(os.path.join(src_path, "bin", try_name))
+            try_paths.append(os.path.join(src_path, try_name))
+        for try_path in try_paths:
+            if os.path.isfile(try_path):
+                got_path = try_path
+                break
+
+        if got_path is not None:
+            print("* detected binary: '{}'".format(got_path))
+            src_path = got_path
         else:
             all_files = os.listdir(src_path)
             scripts = []
@@ -1391,7 +1438,19 @@ def install_program_in_place(src_path, **kwargs):
     print("{} started.".format(verb.title()))
 
     filename = os.path.split(src_path)[-1]
-    dirpath = os.path.split(src_path)[-2]
+    if dirpath is None:
+        dirpath = os.path.split(src_path)[-2]
+    else:
+        print("* using detected \"{}\" for dirpath instead of \"{}\""
+              "".format(dirpath, os.path.split(src_path)[-2]))
+        filename = src_path[len(dirpath)+1:]  # 1 for slash
+        # INFO: The filename is a relative path (not merely a name) in
+        #       this case.
+        print("  * therefore the filename is \"{}\""
+              "".format(filename))
+        if move_what == 'file':
+            raise RuntimeError("A single file install is impossible"
+                               " since there is a directory.")
     if detect_program_parent:
         this_programs_path = os.path.split(dirpath)[0]
         this_programs = os.path.split(this_programs_path)[-1]
@@ -1618,8 +1677,11 @@ def install_program_in_place(src_path, **kwargs):
 
 
     if not do_uninstall:
+        sys.stderr.write("* marking \"{}\" as executable..."
+                         "".format(path))
         os.chmod(path, stat.S_IRWXU | stat.S_IXGRP | stat.S_IRGRP
                        | stat.S_IROTH | stat.S_IXOTH)
+        sys.stderr.write("OK\n")
         # stat.S_IRWXU : Read, write, and execute by owner
         # stat.S_IEXEC : Execute by owner
         # stat.S_IXGRP : Execute by group
@@ -1724,6 +1786,13 @@ def install_program_in_place(src_path, **kwargs):
                           | stat.S_IWUSR))
                 print("* installing '{}'...{}".format(sc_path,
                                                       inst_msg))
+                sys.stderr.write("* marking \"{}\" as executable..."
+                                 "".format(path))
+                os.chmod(path, stat.S_IRWXU | stat.S_IXGRP
+                         | stat.S_IRGRP
+                         | stat.S_IROTH | stat.S_IXOTH)
+                sys.stderr.write("OK\n")
+
             else:
                 print("* installing '{}'...".format(sc_name,
                                                     inst_msg))
