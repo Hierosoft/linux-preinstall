@@ -1,0 +1,78 @@
+#!/bin/sh
+me="`basename $0`"
+error(){
+    >&2 echo "$@"
+    # Wrap it in a function to avoid creating a global alias as per
+    # Braden Best's comment on
+    # <https://stackoverflow.com/a/23550347/4541104>
+}
+errorf(){
+    printf "$@" 1>&2
+    # Wrap it in a function to avoid creating a global alias as per
+    # Braden Best's comment on
+    # <https://stackoverflow.com/a/23550347/4541104>
+}
+if [ -z "$1" ]; then
+    error "You must specify a path or a binary in the path."
+    exit 1
+fi
+BIN_PATH="$1"
+if [ ! -f "$BIN_PATH" ]; then
+    error
+    errorf "Warning: The path \"$BIN_PATH\" does not exist"
+    TRY_CMD="`command -v $BIN_PATH`"
+    if [ -f "$TRY_CMD" ]; then
+        error ". Try:"
+        error "  $me \"$TRY_CMD\""
+        error "  # or whichever is the correct $BIN_PATH to get the correct icon, otherwise the first matching one will be displayed as standard output."
+        error
+        # exit 2
+    else
+        error " and it is not in the environment's PATH."
+        error
+        exit 3
+    fi
+fi
+error "* looking for a shortcut to \"$BIN_PATH\"..."
+for SC_PATH in /usr/local/share/applications /usr/share/applications $HOME/.local/share/applications
+do
+    if [ ! -d "$SC_PATH" ]; then
+        # error "$SC_PATH does not exist."
+        continue
+    fi
+    # error "* checking in \"$SC_PATH\"..."
+    cd "$SC_PATH"
+    result=""
+    for file in .* *
+    do
+        subPath="$SC_PATH/$file"
+        if [ -d "$subPath" ]; then
+            continue
+        fi
+        if [ ! -f "$subPath" ]; then
+            got="`readlink "$subPath"`"
+            if [ ! -z "$got" ]; then
+                error "* bad symlink \"$subPath\" points to inaccessible file \"$got\""
+            else
+                error "* inaccessible file: $subPath"
+            fi
+            continue
+        fi
+        if [ "`cat "$subPath" | grep "$BIN_PATH" | wc -l`" -gt 0 ]; then
+            if [ "@$file" = "@bamf-2.index" ]; then
+                error "* skipping $subPath"
+            elif [ "@$file" = "@mimeinfo.cache" ]; then
+                error "* skipping $subPath"
+            else
+                if [ "@$result" = "@" ]; then
+                    echo "$subPath"
+                    result="$subPath"
+                else
+                    error "* skipping \"$subPath\" since already got a result!"
+                fi
+            fi
+        # else
+        #     error "NOT $subPath: `cat "$subPath" | grep "$BIN_PATH" | wc -l`"
+        fi
+    done
+done
