@@ -10,12 +10,10 @@ parents.append(
 # ^ last used 13 days ago on test user's computer 178 GB). I'm not sure
 #   why it was that recent, because the deb package was removed a while
 #   back.
-'''
 parents.append(
     os.path.join(os.environ["HOME"], ".var", "app", "io.lbry.lbry-app",
                  "data", "lbry", "lbrynet", "blobfiles")
 )
-'''
 # ^ IT was last used 4 days ago on test user's computer (46.9 GB), so it
 #   is probably the flatpak packaged one.
 count = 0
