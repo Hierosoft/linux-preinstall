@@ -29,10 +29,11 @@ for parent in parents:
         if sub.startswith("."):
             continue
         subPath = os.path.join(parent, sub)
-        # os.remove(subPath)
         deletedMB += os.stat(subPath).st_size/1024/1024
+        os.remove(subPath)
         print(subPath)
         thisCount += 1
         print("- {}".format(subPath))
         count += thisCount
 print("* deleted {} MB ({} file(s))".format(deletedMB, count))
+print("You can close this window.")
