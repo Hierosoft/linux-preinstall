@@ -1,0 +1,21 @@
+[Desktop Entry]
+Version=1.0
+Encoding=UTF-8
+Name=Clean LBRY
+Name[en_US]=Clean LBRY
+GenericName=Clean LBRY
+GenericName[en_US]=Clean LBRY
+Categories=System;
+Comment=Clean LBRY
+Comment[en_US]=
+Exec=/home/owner/git/linux-preinstall/utilities/clean-lbry.py
+Icon=/usr/share/icons/hicolor/48x48/actions/geany-close-all.png
+MimeType=;
+Path=/home/owner/git/linux-preinstall
+StartupNotify=true
+Terminal=true
+TerminalOptions=--noclose
+Type=Application
+X-DCOP-ServiceType=
+# X-KDE-SubstituteUID=false
+# X-KDE-Username=
