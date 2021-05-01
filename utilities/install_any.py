@@ -106,6 +106,7 @@ iconLinks = {}
 iconLinks["ultimaker.cura"] = "https://github.com/Ultimaker/Cura/raw/master/icons/cura-48.png"
 iconLinks["prusaslicer"] = "https://github.com/prusa3d/PrusaSlicer/raw/master/resources/icons/PrusaSlicer.png"
 iconLinks["pycharm.community"] = "https://github.com/JetBrains/intellij-community/raw/master/python/resources/PyCharmCore128.png"
+iconLinks["keepassxc"] = "https://github.com/keepassxreboot/keepassxc/raw/develop/share/icons/application/scalable/apps/keepassxc.svg"
 casedNames = {}
 casedNames["umlet"] = "UMLet Standalone"  # as opposed to a plugin/web ver
 casedNames["freecad"] = "FreeCAD"
