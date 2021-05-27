@@ -537,6 +537,17 @@ class PackageInfo:
             fnamePartial = os.path.splitext(self.fname)[0]
             if fnamePartial.lower().endswith(".tar"):
                 fnamePartial = fnamePartial[:-4]
+        startChar = 0
+        while not fnamePartial[startChar].isalpha():
+            startChar += 1
+            if startChar >= len(fnamePartial):
+                msg = ("Parsing names with no alphabetic"
+                       " characters is not possible.")
+                raise ValueError(msg)
+                # print(msg)
+                # break
+                # startChar = 0
+        fnamePartial = fnamePartial[startChar:]
         self.caption = kwargs.get('caption')
         parts = split_any(fnamePartial, PackageInfo.DELIMITERS,
                           blobs=PackageInfo.ARCHES)

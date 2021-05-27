@@ -30,6 +30,11 @@ def check_parent(parent):
         if sub.endswith(".sh"):
             check_sh_quality(subPath)
 
+sys.path.insert(0, "utilities")
+from install_any import tests
+tests()
+print("  (done testing install_any)")
+
 check_parent(REPO_DIR)
 issueCount = 0
 for key,issues in issuesByType.items():

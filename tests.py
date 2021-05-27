@@ -164,6 +164,23 @@ pkg = PackageInfo(src_path, is_dir=False)
 assertEqual(pkg.caption, "Ultimaker Cura 4.8.0 (AppImage)")
 assertEqual(pkg.luid, "ultimaker.cura")
 
+src_path = "4.9_20210511_Ultimaker_Cura-4.9.1.AppImage"
+pkg = PackageInfo(src_path, is_dir=False)
+assertEqual(pkg.caption, "Ultimaker Cura 4.9.1 (AppImage)")
+assertEqual(pkg.luid, "ultimaker.cura")
+
+found = False
+try:
+    src_path = "4.9_20210511-4.9.1.AppImage"
+    pkg = PackageInfo(src_path, is_dir=False)
+except ValueError as ex:
+    if "no alphabetic" in str(ex):
+        found = True
+    else:
+        raise ex
+if not found:
+    raise RuntimeError("The program should have detected a filename (not including extension) with no alphabetic characters as bad (See code near `startChar` in install_any.py).")
+
 src_path = "blender-2.49b-linux-glibc236-py26-x86_64.tar.bz2"
 pkg = PackageInfo(src_path, is_dir=False)
 assertEqual(pkg.caption, "Blender 2.49b")
