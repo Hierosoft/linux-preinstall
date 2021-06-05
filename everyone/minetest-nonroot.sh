@@ -10,12 +10,17 @@ MT_BASH_SCRIPT_NAME="update-minetest-linux64.sh"
 MT_BASH_SCRIPT_PATH="/tmp/$MT_BASH_SCRIPT_NAME"
 curl https://raw.githubusercontent.com/poikilos/EnlivenMinetest/master/$MT_BASH_SCRIPT_NAME -o $MT_BASH_SCRIPT_PATH
 bash $MT_BASH_SCRIPT_PATH
+# The light install is (barring this script): curl https://raw.githubusercontent.com/poikilos/EnlivenMinetest/master/update-minetest-linux64.sh | bash
 exit $?
-
+cat > /dev/null <<END
 killall minetest
 arcName=minetest-linux64.zip
 RELEASE_ARC_URL=https://downloads.minetest.org/$arcName
+if [ -d "everyone" ]; then
+     cd everyone
+fi
 installPath="`pwd`"
+
 customExit() {
     echo
     echo "ERROR:"
@@ -79,7 +84,7 @@ if [ -d "$HOME/minetest/worlds" ]; then
 fi
 if [ -d "$HOME/minetest/games/Bucket_Game/mods/codercore/coderskins" ]; then
     echo
-    echo "Backing up skins..."
+    echo "Backing up deprecated skin config location..."
     rsync -rt --delete --info=progress2 $HOME/minetest/games/Bucket_Game/mods/codercore/coderskins $mytmp
 fi
 if [ ! -d "$HOME/minetest" ]; then
@@ -104,7 +109,7 @@ if [ -d "$mytmp/worlds" ]; then
 fi
 if [ -d "$mytmp/coderskins/textures" ]; then
     echo
-    echo "Restoring skins..."
+    echo "Restoring deprecated skin config location..."
     rsync -rt --info=progress2 $mytmp/coderskins/textures/ $HOME/minetest/games/Bucket_Game/mods/codercore/coderskins/textures
 fi
 destPix="$HOME/.local/share/pixmaps"
@@ -128,12 +133,13 @@ echo "Name=Final Minetest" >> "$dstShortcut"
 echo "Icon=$destPix/minetest.png" >> "$dstShortcut"
 
 updaterName=org.minetest.mtupdate.desktop
+updaterSh="$installPath/minetest-nonroot.sh"
 updaterSrc="share/applications/$updaterName"
 updaterDst="$HOME/.local/share/applications/$updaterName"
 
 if [ -f "$installPath/$updaterSrc" ]; then
     cat "$installPath/$updaterSrc" | grep -v Exec= | grep -v Icon= > $updaterDst
-    echo "Exec=$HOME/git/linux-preinstall/everyone/minetest-nonroot.sh" >> $updaterDst
+    echo "Exec=$updaterSh" >> $updaterDst
     echo "Icon=$HOME/.local/share/pixmaps/minetest.png" >> $updaterDst
 else
     echo "'$updaterSrc' is missing."
@@ -143,3 +149,4 @@ echo
 echo "Update is complete."
 echo
 sleep 4
+END
