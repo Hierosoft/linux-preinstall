@@ -107,6 +107,7 @@ iconLinks["ultimaker.cura"] = "https://github.com/Ultimaker/Cura/raw/master/icon
 iconLinks["prusaslicer"] = "https://github.com/prusa3d/PrusaSlicer/raw/master/resources/icons/PrusaSlicer.png"
 iconLinks["pycharm.community"] = "https://github.com/JetBrains/intellij-community/raw/master/python/resources/PyCharmCore128.png"
 iconLinks["keepassxc"] = "https://github.com/keepassxreboot/keepassxc/raw/develop/share/icons/application/scalable/apps/keepassxc.svg"
+iconLinks["unityhub"] = "https://img.icons8.com/ios-filled/50/000000/unity.png"
 casedNames = {}
 casedNames["umlet"] = "UMLet Standalone"  # as opposed to a plugin/web ver
 casedNames["freecad"] = "FreeCAD"
@@ -927,6 +928,8 @@ def logLn(line, path=logPath):
 
 def install_program_in_place(src_path, **kwargs):
     version = kwargs.get("version")
+    if version is not None:
+        print("- version: {}".format(version))
     casedName = kwargs.get("casedName")
     caption = kwargs.get("caption")
     luid = kwargs.get("luid")
@@ -1836,6 +1839,8 @@ if __name__ == "__main__":
     enable_reinstall = False
     move_what = None
     multiVersion = None
+    valueParams = {}
+    valueParamsKey = None
     for i in range(1, len(sys.argv)):
         arg = sys.argv[i]
         if arg[:2] == "--":
@@ -1843,6 +1848,8 @@ if __name__ == "__main__":
                 do_uninstall = True
             elif arg == "--move":
                 move_what = 'any'
+            elif arg == "--version":
+                valueParamsKey = "version"
             elif arg == "--reinstall":
                 enable_reinstall = True
             elif arg == "--multi-version":
@@ -1853,6 +1860,9 @@ if __name__ == "__main__":
             else:
                 print("ERROR: '{}' is not a valid option.".format(arg))
                 exit(1)
+        elif valueParamsKey is not None:
+            valueParams[valueParamsKey] = arg
+            valueParamsKey = None
         else:
             if src_path is None:
                 src_path = arg
@@ -1878,7 +1888,7 @@ if __name__ == "__main__":
     parts = src_path.split('.')
     if parts[-1] == "AppImage":
         move_what='file'
-
+    version = valueParams.get('version')
     install_program_in_place(
         src_path,
         caption=caption,
@@ -1886,4 +1896,5 @@ if __name__ == "__main__":
         do_uninstall=do_uninstall,
         enable_reinstall=enable_reinstall,
         multiVersion=multiVersion,
+        version=version,
     )
