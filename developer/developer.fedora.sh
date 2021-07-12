@@ -89,8 +89,7 @@ if [ "@$VERSION_CODENAME" = "@buster" ]; then
         # ^ Use flatpak if Debian 10 it is really old and crashes.
         flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
         flatpak install -y flathub org.codeblocks.codeblocks
-        # TODO: Remove above then in nonroot addendum to this script, install with the --user option:
-        # flatpak install -y --user flathub org.codeblocks.codeblocks
+        # ^ Use system rather than `--user` for *everything* in linux-preinstall to avoid doubling up on dependencies.
         if [ $? -ne 0 ]; then
             echo "Error: 'flatpak install -y flathub org.codeblocks.codeblocks' failed."
             exit 1

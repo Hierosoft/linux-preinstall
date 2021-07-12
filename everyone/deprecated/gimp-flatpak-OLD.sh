@@ -2,6 +2,9 @@
 # above is INCORRECT: That is a misreading of the Gimp 2.10 release notes. The notes say that better graphics tablet support is planned for 3.0.
 # dnf -y remove gimp
 # BUT that will sacrifice all plugins installed above, so reinstall them (see always-install-Fedora-dev-unpriveleged-user.sh)
+
+# ^ Use system rather than `--user` for *everything* in linux-preinstall to avoid doubling up on dependencies.
+
 echo
 echo
 echo "Installing GIMP flatpak (for more recent version) will require privs to install the repo itself, but GIMP can be still installed as unpriveleged user."
