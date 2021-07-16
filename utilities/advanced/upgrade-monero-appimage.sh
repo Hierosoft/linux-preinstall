@@ -6,8 +6,9 @@ fi
 if [ "@$dstName" = "@" ]; then
     dstName=monero-wallet-gui.AppImage
 fi
+DST_DRIVE="/media/owner/SEAN16A"
 if [ "@$DST_DIR" = "@" ]; then
-    DST_DIR="/media/owner/SEAN16A/monero-gui"
+    DST_DIR="$DST_DRIVE/monero-gui"
 fi
 
 printf "* backing up \"$0\" to \"$DST_DIR\" from \"`pwd`\"..."
