@@ -99,18 +99,22 @@ me = "install_any.py"
 myDir = os.path.dirname(os.path.abspath(__file__))
 repoDir = os.path.dirname(myDir)
 version_chars = digits + "."
-icons = {}
+
+# The following dictionaries contain information that can't be derived
+# from the installer file's name.
+icons = {}  # A list of preferred icon file names indexed by LUID
 icons["freecad"] = "org.freecadweb.FreeCAD"
 icons["ultimaker.cura"] = "cura"
-iconLinks = {}
+iconLinks = {}  # A list URLs to icon graphics indexed by LUID
 iconLinks["ultimaker.cura"] = "https://github.com/Ultimaker/Cura/raw/master/icons/cura-48.png"
 iconLinks["prusaslicer"] = "https://github.com/prusa3d/PrusaSlicer/raw/master/resources/icons/PrusaSlicer.png"
 iconLinks["pycharm.community"] = "https://github.com/JetBrains/intellij-community/raw/master/python/resources/PyCharmCore128.png"
 iconLinks["keepassxc"] = "https://github.com/keepassxreboot/keepassxc/raw/develop/share/icons/application/scalable/apps/keepassxc.svg"
 iconLinks["unityhub"] = "https://img.icons8.com/ios-filled/50/000000/unity.png"
-casedNames = {}
+casedNames = {}  # A list of correct icon captions indexed by LUID
 casedNames["umlet"] = "UMLet Standalone"  # as opposed to a plugin/web ver
 casedNames["freecad"] = "FreeCAD"
+casedNames["android.studio.ide"] = "Android Studio IDE"
 casedNames["flashprint"] = "FlashPrint"
 casedNames["argouml"] = "ArgoUML"
 annotations = {}
@@ -1361,6 +1365,9 @@ def install_program_in_place(src_path, **kwargs):
         try_names.append(name_partial + ".sh")
         # ^ sh takes priority in case environment vars are necessary
         try_names.append(name_partial)
+        if len(src_name.split("-")) > 1:
+            try_names.append(src_name.split("-")[1] + ".sh")
+            # ^ such as studio.sh for android-studio
         print("  src_name: {}".format(src_name))
         print("  only_name: {}".format(only_name))
         print("  name_partial: {}".format(name_partial))
@@ -1421,8 +1428,10 @@ def install_program_in_place(src_path, **kwargs):
                     # if has something like argouml.sh and
                     # argouml2.sh (experimental), use argouml.sh.
                     del scripts[long_i]
+            
             if len(jars) > 0:
                 enable_force_script = True
+            
             if enable_force_script and (len(scripts) == 1):
                 src_path = os.path.join(src_path, scripts[0])
                 print("* detected executable script: '{}'"
