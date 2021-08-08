@@ -111,6 +111,9 @@ iconLinks["prusaslicer"] = "https://github.com/prusa3d/PrusaSlicer/raw/master/re
 iconLinks["pycharm.community"] = "https://github.com/JetBrains/intellij-community/raw/master/python/resources/PyCharmCore128.png"
 iconLinks["keepassxc"] = "https://github.com/keepassxreboot/keepassxc/raw/develop/share/icons/application/scalable/apps/keepassxc.svg"
 iconLinks["unityhub"] = "https://img.icons8.com/ios-filled/50/000000/unity.png"
+iconLinks["godot"] = "https://github.com/godotengine/godot/raw/master/main/app_icon.png"
+iconNames = {}  # A list of icon names where the downloaded file should be renamed.
+iconNames["godot"] = "godot"  # since the file is named "app_icon.png"
 casedNames = {}  # A list of correct icon captions indexed by LUID
 casedNames["umlet"] = "UMLet Standalone"  # as opposed to a plugin/web ver
 casedNames["freecad"] = "FreeCAD"
@@ -475,7 +478,19 @@ class PackageInfo:
     #   delimiter
     LINS = ["linux", "linux64", "linux32"]
     WINS = ["windows", "windows64", "windows32", "win64", "win32"]
-    VPARTS = ['master', 'dev', 'prealpha', 'alpha', 'beta', 'rc']
+    VPARTS = ['master', 'dev', 'prealpha', 'alpha', 'beta', 'rc',
+              'mono', 'stable']
+    # mono: a specific version of Godot with C# support
+    # stable: This is for the stable version of Godot. It must be kept
+    # or the "mono" part after it will be discarded for the mono version
+    # (keeping it allows 2 icons, one for each version). The " stable"
+    # part is removed manually later. See `if "Godot" in caption:`.
+    BIN_EXTS = [
+        "",
+        "sh",
+        "32",  # such as Godot 32-bit
+        "64",  # such as Godot 64-bit
+    ]
     verbosity = 1
 
     def __init__(self, src_path, **kwargs):
@@ -828,6 +843,14 @@ class PackageInfo:
                             if i == lastNumI:
                                 oldDelimiter = ""
                                 # ^ Don't add the ending delimiter.
+                            if (i + 1) < len(tmpParts):
+                                if tmpParts[i+1] in PackageInfo.VPARTS:
+                                    oldDelimiter = " "
+                                    # ^ ensure the icon name wraps
+                                    #   to the next line instead of
+                                    #   being cut off (such as
+                                    #   "Godot 3.3.2 stable mono")
+                                    pass
                             joined += tmpParts[i] + oldDelimiter
                             i += 1
                         parts.append(joined)
@@ -1394,10 +1417,11 @@ def install_program_in_place(src_path, **kwargs):
                 if sub.startswith("."):
                     continue
                 if os.path.isdir(sub_path):
+                    print("  - \"{}\" is a directory".format(sub))
                     continue
                 if sub.endswith(".jar"):
                     jars.append(sub)
-                elif (ext == "sh") or (ext == ""):
+                elif ext in PackageInfo.BIN_EXTS:
                     scripts.append(sub)
             if len(scripts) >= 2:
                 bad_indices = []
@@ -1428,19 +1452,21 @@ def install_program_in_place(src_path, **kwargs):
                     # if has something like argouml.sh and
                     # argouml2.sh (experimental), use argouml.sh.
                     del scripts[long_i]
-            
+
             if len(jars) > 0:
                 enable_force_script = True
-            
-            if enable_force_script and (len(scripts) == 1):
+
+            if enable_force_script or (len(scripts) == 1):
                 src_path = os.path.join(src_path, scripts[0])
                 print("* detected executable script: '{}'"
                       "".format(src_path))
             else:
                 print("* could not detect binary in {}"
                       "".format(all_files))
-                print("  scripts: {}".format(scripts))
                 print("  jars: {}".format(jars))
+                print("  scripts: {}".format(scripts))
+                # if len(scripts) == 1:
+                #     print("  - There is only {} script.")
                 return False
 
 
@@ -1559,6 +1585,7 @@ def install_program_in_place(src_path, **kwargs):
     sc_path = None
     sc_name = None
     old_sc_name = None
+    old_sc_name_msg = " (legacy name before git 2021-02-25)"
     if luid == "blender":
         if multiVersion is None:
             multiVersion = True
@@ -1574,6 +1601,24 @@ def install_program_in_place(src_path, **kwargs):
             if do_uninstall:
                 old_sc_name = "org.blender"
         print("* using {} as shortcut name".format(sc_name))
+    elif luid == "godot":
+        old_sc_name_msg = (" (for linux-preinstall versions before"
+                           " 2021-08-07)")
+        if multiVersion is None:
+            multiVersion = True
+            print("* enabling multiVersion since using Godot")
+        if version is not None:
+            sc_name = "godot-{}".format(version.replace(" ", "-"))
+            # ^ Change "3.3.2 stable mono" to "3.3.2-stable-mono"
+            if do_uninstall:
+                old_sc_name = "godot"
+        else:
+            if multiVersion is True:
+                print("  but the version was not detected!")
+            sc_name = "godot" + suffix
+            print("  * using suffix \"{}\"".format(suffix))
+            if do_uninstall:
+                old_sc_name = "godot"
     elif version is not None:
         if multiVersion is True:
             sc_name = "{}{}-{}".format(luid, suffix, version)
@@ -1588,8 +1633,9 @@ def install_program_in_place(src_path, **kwargs):
     old_sc_path = None
     if old_sc_name is not None:
         old_sc_name += ".desktop"
-        print("* WARNING: legacy name before git 2021-02-25) name"
-              " was {} as shortcut name".format(sc_name))
+        print("* WARNING:{} name"
+              " was {} as shortcut name"
+              "".format(old_sc_name_msg, old_sc_name))
         old_sc_path = os.path.join(applications, old_sc_name)
     if luid is None:
         print("WARNING: luid was never set, so setting to:")
@@ -1615,6 +1661,10 @@ def install_program_in_place(src_path, **kwargs):
     if icon_path is None:
         if try_icon_url is not None:
             icon_name = try_icon_url.split('/')[-1]
+            icon_partial_name = iconNames.get(luid)
+            if icon_partial_name is not None:
+                icon_ext = os.path.splitext(icon_name)[-1]
+                icon_name = icon_partial_name + icon_ext
             icon_path = os.path.join(icons_path, icon_name)
             if not do_uninstall:
                 if not os.path.isdir(icons_path):
@@ -1718,7 +1768,12 @@ def install_program_in_place(src_path, **kwargs):
 
     if icon_path is None:
         icon_path = luid
-
+    if "Godot" in caption:
+        caption = caption.replace(" stable", "")
+        # ^ otherwise both "stable mono" and "stable" icons will always
+        #   look the same in gnome as it forever mercilessly and
+        #   incompetently botches the name as something like
+        #   "Godot 3.3.2 sta..." for both.
     shortcut_data = shortcut_data_template.format(Exec=path,
                                                   Name=caption,
                                                   Icon=icon_path)
@@ -1752,6 +1807,7 @@ def install_program_in_place(src_path, **kwargs):
                 shutil.rmtree(new_tmp)
     desktop_installer = "xdg-desktop-menu"
     u_cmd_parts = [desktop_installer, "uninstall", sc_path]
+    # PATH_ELEMENT_I = -1  # The place in u_cmd_parts that is the path
     if old_sc_path is not None:
         if os.path.isfile(old_sc_path):
             u_cmd_parts = [desktop_installer, "uninstall", old_sc_path]
@@ -1760,6 +1816,8 @@ def install_program_in_place(src_path, **kwargs):
                       " because both shortcut path \"{}\" and legacy"
                       " shortcut path \"{}\" are present."
                       "".format(sc_path, old_sc_path))
+            sc_path = old_sc_path
+            # ^ Ensure the checks below use the found path.
 
     if do_uninstall:
         logLn("uninstall_shortcut:{}".format(sc_path))
