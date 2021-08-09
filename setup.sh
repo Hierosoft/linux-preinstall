@@ -14,6 +14,9 @@ if [ ! -f "$LINUX_PREINSTALL/api.rc" ]; then
     exit 1
 fi
 L_P_CONFIG_DIR=$HOME/.config/linux-preinstall
+if [ ! -d "$L_P_CONFIG_DIR" ]; then
+    mkdir -p "$L_P_CONFIG_DIR"
+fi
 L_P_GLOBALS_PATH="$L_P_CONFIG_DIR/globals.rc"
 if [ ! -f "$L_P_GLOBALS_PATH" ]; then
     echo "LINUX_PREINSTALL=\"$LINUX_PREINSTALL\"" > "$L_P_GLOBALS_PATH"
