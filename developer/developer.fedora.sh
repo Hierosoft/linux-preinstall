@@ -113,32 +113,35 @@ PY2_PYGAME_PKG=python2-pygame
 PROJECTM_PA_PKG=projectM-pulseaudio
 ECLIPSE_JDT_PKG=eclipse-jdt
 
-# TODO: Make package variables for stuff below too to improve compatibility with other distros.
-_PKG=icedtea-web
-_PKG=shotcut
-_PKG=chromium-libs-media-freeworld
-_PKG=fuse-exfat
-_PKG=unetbootin
-_PKG=gimp-elsamuko
-_PKG=gimp-wavelet-denoise-plugin
-_PKG=gimp-paint-studio
-_PKG=gimp-lqr-plugin
-_PKG=gimp-normalmap
-_PKG=GREYCstoration-gimp
+cat > /dev/null <<END
+# ('-': deferred)
+# - [-] (Where variable names start with '?') Make package variables for stuff below too to improve compatibility with other distros.
+?_PKG=icedtea-web
+?_PKG=shotcut
+?_PKG=chromium-libs-media-freeworld
+?_PKG=fuse-exfat
+?_PKG=unetbootin
+?_PKG=gimp-elsamuko
+?_PKG=gimp-wavelet-denoise-plugin
+?_PKG=gimp-paint-studio
+?_PKG=gimp-lqr-plugin
+?_PKG=gimp-normalmap
+?_PKG=GREYCstoration-gimp
 STAR_PKG=star
 # E: Package 'star' has no installation candidate
 # ^ Debian 10
-_PKG=ladspa-cmt-plugins
-_PKG=ladspa-autotalent-plugins
-_PKG=ladspa-zam-plugins
-_PKG=ladspa-rev-plugins
-_PKG=PersonalCopy-Lite-soundfont
-_PKG=ardour5
-_PKG=remarkable
-_PKG=discord
-_PKG=git-credential-libsecret
-_PKG=gstreamer-ffmpeg
-_PKG=gmic-gimp
+?_PKG=ladspa-cmt-plugins
+?_PKG=ladspa-autotalent-plugins
+?_PKG=ladspa-zam-plugins
+?_PKG=ladspa-rev-plugins
+?_PKG=PersonalCopy-Lite-soundfont
+?_PKG=ardour5
+?_PKG=remarkable
+?_PKG=discord
+?_PKG=git-credential-libsecret
+?_PKG=gstreamer-ffmpeg
+?_PKG=gmic-gimp
+END
 
 skip_msg(){
     echo "* skipping \"$1\" since its package name is unknown on your package system ($PACKAGE_TYPE)"
@@ -158,7 +161,7 @@ if [ "@$PACKAGE_TYPE" = "@deb" ]; then
 
     STAR_PKG=
     skip_msg star
-
+# error "=dnf" not found on line 165
 fi
 
 $INSTALL_CMD \
@@ -195,7 +198,7 @@ $INSTALL_CMD \
     hexchat \
     ghex \
     gxmms2 \
-    python2-pygame \
+    $PY2_PYGAME_PKG \
     gucharmap \
     tiled \
     fontforge \
@@ -264,7 +267,7 @@ dnf -y install zlib libpng
 
 #Save git password without KDE keyring:
 dnf -y install libsecret
-# see also run as unpriveleged user (git config --global credential.helper libsecret automatically edits:
+# see also run as unpriveleged user (git config --global credential.helper libsecret automatically edits):
 # echo > ~/.gitconfig <<END
 # [credential]
 # helper = libsecret
@@ -531,14 +534,7 @@ else
   bash install || echo "cd Gedit-External-Tools-SaveSession && bash install # FAILED" >> $postinstall
 fi
 
-adduser nonet
-sudo iptables -A OUTPUT -m owner --uid-owner nonet -j REJECT
 cat >> $postinstall <<END
-* nonet user has been denied internet on purpose.
-  If you want to allow the nonet user to have internet, undo as follows:
-    sudo iptables -D OUTPUT -m owner --uid-owner nonet -j REJECT
-  Add the command without -D to /etc/rc.local if setting doesn't persist.
-
 ## Tips
 * Experiment and get good at G'MIC plugins section of gimp filters,
   because they can also be used in terminal and in other programs:
@@ -557,3 +553,5 @@ END
 echo "Showing $postinstall..."
 cat $postinstall
 echo "(to see this generated post-install information again, see `pwd`/$postinstall)"
+
+echo "* adding the nonet user is no longer in this script. See utilities/add-nonet-user.sh."
