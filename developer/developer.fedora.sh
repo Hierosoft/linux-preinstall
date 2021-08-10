@@ -72,14 +72,14 @@ echo "You must install everyone.sh files first, or the repositories or programs 
 . /etc/os-release
 
 PACKAGE_TYPE=rpm
-INSTALL_CMD=="dnf -y install"
+INSTALL_CMD="dnf -y install"
 if [ ! -f "`command -v dnf`" ]; then
     if [ ! -f "`command -v yum`" ]; then
         if [ -f "`command -v apt`" ]; then
-            INSTALL_CMD=="apt -y install"
+            INSTALL_CMD="apt -y install"
             PACKAGE_TYPE=deb
         elif [ -f "`command -v apt-get`" ]; then
-            INSTALL_CMD=="apt-get -y install"
+            INSTALL_CMD="apt-get -y install"
             PACKAGE_TYPE=deb
         fi
     else
@@ -167,7 +167,6 @@ if [ "@$PACKAGE_TYPE" = "@deb" ]; then
 
     STAR_PKG=
     skip_msg star
-# error "=dnf" not found on line 165
 fi
 
 $INSTALL_CMD \
