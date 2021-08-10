@@ -1,0 +1,2 @@
+You must do the following manual steps to enable newly-installed features:
+ - [ ] Enable spell check plugin in Geany's "Tools", "Plugin manager" window.

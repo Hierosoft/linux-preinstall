@@ -1,4 +1,10 @@
 #!/bin/bash
+
+
+# STATUS: PERMANENT FEATURE FREEZE
+# - All commands and comments are now represented in the linuxpreinstall module's package_names.csv and meta.
+
+
 me=`basename $0`
 
 # region common

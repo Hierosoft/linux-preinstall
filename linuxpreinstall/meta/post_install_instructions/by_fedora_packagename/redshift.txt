@@ -1,0 +1,10 @@
+Configure redshift (location for yourself can be found via Google Maps)
+where 5600 is day temp and 3400 is night temp:
+
+`redshift -l 40.3832256:-75.2748652 -t 5600:3400`
+
+Has to remain running, so use GUI instead (drag widget to KDE panel, then right-click to configure:
+ * turn on smooth transitions
+ * set temps to 5600 and 3400
+ * click Locate [if fails, use coords for your location such as above]
+ * Apply

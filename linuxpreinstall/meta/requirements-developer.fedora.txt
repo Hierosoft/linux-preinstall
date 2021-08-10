@@ -1,0 +1,1 @@
+You must install everyone.sh files first, or the repositories or programs may be missing.

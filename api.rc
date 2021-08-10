@@ -1,4 +1,9 @@
 #!/bin/sh
+echo "WARNING: api.rc is deprecated. Use the Python module instead."
+# ^ To make changes, make them in `def _init_commands` in linuxpreinstall/__init__.py
+echo "Press Ctrl+C to cancel within 10 seconds..."
+sleep 10
+
 echo "api.rc is running in `basename $0`"
 if [ "`basename $0`" = "api.rc" ]; then
     echo
