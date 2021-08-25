@@ -108,6 +108,7 @@ def main():
         error("ERROR: You must specify a source and destination"
               " platform.")
         exit(1)
+    migrate(sys.argv[1], sys.argv[2])
 
 
 if __name__ == "__main__":
