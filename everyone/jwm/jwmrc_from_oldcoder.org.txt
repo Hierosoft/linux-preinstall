@@ -1,0 +1,404 @@
+<?xml version="1.0"?>
+<JWM>
+    <!-- The root menu. -->
+    <RootMenu onroot="12">
+        <Menu icon="xfce-system-settings.svg" label="Set System">
+
+            <Menu icon="folder" label="Music Player">
+<Program label="Default"           >set-menu-program music-player default       </Program>
+<Program label="Alsaplayer"        >set-menu-program music-player alsaplayer     </Program>
+<Program label="Audacious"         >set-menu-program music-player audacious      </Program>
+<Program label="Rhythmbox"         >set-menu-program music-player rhythmbox      </Program>
+<Program label="Strawberry"        >set-menu-program music-player strawberry     </Program>
+            </Menu>
+
+            <Menu icon="folder" label="Wallpaper">
+<Program label="Default"           >setbackground default           </Program>
+<Program label="Anthony Ant"       >setbackground Anthony_Ant        </Program>
+<Program label="Blue Balloons"     >setbackground Blue_Balloons      </Program>
+<Program label="Dice Seven"        >setbackground Dice_Seven         </Program>
+<Program label="GNU Ice"           >setbackground GNU_Ice            </Program>
+<Program label="Krupskin Penguins" >setbackground Krupski_Penguins   </Program>
+<Program label="Linux Capitalists" >setbackground Linux_Capitalists  </Program>
+<Program label="SkeleTux Linux"    >setbackground SkeleTux_Linux.png </Program>
+<Program label="La Jolla Sunset"   >setbackground La_Jolla_Sunset    </Program>
+<Program label="Strandhill"        >setbackground Strandhill         </Program>
+<Program label="TuxBornXP"         >setbackground TuxBornXP          </Program>
+            </Menu>
+        </Menu>
+
+        <Program icon="terminal2007b" label="xterm">xterm</Program>
+        <Menu icon="folder" label="Applications">
+            <Program icon="sound" label="Audacious">audacious</Program>
+            <Program icon="calc" label="Calculator">xcalc</Program>
+            <Program icon="web-browser" label="Firefox">firefox</Program>
+            <Program icon="image" label="Gimp">gimp</Program>
+            <Program icon="email" label="Mail">claws-mail</Program>
+        </Menu>
+
+        <Menu icon="folder" label="Utilities">
+            <Program icon="font" label="Fonts">xfontsel</Program>
+            <Program icon="info" label="Window Properties">
+                xprop | xmessage -file -
+            </Program>
+            <Program icon="info" label="Window Information">
+                xwininfo | xmessage -file -
+            </Program>
+        </Menu>
+
+        <Separator/>
+        <Program icon="lock" label="Lock">
+           xscreensaver-command -lock
+        </Program>
+        <Separator />
+
+        <Restart label="Restart" icon="reload" />
+        <Exit label="Exit" confirm="true" icon="exit"/>
+    </RootMenu>
+
+    <!-- Options for program groups. -->
+    <Group>
+        <Option>tiled</Option>
+    </Group>
+    <Group>
+        <Name>xterm</Name>
+        <Option>vmax</Option>
+    </Group>
+    <Group>
+        <Name>xclock</Name>
+        <Name>fishmon</Name>
+        <Name>wmfishtime</Name>
+        <Option>drag</Option>
+        <Option>notitle</Option>
+    </Group>
+
+<!-- WM_CLASS(STRING) = "goldendict.bin", "GoldenDict" -->
+<!-- name = 1st, class = 2nd ? -->
+
+    <Group>
+        <Name>GoldenDict</Name>
+        <Class>GoldenDict</Class>
+        <Name>HexChat</Name>
+        <Class>HexChat</Class>
+        <Name>goldendict.bin</Name>
+        <Option>noclose</Option>
+        <Option>nokill</Option>
+        <Option>nofullscreen</Option>
+        <Option>nolist</Option>
+        <Option>nomaxmoo</Option>
+        <Option>nomin</Option>
+    </Group>
+
+    <!-- Tray for start, Terminal, and taskbar -->
+    <Tray x="0" y="-1" autohide="off" delay="1000" height="48">
+        <TrayButton icon="greenstart">root:1</TrayButton>
+        <TrayButton icon="terminal2007b">exec:xterm</TrayButton>
+        <Spacer width="2"/>
+        <TrayButton label="_">showdesktop</TrayButton>
+        <Spacer width="2"/>
+        <TaskList labeled="false" maxwidth="256"/>
+    </Tray>
+
+    <Tray layout="vertical"
+        x="0"         y="0"
+        halign="left" valign="top"
+        width="48"    height="350"
+        <TrayButton icon="internet-mail.png"
+            popup="Icedove Mail">exec:icedove</TrayButton>
+        <TrayButton icon="jwm-libreoffice.png"
+            popup="LibreOffice">exec:soffice</TrayButton>
+        <TrayButton icon="jwm-hexchat.svg"
+            popup="HexChat">exec:wrap-hexchat-bin</TrayButton>
+        <TrayButton icon="chromium.png"
+            popup="HexChat">exec:wrap-chromium-bin</TrayButton>
+        <TrayButton icon="jwm-chess.svg"
+            popup="HexChat">exec:wrap-eboard-bin</TrayButton>
+        <TrayButton icon="jwm-lock.svg"
+            popup="Screen Lock">exec:slock</TrayButton>
+    </Tray>
+
+    <Tray layout="vertical"
+        x="49"         y="0"
+                      valign="top"
+        width="48"    height="350"
+        <TrayButton icon="jwm-leafpad.svg"
+            popup="Leafpad">exec:leafpad</TrayButton>
+        <TrayButton icon="jwm-gimp.svg"
+            popup="The GIMP">exec:gimp</TrayButton>
+        <TrayButton icon="jwm-pidgin.svg"
+            popup="Pidgin">exec:pidgin</TrayButton>
+        <TrayButton icon="jwm-netscape.svg"
+            popup="Rhythmbox">exec:netscape</TrayButton>
+        <TrayButton icon="jwm-music.png"
+            popup="Rhythmbox">exec:run-menu-program music-player</TrayButton>
+        <TrayButton icon="jwm-osmo.png"
+            popup="Osmo">exec:wrap-osmo-bin</TrayButton>
+        <TrayButton icon="jwm-qalculate.svg"
+            popup="Qalculate">exec:wrap-qalculate-bin</TrayButton>
+    </Tray>
+
+    <Tray layout="vertical" x="0" y="356" halign="left" width="69">
+        <Swallow width="60" height="62" name="fishmon">wmfishtime</Swallow>
+        <Swallow width="60" height="62" name="wmmp3">wmmp3</Swallow>
+    </Tray>
+
+    <Tray layout="vertical" x="69" y="356" width="69">
+        <Swallow width="60" height="62" name="wmglobe">wmglobe</Swallow>
+        <Swallow width="60" height="62" name="wmmoonclock">wmmoonclock</Swallow>
+    </Tray>
+
+    <Tray valign="bottom" x="-206" y="-1"
+         autohide="off" delay="1000" height="42">
+        <Pager labeled="true" />
+    </Tray>
+
+    <Tray valign="bottom" halign="right" y="-1"
+         autohide="off" delay="1000" height="48">
+        <Dock />
+    </Tray>
+
+    <!-- Visual Styles -->
+    <WindowStyle decorations="motif">
+        <Font>Sans-12:bold</Font>
+        <Width>4</Width>
+        <Corner>0</Corner>
+        <Foreground>#FFFFFF</Foreground>
+        <Background>#555555</Background>
+        <MOpacity>0.5</MOpacity>
+        <Active>
+            <Foreground>#FFFFFF</Foreground>
+            <Background>#0077CC</Background>
+            <MOpacity>1.0</MOpacity>
+        </Active>
+    </WindowStyle>
+
+    <TrayStyle decorations="motif">
+        <Font>Sans-12</Font>
+        <Background>#888888</Background>
+        <Foreground>#FFFFFF</Foreground>
+        <MOpacity>0.75</MOpacity>
+    </TrayStyle>
+
+    <ClockStyle>
+        <Font>Sans-11</Font>
+    </ClockStyle>
+
+    <TaskListStyle list="all" group="true">
+      <Font>Sans-12</Font>
+      <Active>
+        <Foreground>#FFFFFF</Foreground>
+        <Background>#555555</Background>
+      </Active>
+      <Foreground>#FFFFFF</Foreground>
+      <Background>#333333</Background>
+    </TaskListStyle>
+
+    <PagerStyle>
+        <Foreground>#555555</Foreground>
+        <Background>#333333</Background>
+        <Text>#FFFFFF</Text>
+        <Active>
+            <Foreground>#0077CC</Foreground>
+            <Background>#004488</Background>
+        </Active>
+    </PagerStyle>
+
+    <MenuStyle decorations="motif">
+        <Font>Sans-12</Font>
+        <Foreground>#FFFFFF</Foreground>
+        <Background>#333333</Background>
+        <Active>
+            <Foreground>#FFFFFF</Foreground>
+            <Background>#0077CC</Background>
+        </Active>
+        <MOpacity>0.85</MOpacity>
+    </MenuStyle>
+
+    <PopupStyle>
+        <Font>Sans-12</Font>
+        <Foreground>#000000</Foreground>
+        <Background>#999999</Background>
+    </PopupStyle>
+
+    <!-- Path where icons can be found.
+         IconPath can be listed multiple times to allow searching
+         for icons in multiple paths.
+      -->
+
+    <IconPath>
+        /glibc64/pkg/jwm/share/jwm/icons
+    </IconPath>
+
+    <IconPath>
+        /glibc64/pkg/tango2/share/icons/Tango2/actions/scalable
+    </IconPath>
+
+    <IconPath>
+        /glibc64/pkg/tango2/share/icons/Tango2/apps/scalable
+    </IconPath>
+
+    <IconPath>
+        /glibc64/pkg/tango2/share/icons/Tango2/categories/scalable
+    </IconPath>
+
+    <IconPath>
+        /glibc64/pkg/tango2/share/icons/Tango2/devices/scalable
+    </IconPath>
+
+    <IconPath>
+        /glibc64/pkg/tango2/share/icons/Tango2/emblems/scalable
+    </IconPath>
+
+    <IconPath>
+        /glibc64/pkg/tango2/share/icons/Tango2/emotes/scalable
+    </IconPath>
+
+    <IconPath>
+        /glibc64/pkg/tango2/share/icons/Tango2/mimetypes/scalable
+    </IconPath>
+
+    <IconPath>
+        /glibc64/pkg/tango2/share/icons/Tango2/places/scalable
+    </IconPath>
+
+    <IconPath>
+        /glibc64/pkg/tango2/share/icons/Tango2/status/scalable
+    </IconPath>
+
+    <IconPath>
+        /glibc64/pkg/tango/share/icons/Tango/scalable/actions
+    </IconPath>
+
+    <IconPath>
+        /glibc64/pkg/tango/share/icons/Tango/scalable/apps
+    </IconPath>
+
+    <IconPath>
+        /glibc64/pkg/tango/share/icons/Tango/scalable/categories
+    </IconPath>
+
+    <IconPath>
+        /glibc64/pkg/tango/share/icons/Tango/scalable/devices
+    </IconPath>
+
+    <IconPath>
+        /glibc64/pkg/tango/share/icons/Tango/scalable/emblems
+    </IconPath>
+
+    <IconPath>
+        /glibc64/pkg/tango/share/icons/Tango/scalable/emotes
+    </IconPath>
+
+    <IconPath>
+        /glibc64/pkg/tango/share/icons/Tango/scalable/mimetypes
+    </IconPath>
+
+    <IconPath>
+        /glibc64/pkg/tango/share/icons/Tango/scalable/places
+    </IconPath>
+
+    <IconPath>
+        /glibc64/pkg/tango/share/icons/Tango/scalable/status
+    </IconPath>
+
+    <!-- Virtual Desktops -->
+    <!-- Desktop tags can be contained within Desktops for desktop names. -->
+
+    <Desktops width="4" height="1">
+        <!-- Default background. Note that a Background tag can be
+              contained within a Desktop tag to give a specific background
+              for that desktop.
+         -->
+        <Background type="solid">#111111</Background>
+    </Desktops>
+
+    <!-- Double click speed (in milliseconds) -->
+    <DoubleClickSpeed>400</DoubleClickSpeed>
+
+    <!-- Double click delta (in pixels) -->
+    <DoubleClickDelta>2</DoubleClickDelta>
+
+    <!-- The focus model (sloppy or click) -->
+    <!-- Laclin: click -->
+    <FocusModel>click</FocusModel>
+
+    <!-- The snap mode (none, screen, or border) -->
+    <SnapMode distance="10">border</SnapMode>
+
+    <!-- The move mode (outline or opaque) -->
+    <MoveMode>opaque</MoveMode>
+
+    <!-- The resize mode (outline or opaque) -->
+    <ResizeMode>opaque</ResizeMode>
+
+    <!-- Key bindings -->
+    <Key key="Up">up</Key>
+    <Key key="Down">down</Key>
+    <Key key="Right">right</Key>
+    <Key key="Left">left</Key>
+    <Key key="h">left</Key>
+    <Key key="j">down</Key>
+    <Key key="k">up</Key>
+    <Key key="l">right</Key>
+    <Key key="Return">select</Key>
+    <Key key="Escape">escape</Key>
+
+    <Key mask="A" key="Tab">nextstacked</Key>
+    <Key mask="A" key="F4">close</Key>
+    <Key mask="A" key="#">desktop#</Key>
+    <Key mask="A" key="F1">root:1</Key>
+    <Key mask="A" key="F2">window</Key>
+    <Key mask="A" key="F10">maximize</Key>
+    <Key mask="A" key="Right">rdesktop</Key>
+    <Key mask="A" key="Left">ldesktop</Key>
+    <Key mask="A" key="Up">udesktop</Key>
+    <Key mask="A" key="Down">ddesktop</Key>
+
+    <!-- Mouse bindings -->
+    <Mouse context="root" button="4">ldesktop</Mouse>
+    <Mouse context="root" button="5">rdesktop</Mouse>
+
+    <Mouse context="title" button="1">move</Mouse>
+    <Mouse context="title" button="2">move</Mouse>
+    <Mouse context="title" button="3">window</Mouse>
+    <Mouse context="title" button="4">shade</Mouse>
+    <Mouse context="title" button="5">shade</Mouse>
+    <Mouse context="title" button="11">maximize</Mouse>
+
+    <Mouse context="icon" button="1">window</Mouse>
+    <Mouse context="icon" button="2">move</Mouse>
+    <Mouse context="icon" button="3">window</Mouse>
+    <Mouse context="icon" button="4">shade</Mouse>
+    <Mouse context="icon" button="5">shade</Mouse>
+
+    <Mouse context="border" button="1">resize</Mouse>
+    <Mouse context="border" button="2">move</Mouse>
+    <Mouse context="border" button="3">window</Mouse>
+
+    <Mouse context="close" button="-1">close</Mouse>
+    <Mouse context="close" button="2">move</Mouse>
+    <Mouse context="close" button="-3">close</Mouse>
+
+    <Mouse context="maximize" button="-1">maximize</Mouse>
+    <Mouse context="maximize" button="-2">maxv</Mouse>
+    <Mouse context="maximize" button="-3">maxh</Mouse>
+
+    <Mouse context="minimize" button="-1">minimize</Mouse>
+    <Mouse context="minimize" button="2">move</Mouse>
+    <Mouse context="minimize" button="-3">shade</Mouse>
+
+    <Desktops width="4" height="1">
+        <Background type="solid">#111111</Background>
+    </Desktops>
+
+    <StartupCommand>setbackground</StartupCommand>
+    <StartupCommand>set-menu-program music-player</StartupCommand>
+    <StartupCommand>cbatticon</StartupCommand>
+    <StartupCommand>nocompton</StartupCommand>
+    <StartupCommand>goldendict</StartupCommand>
+    <StartupCommand>pavucontrol</StartupCommand>
+    <StartupCommand>pa-applet</StartupCommand>
+    <StartupCommand>/glibc64/pkg/gtkcore/libexec/dconf-service</StartupCommand>
+    <StartupCommand>redshift-start</StartupCommand>
+    <StartupCommand>/glibc64/pkg/jwm/data/jwm-conky.pl</StartupCommand>
+</JWM>
