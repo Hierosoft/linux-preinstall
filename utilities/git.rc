@@ -1,0 +1,35 @@
+#!/bin/bash
+
+
+update_repo(){
+    prev_dir="`pwd`"
+    if [ "@$1" = "@" ]; then
+        echo "Error: update_repo requires a path then a URL but the 1st param is missing."
+    fi
+    if [ "@$2" = "@" ]; then
+        echo "Error: update_repo requires a path then a URL but the 2nd param is missing."
+    fi
+    path=$1
+    url=$2
+    if [ -d "$path" ]; then
+        cd "$path"
+        if [ $? -ne 0 ]; then
+            echo "Error: 'cd \"$path\"' failed."
+            cd "$prev_dir"
+            return 1
+        fi
+        git pull --no-rebase
+        if [ $? -ne 0 ]; then
+            echo "Error: 'git pull' failed in \"`pwd`\"."
+            cd "$prev_dir"
+            return 2
+        fi
+        cd "$prev_dir"
+    else
+        git clone "$url" "$path"
+        if [ $? -ne 0 ]; then
+            echo "Error: 'git clone \"$url\" \"$path\"' failed."
+            return 2
+        fi
+    fi
+}
