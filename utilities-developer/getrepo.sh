@@ -32,6 +32,22 @@ EXAMPLES
 END
 }
 
+
+myPath="$0"
+realMyPath="`readlink $myPath`"
+if [ ! -z "$realMyPath" ]; then
+    myPath="$realMyPath"
+fi
+myName="`basename "$0"`"
+myDir="`dirname $myPath`"
+repoDir="`dirname $myDir`"
+tryRC="$repoDir/utilities/git.rc"
+. $tryRC
+if [ $? -ne 0 ]; then
+    echo "Error: \"$tryRC\" doesn't exist."
+    exit 1
+fi
+
 customExit() {
     echo
     echo "ERROR:"
@@ -105,9 +121,12 @@ done
 if [ ! -z "$USER_DIR" ]; then
     echo "* USER_DIR: '$USER_DIR'."
 fi
+WEBSITE_GITHUB="https://github.com"
+WEBSITE_GITLAB="https://gitlab.com"
+WEBSITE_NOTABUG="https://notabug.org"
 if [ -z "$WEBSITE" ]; then
-    WEBSITE="https://github.com"
-    echo "* assuming website is GitHub since you did not specify one"
+    WEBSITE="$WEBSITE_GITHUB"
+    echo "* assuming website is GitHub since you did not specify one (others will be tried first just in case the repo was migrated and is maintained more elsewhere)"
 fi
 
 if [ ! -z "$REPOS_DIR" ]; then
@@ -187,14 +206,70 @@ if [ "`pwd`" != "$USER_DIR" ]; then
     customExit "The script failed to end up in $USER_DIR (PWD is '$PWD' accidentally)"
 fi
 
-URL="$WEBSITE/$REMOTE_GIT_USER/$REPO_NAME"
+
+GITHUB_URL="$WEBSITE_GITHUB/$REMOTE_GIT_USER/$REPO_NAME.git"
+CUSTOM_URL="$WEBSITE/$REMOTE_GIT_USER/$REPO_NAME.git"
+URL="$CUSTOM_URL"
+GITLAB_URL="$WEBSITE_GITLAB/$REMOTE_GIT_USER/$REPO_NAME.git"
+NOTABUG_URL="$WEBSITE_NOTABUG/$REMOTE_GIT_USER/$REPO_NAME.git"
 LOCAL_REPO_NAME="$REPO_NAME$REPO_DIR_SUFFIX"
 DEST="$USER_DIR/$LOCAL_REPO_NAME"
 # if [ ! -d "$REPO_NAME" ]; then
-
+_found=false
+_path_suffix=""
 if [ ! -d "$DEST" ]; then
-    echo "* cloning $URL in `pwd` (OPTIONS=$OPTIONS)"
-    git clone $OPTIONS $WEBSITE/$REMOTE_GIT_USER/$REPO_NAME $DEST
+    echo "* checking for $NOTABUG_URL..."
+    echo "\n\n" | git ls-remote $NOTABUG_URL -q
+    if [ $? -eq 0 ]; then
+        echo "* [$myName] detected $NOTABUG_URL repo"
+        _found=true
+        URL="$NOTABUG_URL"
+        echo "* cloning the detected $URL in `pwd` (OPTIONS=$OPTIONS)"
+        # git clone $OPTIONS $NOTABUG_URL $DEST
+        update_repo $DEST $NOTABUG_URL $OPTIONS
+    else
+        echo "  * not found"
+    fi
+    echo "* checking for $GITLAB_URL..."
+    yes | git --exit-code -h ls-remote $GITLAB_URL -q
+    if [ $? -eq 0 ]; then
+        echo "* [$myName] detected $GITLAB_URL repo"
+        if [ "$_found" = "true" ]; then
+            _path_suffix="/1.gitlab"
+            DEST="$USER_DIR$_path_suffix/$LOCAL_REPO_NAME"
+        fi
+        _found=true
+        URL="$GITLAB_URL"
+        echo "* cloning $URL to $DEST (OPTIONS=$OPTIONS)"
+        # git clone $OPTIONS $GITLAB_URL $DEST
+        update_repo $DEST $GITLAB_URL $OPTIONS
+    else
+        echo "  * not found"
+    fi
+    echo "* checking for $CUSTOM_URL last..."
+    echo "\n\n" | git ls-remote $CUSTOM_URL -q
+    if [ $? -eq 0 ]; then
+        echo "* [$myName] detected $WEBSITE repo"
+        URL="$CUSTOM_URL"
+        if [ "$_found" = "true" ]; then
+            if [ "$CUSTOM_URL" = "$GITHUB_URL" ]; then
+                _path_suffix="/1.github"
+            else
+                _path_suffix="/1.custom_git_site"
+            fi
+            DEST="$USER_DIR$_path_suffix/$LOCAL_REPO_NAME"
+        fi
+        echo "* cloning $URL to $DEST (OPTIONS=$OPTIONS)"
+        _found=true
+        # git clone $OPTIONS $CUSTOM_URL $DEST
+        update_repo $DEST $CUSTOM_URL $OPTIONS
+    else
+        echo "  * not found"
+    fi
+    if [ "$_found" != "true" ]; then
+        echo "Error: A git URL $REMOTE_GIT_USER/$REPO_NAME wasn't detected (tried git ls-remote <url> -q) in $NOTABUG_URL, $GITLAB_URL or $WEBSITE."
+        exit 1
+    fi
     # git clone $URL $USER_DIR/$REPO_NAME
     # git clone $URL || customExit "'git clone $URL' failed in '`pwd`'"
 else
@@ -202,6 +277,6 @@ else
     if [ "@$IS_MIRROR" = "@true" ]; then
         git remote update || customExit "'git remote update' failed in '`pwd`'"
     else
-        git pull || customExit "'git pull' failed in '`pwd`'"
+        git pull --no-rebase || customExit "'git pull' failed in '`pwd`'"
     fi
 fi
