@@ -1,0 +1,33 @@
+# from <https://www.linuxquestions.org/questions/bodhi-92/unauthorized-to-unmount-usb-drive-4175639246/>:
+#[Allow Automount]
+#Identity=unix-group:plugdev
+#Action=org.freedesktop.udisks2.filesystem-mount
+#ResultAny=yes
+#ResultInactive=yes
+#ResultActive=yes
+
+# place in 
+#create dir if needed
+#/etc/polkit-1/localauthority/50-local.d/automount.pkla
+
+
+[Allow Automount]
+Identity=unix-group:plugdev
+Action=org.freedesktop.udisks2.filesystem-mount*
+ResultAny=yes
+ResultInactive=yes
+ResultActive=yes
+
+[Allow Eject]
+Identity=unix-group:plugdev
+Action=org.freedesktop.udisks2.eject-media*
+ResultAny=yes
+ResultInactive=yes
+ResultActive=yes
+
+[Allow Mounting of fstab]
+Identity=unix-group:plugdev
+Action=org.freedesktop.udisks2.filesystem-fstab*
+ResultAny=yes
+ResultInactive=yes
+ResultActive=yes
