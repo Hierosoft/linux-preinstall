@@ -1,4 +1,7 @@
 #!/bin/bash
+echo "The code of install_any.py was moved to https://github.com/poikilos/nopackage"
+exit 1
+
 PREFIX="$HOME/.local"
 src_dt="dist/share/applications/install_any.desktop"
 dst_dt="$PREFIX/share/applications/install_any.desktop"
