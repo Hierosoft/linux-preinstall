@@ -7,6 +7,7 @@ import tarfile
 import tempfile
 from zipfile import ZipFile
 import platform
+import json
 
 python_mr = 3  # major revision
 try:
@@ -17,7 +18,6 @@ except:
     python_mr = 2
     import urllib2 as urllib
     request = urllib
-
 '''
     class SubprocessError(Exception):
         pass
@@ -91,6 +91,15 @@ except ImportError:
                                 stderr=errs)
     subprocess.run = sp_run
 
+verbose = True
+
+def error(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
+
+def debug(msg):
+    if not verbose:
+        return
+    error("[debug] {}".format(msg))
 
 digits = "0123456789"
 # me = os.path.split(sys.argv[0])[-1]
@@ -124,6 +133,10 @@ annotations = {}
 annotations[".deb"] = "deb"
 annotations[".appimage"] = "AppImage"
 
+noCmdMsg = "Error: You must specify a directory or binary file."
+OLD_NO_CMD_MSG = "You must specify a directory or binary file."
+# ^ For compatibility with older versions, don't change OLD_NO_CMD_MSG.
+
 
 def usage():
     print("")
@@ -141,6 +154,19 @@ def usage():
     print(me + " --help")
     print(" "*len(me) + " ^ Show this help screen.")
     print("")
+    print("If you know the luid (locally-unique ID) of a program and it"
+          "is in the programs object in {lmName}, you can uninstall the"
+          " program using the luid (otherwise you need the full path"
+          " of the source, which may be inaccessible). You can obtain"
+          " the luid of any installed program by reviewing {lmPath}"
+          " after the first run of the program (it should be there by"
+          " now)."
+          "\nFor example:\n"
+          "".format(
+                lmPath=localMachineMetaPath,
+                lmName=os.path.basename(localMachineMetaPath),
+            ))
+    print(me + " --uninstall keepassxc")
     print("")
 
 
@@ -522,6 +548,10 @@ class PackageInfo:
                    version. This script should automatically pass along
                    the version such as if the archive but not directory
                    (or directory but not not binary) has the version.
+        dry_run -- Setting this to True prevents a ValueError when
+            src_path is not a file in a way that is more future-proof
+            than is_dir=True. The reason for forcing the constructor to
+            finish is to obtain metadata for non-install purposes.
         '''
         print("[PackageInfo __init__] * checking src_path {}..."
               "".format(src_path))
@@ -530,6 +560,7 @@ class PackageInfo:
             print("Creating PackageInfo...")
         self.metas = ['casedName', 'luid', 'version',
                       'caption', 'platform', 'arch']
+        no_error = kwargs.get('no_error') is True
         self.casedName = kwargs.get('casedName')
         self.luid = kwargs.get("luid")
         # ^ decided by transforming casedName below if None
@@ -538,9 +569,10 @@ class PackageInfo:
         self.arch = None
         self.path = src_path
         self.suffix = ""
+        self.dry_run = kwargs.get('dry_run')
         is_dir = kwargs.get('is_dir')
         if is_dir is None:
-            if not os.path.exists(src_path):
+            if not os.path.exists(src_path) and not self.dry_run:
                 raise ValueError(
                     "src_path \"{}\" must exist or you must specify the"
                     " is_dir keyword argument for the PackageInfo"
@@ -630,13 +662,17 @@ class PackageInfo:
             #   multiple parts such as in ['Slic3r', '1.3.1', 'dev']
             del i
         if (len(parts) < 2) and (self.version is None):
-            usage()
-            raise ValueError("The end of the program name (any of '{}'"
-                             " or '.' is not in {} and you didn't"
-                             " specify a version such as:\n"
-                             " install_any.py {} --version x"
-                             "".format(PackageInfo.DELIMITERS,
-                                       fnamePartial, src_path))
+            if not self.dry_run:
+                usage()
+                raise ValueError("The end of the program name (any of"
+                                 " '{}' or '.' is not in {} and you"
+                                 " didn't specify a version such as:\n"
+                                 " install_any.py {} --version x"
+                                 "".format(PackageInfo.DELIMITERS,
+                                           fnamePartial, src_path))
+            else:
+                error("WARNING: no version is in {}"
+                      "".format(fnamePartial))
         if self.version is None:
             # INFO: Any "v" prefix was already removed and multi-part
             #       versions were already un-split into one part
@@ -935,9 +971,188 @@ else:
     icons_path = os.path.join(share_path, "pixmaps")
 if not os.path.isdir(myAppData):
     os.makedirs(myAppData)
-logPath = os.path.join(myAppData, "install_any.log")
 lib64 = os.path.join(local_path, "lib64")
 lib = os.path.join(local_path, "lib")
+
+localMachineMetaPath = os.path.join(myAppData, "local_machine.json")
+logPath = os.path.join(myAppData, "install_any.log")
+localMachine = {
+    'programs': {}
+}
+
+def getValueFromSymbol(valueStr, lineN=-1, path="(generated)"):
+    '''
+    Convert a symbolic value such as `"\"hello\""` to a real value such
+    as `"hello"`.
+    This simplistic compared to str_to_value in enissue.py in
+    https://github.com/poikilos/EnlivenMinetest.
+
+    Keyword arguments:
+    path -- The file (used for error reporting only).
+    lineN -- The line number in the file (used for error reporting only).
+    '''
+    valueL = None
+    if valueStr is not None:
+        valueL = valueStr.lower()
+    if valueStr == "None":
+        return None
+
+    if valueStr.startswith("'") and valueStr.endswith("'"):
+        return valueStr[1:-1]
+    if valueStr.startswith('"') and valueStr.endswith('"'):
+        return valueStr[1:-1]
+    return valueStr
+
+def fillProgramMeta(programMeta):
+    pkginfo = None
+    if programMeta.get('src_path') is not None:
+        pkginfo = PackageInfo(
+            programMeta.get('src_path'), # required
+            casedName=programMeta.get('casedName'),
+            version=programMeta.get('version'),
+            caption=programMeta.get('caption'),
+            luid=programMeta.get('luid'),
+            dry_run=True, # prevents ValueError on no file.
+        )
+    else:
+        print("WARNING: There is no src_path for {}"
+              "".format(programMeta))
+        return programMeta
+    derivedMeta = pkginfo.toDict()
+    for k, v in derivedMeta.items():
+        if programMeta.get(k) is None:
+            programMeta[k] = v
+    return programMeta
+
+
+# if not os.path.isfile(localMachineMetaPath):
+if True:
+    if os.path.isfile(logPath):
+        error("* generating {} from {}"
+              "".format(localMachineMetaPath, logPath))
+        names = set([])
+        programs = localMachine['programs']
+        lineN = 0
+        regionStarters = set(['install_file', 'uninstall_dir'])
+        pkginfo = None
+        validNames = set(['uninstall_dir', 'install_file',
+                          'uninstall_file', 'recovered_to', 'luid',
+                          'ERROR', 'install_move_dir',
+                          'install_shortcut', 'uninstall_shortcut'])
+        with open(logPath, 'r') as ins:
+            thisMeta = {
+                'logLineNumber': lineN,
+                'installed': True,
+            }
+            # ^ also set to {} when regionStarters!
+            for rawL in ins:
+                lineN += 1  # Counting numbers start at 1.
+                line = rawL.strip()
+                if line == noCmdMsg:
+                    continue
+                if line == OLD_NO_CMD_MSG:
+                    continue
+                if line.startswith("*"):
+                    continue
+                if len(line) < 1:
+                    continue
+                name = None
+                value = None
+                signI = -1
+                if line.startswith("luid="):
+                    signI = 4
+                elif "=" in line:
+                    raise NotImplementedError("An '=' sign not directly"
+                                              " preceded by  \"luid\""
+                                              " isn't a recognized log"
+                                              " entry.")
+                if signI < 0:
+                    signI = line.find(":")
+                if signI < 0:
+                    error("{}:{}: Unrecognized line format: {}"
+                          "".format(logPath, lineN, line))
+                    continue
+                name = line[:signI]
+                valueStr = line[signI+1:]
+                value = getValueFromSymbol(valueStr)
+                names.add(name)
+                if name in regionStarters:
+                    if thisMeta.get('src_path') is not None:
+                        thisMeta = fillProgramMeta(thisMeta)
+                        if thisMeta.get('luid') is None:
+                            error("WARNING: A luid was not determined"
+                                  " for {}".format(thisMeta))
+                        else:
+                            programs[thisMeta['luid']] = thisMeta
+                            debug("ENTERED program: {}"
+                                  "".format(thisMeta['luid']))
+                    elif len(thisMeta) > 2:
+                        error("WARNING: There is no src_path in {}"
+                              "".format(thisMeta))
+                    thisMeta = {
+                        'logLineNumber': lineN,
+                        'installed': True,
+                    }
+                # Determine the meaning separately from the "if" case
+                # above which merely moves on to another program.
+                if name == 'uninstall_dir':
+                    thisMeta['installed'] = False
+                elif name == 'install_file':
+                    badValue = os.path.join(lib64, "1.InstallManually")
+                    # ^ A bug causes the value to be badValue, so ignore
+                    #   it (See ).
+                    # src_path = value
+                elif name == 'recovered_to':
+                    thisMeta['src_path'] = value
+                    thisMeta['installed'] = False
+                elif name == 'uninstall_file':
+                    thisMeta['installed'] = False
+                elif name == 'luid':
+                    thisMeta['luid'] = value
+                elif name == "ERROR":
+                    thisMeta['error'] = value
+                    if thisMeta['installed']:
+                        thisMeta['installed'] = False
+                    else:
+                        # Assume installed if error was during uninstall
+                        thisMeta['installed'] = True
+                elif name == 'install_move_dir':
+                    thisMeta['install_move_dir'] = value
+                elif name == 'install_shortcut':
+                    thisMeta['install_shortcut'] = value
+                elif name == 'uninstall_shortcut':
+                    thisMeta['uninstall_shortcut'] = value
+                    thisMeta['installed'] = False
+                else:
+                    error("{}:{}: WARNING: The line variable name {} is"
+                          " unrecognized for: {}"
+                          "".format(logPath, lineN, name, thisMeta))
+            # The loop is over, so get the last one:
+            if thisMeta.get('src_path') is not None:
+                thisMeta = fillProgramMeta(thisMeta)
+                if thisMeta.get('luid') is None:
+                    error("WARNING: A luid was not determined for"
+                          " {}".format(thisMeta))
+                else:
+                    programs[thisMeta['luid']] = thisMeta
+            elif len(thisMeta) > 2:
+                error("WARNING: There is no src_path in {}"
+                      "".format(thisMeta))
+
+
+        # error("names: {}".format(names))
+        # ^ should match validNames
+        error("")
+        error("[debug] localMachine: {}"
+              "".format(json.dumps(localMachine, indent=2)))
+        with open(localMachineMetaPath, 'w') as outs:
+            json.dump(localMachine, outs, indent=2)
+else:
+    with open(localMachineMetaPath, 'r') as ins:
+        localMachine = json.load(ins)
+
+    error("* using installed programs metadata: {}"
+          "".format(localMachineMetaPath))
 fm = None
 
 
@@ -954,26 +1169,15 @@ def logLn(line, path=logPath):
 
 
 def install_program_in_place(src_path, **kwargs):
-    version = kwargs.get("version")
-    if version is not None:
-        print("- version: {}".format(version))
-    casedName = kwargs.get("casedName")
-    caption = kwargs.get("caption")
-    luid = kwargs.get("luid")
-    do_uninstall = kwargs.get("do_uninstall")
-    if do_uninstall is None:
-        do_uninstall = False
-    enable_reinstall = kwargs.get("enable_reinstall")
-    if enable_reinstall is None:
-        enable_reinstall = False
-    detect_program_parent = kwargs.get("detect_program_parent")
-    if detect_program_parent is None:
-        detect_program_parent = False
-    multiVersion = kwargs.get("multiVersion")
-    icon_path = kwargs.get("icon_path")
-    move_what = kwargs.get("move_what")
-    pull_back = kwargs.get("pull_back")
-    """Install binary program src_path
+    """
+    Install binary program src_path
+
+    Sequential arguments:
+    src_path -- This is usually a file or directory source path, but if
+        you don't specify the luid keyword argument, init will see if
+        src_path is actually a luid (such as 'keepassxc') and will try
+        to get the src_path from the local_machine.json configuration
+        file that this program should maintain.
 
     Keyword arguments:
     casedName --
@@ -1023,6 +1227,27 @@ def install_program_in_place(src_path, **kwargs):
             It is detected automatically from the file or directory name
             if None.
     """
+
+    version = kwargs.get("version")
+    if version is not None:
+        print("- version: {}".format(version))
+    casedName = kwargs.get("casedName")
+    caption = kwargs.get("caption")
+    luid = kwargs.get("luid")
+    do_uninstall = kwargs.get("do_uninstall")
+    if do_uninstall is None:
+        do_uninstall = False
+    enable_reinstall = kwargs.get("enable_reinstall")
+    if enable_reinstall is None:
+        enable_reinstall = False
+    detect_program_parent = kwargs.get("detect_program_parent")
+    if detect_program_parent is None:
+        detect_program_parent = False
+    multiVersion = kwargs.get("multiVersion")
+    icon_path = kwargs.get("icon_path")
+    move_what = kwargs.get("move_what")
+    pull_back = kwargs.get("pull_back")
+
     enable_force_script = False
     dst_programs = lib64  # changed if deb has a different programs dir
     if '32' in platform.architecture()[0]:
@@ -1033,8 +1258,39 @@ def install_program_in_place(src_path, **kwargs):
     suffix = ""
     new_tmp = None
     verb = "uninstall" if do_uninstall else "install"
-    is_dir = None
     pull_back = None
+    knownMeta = None
+    # if luid is None:
+    if not os.path.isfile(src_path):
+        tryLuid = os.path.basename(src_path)
+        knownMeta = localMachine['programs'].get(tryLuid)
+    # if knownMeta is None:
+    #     debug('There is no meta for "{}"'.format(src_path))
+    # ^ In case src_path is a luid, get some metadata.
+    is_dir = None
+    if knownMeta is not None:
+        debug("The program metadata for '{}' in {} will be used."
+              "".format(knownMeta['luid'], localMachineMetaPath))
+        luid = knownMeta.get('luid')
+        src_path = knownMeta.get('src_path')
+        # ^ In case src_path is a luid, change src_path to the real one.
+        if src_path is None:
+            raise ValueError("There is an error in {}: The src_path is"
+                             " not set for luid {}"
+                             "".format(localMachineMetaPath, ))
+        if is_dir is None:
+            if knownMeta.get('is_dir') is not None:
+                is_dir = knownMeta.get('is_dir')
+        if version is None:
+            if knownMeta.get('version') is not None:
+                version = knownMeta.get('version')
+        if casedName is None:
+            if knownMeta.get('casedName') is not None:
+                casedName = knownMeta.get('casedName')
+        if caption is None:
+            if knownMeta.get('caption') is not None:
+                caption = knownMeta.get('caption')
+
     if src_path.lower().endswith(".appimage"):
         is_dir = False
         # ^ ONLY manually set this for files that won't be
@@ -1473,7 +1729,8 @@ def install_program_in_place(src_path, **kwargs):
 
     if src_path is None:
         usage()
-        print("ERROR: You must specify a path to a binary file.")
+        error("")
+        error("Error: You must specify a path to a binary file.")
         return False
     elif not os.path.isfile(src_path):
         usage()
@@ -1898,7 +2155,8 @@ if __name__ == "__main__":
     src_path = None
     if len(sys.argv) < 2:
         usage()
-        logLn("You must specify a directory or binary file.")
+        print("")
+        print(noCmdMsg)
         print("")
         print("")
         exit(1)
@@ -1939,7 +2197,8 @@ if __name__ == "__main__":
                 print("A 3rd parameter is unexpected: '{}'".format(arg))
                 exit(1)
     if src_path is None:
-        print("You must specify a source path.")
+        error("")
+        error("Error: You must specify a source path.")
         exit(1)
     src_path = os.path.abspath(src_path)
     if move_what == 'any':
