@@ -231,7 +231,8 @@ if [ ! -d "$DEST" ]; then
         echo "  * not found"
     fi
     echo "* checking for $GITLAB_URL..."
-    yes | git --exit-code -h ls-remote $GITLAB_URL -q
+    yes | git ls-remote -h --exit-code $GITLAB_URL
+    # ^ For some reason, -q makes it fail with 2 (--exit-code should only produce 2 when no matching remote refs)
     if [ $? -eq 0 ]; then
         echo "* [$myName] detected $GITLAB_URL repo"
         if [ "$_found" = "true" ]; then
@@ -244,7 +245,7 @@ if [ ! -d "$DEST" ]; then
         # git clone $OPTIONS $GITLAB_URL $DEST
         update_repo $DEST $GITLAB_URL $OPTIONS
     else
-        echo "  * not found"
+        echo "  * not found: yes | git ls-remote -h --exit-code $GITLAB_URL -q"
     fi
     echo "* checking for $CUSTOM_URL last..."
     echo "\n\n" | git ls-remote $CUSTOM_URL -q
@@ -279,4 +280,9 @@ else
     else
         git pull --no-rebase || customExit "'git pull' failed in '`pwd`'"
     fi
+fi
+if [ $? -eq 0 ]; then
+    echo "[$myName] OK"
+else
+    echo "[$myName] Error: There was an untracked error."
 fi
