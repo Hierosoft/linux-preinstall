@@ -41,3 +41,12 @@ if [ "@$enable_clone" = "@true" ]; then
     git clone https://github.com/UnnatShaneshwar/AtomOneDarkIcons.git "$HOME/.local/share/icons/Atom One Dark"
     if [ $? -ne 0 ]; then exit 1; fi
 fi
+cat <<END
+WARNING: In this icon theme Open is an underlined up arrow, and save
+and save all are underlined down arrows.
+END
+# If the issue gets solved in
+# https://github.com/daniruiz/skeuos-gtk/issues/32, consider posting a
+# similar issue on
+# https://github.com/UnnatShaneshwar/AtomOneDarkIcons/issues
+# along with the solution.

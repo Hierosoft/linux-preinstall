@@ -1,3 +1,7 @@
+
+Poikilos:
+diffimage.py (in gimp-plugin-channel-tinker)
+
 arch:
 testdisk
 
@@ -24,8 +28,8 @@ magicrescue: "Find and recover deleted files on block devices"
 
 	This is a problem since when the object contains more than one value (such as a list, gives an error that provides in incorrect fix given the way None is used by these files: "ValueError: The truth value of an array with more than one element is ambiguous. Use a.any() or a.all()"). This causes the program not to run due to where error occurs in utils.py.
 
-	I contacted mauritiusdadd via the google site 
-	  https://sites.google.com/site/lxnstack/home/contact 
+	I contacted mauritiusdadd via the google site
+	  https://sites.google.com/site/lxnstack/home/contact
 	  and mentioned the following:
 	  * github versions of these files (github user of same username as sourceforge) don't have the problem
 	  * please make change AUR entry to use a git release, or fix sourceforge version
