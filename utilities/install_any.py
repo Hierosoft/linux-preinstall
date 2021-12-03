@@ -1,4 +1,55 @@
 #!/usr/bin/env python
+'''
+install_any tries to install any program such as a zip or gz binary
+package, appimage, directory, or other file.
+
+Author: Jake Gustafson
+License: GPLv3 or later (https://www.gnu.org/licenses/)
+
+Internet use: See iconLinks variable for what will be attempted when.
+
+USAGE:
+install_any.py <Program Name_version.AppImage>
+install_any.py <file.AppImage> <Icon Caption>
+install_any.py <file.deb> <Icon Caption>
+install_any.py <path> --move
+               ^ moves the directory to $HOME/.local/lib64
+install_any.py <path> --uninstall
+               ^ removes it from $HOME/.local/lib64
+                 and tries to recover the data to the original path from
+                 which it was installed (using local_machine.json).
+install_any.py --uninstall keepassxc
+                           ^ Use a known luid from local_machine.json
+                           or reinstall the same version (if you didn't
+                           delete the source after uninstall, which
+                           --uninstall had tried to recover) like:
+                           install_any.py --install keepassxc
+install_any.py <path> --reinstall
+               ^ removes it from $HOME/.local/lib64 first
+
+install_any.py --help
+               ^ Show this help screen.
+
+
+'''
+
+'''
+    install_any tries to install any folder or archived binary package.
+    Copyright (C) 2019  Jake "Poikilos" Gustafson
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+'''
 import sys
 import stat
 import os
@@ -8,6 +59,8 @@ import tempfile
 from zipfile import ZipFile
 import platform
 import json
+from datetime import datetime
+import inspect
 
 python_mr = 3  # major revision
 try:
@@ -139,35 +192,7 @@ OLD_NO_CMD_MSG = "You must specify a directory or binary file."
 
 
 def usage():
-    print("")
-    print("USAGE:")
-    print(me + " <Program Name_version.AppImage>")
-    print(me + " <file.AppImage> <Icon Caption>")
-    print(me + " <file.deb> <Icon Caption>")
-    print(me + " <path> --move")
-    print(" "*len(me) + " ^ moves the directory to $HOME/.local/lib64")
-    print(me + " <path> --uninstall")
-    print(" "*len(me) + " ^ removes it from $HOME/.local/lib64")
-    print(me + " <path> --reinstall")
-    print(" "*len(me) + " ^ removes it from $HOME/.local/lib64 first")
-    print("")
-    print(me + " --help")
-    print(" "*len(me) + " ^ Show this help screen.")
-    print("")
-    print("If you know the luid (locally-unique ID) of a program and it"
-          "is in the programs object in {lmName}, you can uninstall the"
-          " program using the luid (otherwise you need the full path"
-          " of the source, which may be inaccessible). You can obtain"
-          " the luid of any installed program by reviewing {lmPath}"
-          " after the first run of the program (it should be there by"
-          " now)."
-          "\nFor example:\n"
-          "".format(
-                lmPath=localMachineMetaPath,
-                lmName=os.path.basename(localMachineMetaPath),
-            ))
-    print(me + " --uninstall keepassxc")
-    print("")
+    print(__doc__)
 
 
 shortcut_data_template = """[Desktop Entry]
@@ -177,6 +202,175 @@ Icon={Icon}
 Terminal=false
 Type=Application
 """
+
+def setDeepValue(category, luid, key, value):
+    if localMachine.get(category) is None:
+        localMachine[category] = {}
+    if localMachine[category].get(luid) is None:
+        localMachine[category][luid] = {}
+    if isinstance(localMachine[category][luid].get(key), list):
+        raise ValueError("You cannot change a list (key={}) to a"
+                         "non-list.".format(key))
+    if isinstance(value, list):
+        callerName = inspect.stack()[1][3]
+        newCallName = callerName + "s"
+        raise ValueError("You cannot set a value ({}.{}.{}) to a"
+                         " list in setDeepValue. Add the"
+                         " individual values using setDeepValues"
+                         " or something like {} instead."
+                         "".format(category, luid, key, newCallName))
+    localMachine[category][luid][key] = value
+
+
+
+def setProgramValue(luid, key, value):
+    setDeepValue('programs', luid, key, value)
+
+
+def setPackageValue(sc_name, key, value):
+    '''
+    Sequential values:
+    sc_name -- Provide the shortcut filename (without extension).
+        The package name is made unique in multi-version mode using
+        sc_name, so sc_name (instead of luid) is used as the key in
+        packages. Be sure to also set luid using
+        setPackageValue(sc_name, 'luid', luid) so this package can be
+        tied back to the unique program id.
+    '''
+    setDeepValue('packages', sc_name, key, value)
+
+
+def getDeepValue(category, luid, key):
+    if localMachine.get(category) is None:
+        return None
+    if localMachine[category].get(luid) is None:
+        return None
+    if isinstance(localMachine[category][luid].get(key), list):
+        callerName = inspect.stack()[1][3]
+        newCallName = callerName + "s"
+        raise ValueError("You cannot get from a list ({}.{}.{}) in"
+                         " getDeepValue. Use getDeepValues or something"
+                         "like {} (plural) instead."
+                         "".format(category, luid, key, newCallName))
+    return localMachine[category][luid].get(key)
+
+
+def getProgramValue(luid, key):
+    return getDeepValue('programs', luid, key)
+
+def getDeepValues(category, luid, key):
+    if localMachine.get(category) is None:
+        error("Warning: getDeepValues didn't find the category {}"
+              "".format(category))
+        return None
+    if localMachine[category].get(luid) is None:
+        return None
+    if not isinstance(localMachine[category][luid].get(key), list):
+        callerName = inspect.stack()[1][3]
+        newCallName = callerName[:-1]  # Remove the 's'.
+        raise ValueError("You can only get multiple values from a list"
+                         " ({}.{}.{}). Use getDeepValue or"
+                         " something like {} (singular) instead."
+                         "".format(category, luid, key, newCallName))
+    return localMachine[category][luid].get(key)
+
+
+def getProgramValues(luid, key):
+    return getDeepValues('programs', luid, key)
+
+def getPackageValues(sc_name, key):
+    '''
+    Sequential values:
+    sc_name -- Provide the shortcut filename (without extension).
+        The package name is made unique in multi-version mode using
+        sc_name, so sc_name (instead of luid) is used as the key in
+        packages (The luid is still set like
+        setPackageValue(sc_name, 'luid', luid) so that the package can
+        be tied back to the unique program id).
+    '''
+    return getDeepValues('packages', sc_name, key)
+
+
+def addDeepValue(category, luid, key, value, unique=True):
+    '''
+    Add a value to a list named with `key` in the category's metadata.
+
+    Sequential arguments:
+    category -- A category in the local_machine.json such as 'programs'.
+
+    Keyword arguments:
+    unique -- True of the value should only be added if it isn't already
+        in the list named by `key`.
+    '''
+    if localMachine.get(category) is None:
+        error("Warning: addDeepValue didn't find the category {}"
+              "".format(category))
+        localMachine[category] = {}
+    if localMachine[category].get(luid) is None:
+        localMachine[category][luid] = {}
+    if localMachine[category][luid].get(key) is None:
+        localMachine[category][luid][key] = []
+    if not isinstance(localMachine[category][luid][key], list):
+        raise ValueError("You cannot append to non-list ({}.{}.{})."
+                         "".format(category, luid, key))
+    if (not unique) or (value not in localMachine[category][luid][key]):
+        localMachine[category][luid][key].append(value)
+
+
+def addProgramValue(luid, key, value, unique=True):
+    '''
+    Add a list item to a value within a program's metadata.
+    See addDeepValue for further documentation.
+    '''
+    addDeepValue('programs', luid, key, value, unique=unique)
+
+def addPackageValue(sc_name, key, value, unique=True):
+    '''
+    Add a list item to a value within a package's metadata.
+    See addDeepValue for further documentation.
+
+    Sequential values:
+    sc_name -- Provide the shortcut filename (without extension).
+        The package name is made unique in multi-version mode using
+        sc_name, so sc_name (instead of luid) is used as the key in
+        packages. Be sure to also set luid using
+        setPackageValue(sc_name, 'luid', luid) so this package can be
+        tied back to the unique program id.
+    '''
+    addDeepValue('packages', sc_name, key, value, unique=unique)
+
+'''
+def setVersionedValue(luid, version, key, value):
+    # Use setPackageValue instead.
+    if isinstance(value, list):
+        raise ValueError("You cannot set a value (programs.{}.{}) to a"
+                         "list. Add individual values using"
+                         "addVersionedValue instead."
+                         "".format(luid, key))
+    if localMachine['programs'].get(luid) is None:
+        localMachine['programs'][luid] = {}
+    if localMachine['programs'][luid].get('versions') is None:
+        localMachine['programs'][luid]['versions'] = {}
+    if localMachine['programs'][luid]['versions'].get(version) is None:
+        localMachine['programs'][luid]['versions'][version] = {}
+    localMachine['programs'][luid]['versions'][version][key] = value
+
+def addVersionedValue(luid, version, key, value):
+    # Use addPackageValue instead.
+    if localMachine['programs'].get(luid) is None:
+        localMachine['programs'][luid] = {}
+    if localMachine['programs'][luid].get('versions') is None:
+        localMachine['programs'][luid]['versions'] = {}
+    if localMachine['programs'][luid]['versions'].get(version) is None:
+        localMachine['programs'][luid]['versions'][version] = {}
+    if localMachine['programs'][luid]['versions'][version].get(key) is None:
+        localMachine['programs'][luid]['versions'][version][key] = []
+    if not isinstance(localMachine['programs'][luid]['versions'][version].get(key), list):
+        raise ValueError("You cannot append to non-list (programs.{}.versions.{}.{})."
+                         "".format(luid, version, key))
+    localMachine['programs'][luid]['versions'][version][key].append(value)
+'''
+
 
 
 def test_CompletedProcessException(code):
@@ -490,7 +684,7 @@ class PackageInfo:
     '''
     To get a globally unique name based on whether multiVersion or
     multiPackage installs can coexist, use get_coexisting_id(luid,
-    multiPackage, multiVersion). See the constructor documentation for
+    multiPackage, multiVersion). See the __init__ documentation for
     more info.
     '''
     DELIMITERS = "_- +"
@@ -522,35 +716,35 @@ class PackageInfo:
     def __init__(self, src_path, **kwargs):
         '''
         Sequential arguments:
-        src_path -- If the constructor parameter is a directory, the
+        src_path -- If the init parameter is a directory, the
         extension will not be removed.
 
         Keyword arguments
         arch -- 64bit or 32bit, to match the first element in the tuple
-                returned by Python's platform.architecture(). If no
-                delimited segment of the filename is in X64S or X32S,
-                the arch will be None after the contructor call.
+            returned by Python's platform.architecture(). If no
+            delimited segment of the filename is in X64S or X32S, the
+            arch will be None after the contructor call.
 
         platform -- uppercase platform such as "Linux" or "Windows"
-                    to match the output of Python's platform.system(). If no
-                    delimited segment of the filename is in LINS or WINS,
-                    the platform will be None after the contructor call.
+            to match the output of Python's platform.system(). If no
+            delimited segment of the filename is in LINS or WINS, the
+            platform will be None after the contructor call.
 
-        casedName -- The casedName is the human-readable name without the
-                     version, possibly including uppercase and spaces
-                     (generated if None).
+        casedName -- The casedName is the human-readable name without
+            the version, possibly including uppercase and spaces
+            (generated if None).
 
-        luid -- the name ("locally unique identifier" uniquely identifying
-                the program (no version); ready to be used as an icon file
-                name; used as a key for the icons dict or casedNames dict
-                default: toLUID(casedName)
+        luid -- the name ("locally unique identifier" uniquely
+            identifying the program (no version); ready to be used as
+            an icon file name; used as a key for the icons dict or
+            casedNames dict default: toLUID(casedName)
         version -- You must specify a version if the name has no
-                   version. This script should automatically pass along
-                   the version such as if the archive but not directory
-                   (or directory but not not binary) has the version.
+            version. This script should automatically pass along the
+            version such as if the archive but not directory (or
+            directory but not not binary) has the version.
         dry_run -- Setting this to True prevents a ValueError when
             src_path is not a file in a way that is more future-proof
-            than is_dir=True. The reason for forcing the constructor to
+            than is_dir=True. The reason for forcing init to
             finish is to obtain metadata for non-install purposes.
         '''
         print("[PackageInfo __init__] * checking src_path {}..."
@@ -575,8 +769,8 @@ class PackageInfo:
             if not os.path.exists(src_path) and not self.dry_run:
                 raise ValueError(
                     "src_path \"{}\" must exist or you must specify the"
-                    " is_dir keyword argument for the PackageInfo"
-                    " constructor (only if running a test)."
+                    " is_dir keyword argument for PackageInfo"
+                    " init (only if running a test)."
                     "".format(src_path)
                 )
             is_dir = os.path.isdir(src_path)
@@ -980,6 +1174,13 @@ localMachine = {
     'programs': {}
 }
 
+# Date variables below are borrowed from enissue.py in
+# <https://github.com/poikilos/EnlivenMinetest>, but the sanitized
+# version instead of the Gitea-specific version is used:
+giteaSanitizedDtFmt = "%Y-%m-%dT%H:%M:%S%z"
+sanitizedDtExampleS = "2021-11-25T12:00:13-0500"
+
+
 def getValueFromSymbol(valueStr, lineN=-1, path="(generated)"):
     '''
     Convert a symbolic value such as `"\"hello\""` to a real value such
@@ -998,10 +1199,25 @@ def getValueFromSymbol(valueStr, lineN=-1, path="(generated)"):
         return None
 
     if valueStr.startswith("'") and valueStr.endswith("'"):
-        return valueStr[1:-1]
+        return valueStr[1:-1].replace('\\\'', '\'')
     if valueStr.startswith('"') and valueStr.endswith('"'):
-        return valueStr[1:-1]
+        return valueStr[1:-1].replace("\\\"", "\"")
+    try:
+        return datetime.strptime(tsRaw, giteaSanitizedDtFmt)
+    except ValueError as ex:
+        if "does not match format" not in str(ex):
+            error("WARNING: {} doens't seem to be a date but the error"
+                  " when trying to parse it is not clear.")
     return valueStr
+
+
+def getSymbolFromValue(value):
+    if isinstance(value, str):
+        return '"{}"'.format(value.replace("\"", "\\\""))
+    if isinstance(value, datetime):
+        return '"' + datetime.strftime(tsRaw, giteaSanitizedDtFmt) + '"'
+    return str(value)
+
 
 def fillProgramMeta(programMeta):
     pkginfo = None
@@ -1025,8 +1241,7 @@ def fillProgramMeta(programMeta):
     return programMeta
 
 
-# if not os.path.isfile(localMachineMetaPath):
-if True:
+if not os.path.isfile(localMachineMetaPath):
     if os.path.isfile(logPath):
         error("* generating {} from {}"
               "".format(localMachineMetaPath, logPath))
@@ -1166,7 +1381,6 @@ def logLn(line, path=logPath):
     with open(path, 'a') as outs:
         outs.write(line + "\n")
         fm = 'a'
-
 
 def install_program_in_place(src_path, **kwargs):
     """
@@ -1475,6 +1689,7 @@ def install_program_in_place(src_path, **kwargs):
                 for sub_name in files:
                     sub_path = os.path.join(root, sub_name)
                     icon_path = os.path.join(icons_path, sub_name)
+                    addProgramValue(luid, 'icon_paths', icon_path)
                     if do_uninstall:
                         if os.path.isfile(icon_path):
                             os.remove(icon_path)
@@ -1884,7 +2099,6 @@ def install_program_in_place(src_path, **kwargs):
     else:
         print("* no version is detected in {}".format(src_path))
         sc_name = "{}".format(luid)
-
     sc_name += ".desktop"
     sc_path = os.path.join(applications, sc_name)
     old_sc_path = None
@@ -1915,6 +2129,7 @@ def install_program_in_place(src_path, **kwargs):
         caption = caption[:1].upper() + caption[1:].lower()
         print("* using '" + caption + "' as caption (from luid)")
     logLn("luid=\"{}\"".format(luid))
+    setProgramValue(luid, 'luid', luid)
     if icon_path is None:
         if try_icon_url is not None:
             icon_name = try_icon_url.split('/')[-1]
@@ -1959,17 +2174,20 @@ def install_program_in_place(src_path, **kwargs):
                 if src_path != path:
                     shutil.move(src_path, path)
                     logLn("install_file:{}".format(dst_dirpath))
+                    setProgramValue(luid, 'installed', True)
                 else:
                     print("The file is already at '{}'.".format(path))
                     logLn("#install_file:{}".format(dst_dirpath))
+                    setProgramValue(luid, 'install_file', dst_dirpath)
             else:
                 if os.path.isfile(path):
                     if not os.path.isfile(src_path) and pull_back:
                         print("mv \"{}\" \"{}\"".format(path, src_path))
                         shutil.move(path, src_path)
-                        logLn("uninstall_file:{}\n"
-                              "recovered_to:{}"
-                              "".format(path, src_path))
+                        logLn("uninstall_file:{}".format(path))
+                        logLn("recovered_to:{}".format(src_path))
+                        setProgramValue(luid, 'installed', False)
+                        setProgramValue(luid, 'src_path', src_path)
                         if src_path == path:
                             print("The source path"
                                   " \"{}\" was moved to \"{}\"."
@@ -1988,10 +2206,23 @@ def install_program_in_place(src_path, **kwargs):
     elif move_what == 'directory':
         if do_uninstall:
             if os.path.isdir(dst_dirpath):
-                shutil.rmtree(dst_dirpath)
+                if not os.path.isfile(src_path) and pull_back:
+                    print("mv \"{}\" \"{}\"".format(path, src_path))
+                    shutil.move(dst_dirpath, src_path)
+                    logLn("recovered_to:{}".format(src_path))
+                    setProgramValue(luid, 'src_path', src_path)
+                    if src_path == path:
+                        print("The source path"
+                              " \"{}\" was moved to \"{}\"."
+                              "".format(path, src_path))
+                else:
+                    shutil.rmtree(dst_dirpath)
             else:
                 print("There is no '{}'.".format(dst_dirpath))
             logLn("uninstall_dir:{}".format(dst_dirpath))
+            setProgramValue(luid, 'installed', False)
+            if multiVersion:
+                setPackageValue(sc_name, 'installed', False)
         else:
             print("mv '{}' '{}'".format(dirpath, dst_dirpath))
             if os.path.isdir(dst_dirpath):
@@ -2006,6 +2237,17 @@ def install_program_in_place(src_path, **kwargs):
             path = os.path.join(dst_dirpath, filename)
             logLn("install_move_dir:{}".format(dst_dirpath))
 
+    # Still set generic values for the program even if multiVersion,
+    # so that the last install is recorded:
+    setProgramValue(luid, 'src_path', src_path)
+
+    if multiVersion:
+        gotMeta = self.toDict()
+        for k,v in gotMeta.items():
+            setPackageValue(sc_name, k, v)
+        setPackageValue(sc_name, 'dst_dirpath', dst_dirpath)
+    else:
+        setProgramValue(luid, 'dst_dirpath', dst_dirpath)
 
     if not do_uninstall:
         sys.stderr.write("* marking \"{}\" as executable..."
@@ -2031,12 +2273,20 @@ def install_program_in_place(src_path, **kwargs):
         #   look the same in gnome as it forever mercilessly and
         #   incompetently botches the name as something like
         #   "Godot 3.3.2 sta..." for both.
+    setProgramValue(luid, 'caption', caption)
+    setProgramValue(luid, 'sc_path', sc_path)
+    if multiVersion:
+        setPackageValue(sc_name, 'caption', caption)
+        setPackageValue(sc_name, 'sc_path', sc_path)
     shortcut_data = shortcut_data_template.format(Exec=path,
                                                   Name=caption,
                                                   Icon=icon_path)
 
     my_dir = os.path.dirname(os.path.realpath(__file__))
     meta_dir = os.path.join(my_dir, "shortcut-metadata")
+    if not os.path.isdir(meta_dir):
+        raise RuntimeError("The shortcut-metadata directory wasn't"
+                           " found: \"{}\"".format(meta_dir))
     meta_path = os.path.join(meta_dir, "{}.txt".format(luid))
 
     shortcut_append_lines = None
