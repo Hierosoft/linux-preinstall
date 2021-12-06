@@ -1,16 +1,22 @@
+# Forensic Imaging Tools
 
 Poikilos:
-diffimage.py (in gimp-plugin-channel-tinker)
+- Commands provided by installing [rotocanvas](https://github.com/poikilos/rotocanvas):
+  - diffimage
+  - diffimagesratio
+  - findbyappearance
+- diffimg (available on some Linux distro repos).
 
-arch:
-testdisk
+Arch:
+- testdisk
 
 AUR:
-rstudio
-whdd
-scrounge-ntfs
-safecopy: extract data from damaged disks
-magicrescue: "Find and recover deleted files on block devices"
+- rstudio
+- whdd
+- scrounge-ntfs
+- safecopy: extract data from damaged disks
+- magicrescue: "Find and recover deleted files on block devices"
+
 
 ## Other forensics tools
 ### Image Stacking (get more detail from series of frames)
@@ -50,7 +56,7 @@ magicrescue: "Find and recover deleted files on block devices"
 * testdisk
 	* comes with photorec which can recover photos from datastream even if partition table is not recoverable
 
-#### Other:
+#### Other
 * ImageJ: mostly for annotating and measuring images, with an emphasis on microscopy https://imagej.nih.gov/ij/download.html (bundled with Java 1.8)
 	* as of 2017-10, the site recommends getting Fiji instead (available in AUR; "a distribution of ImageJ which includes many useful plugins contributed by the community")
 * qastrocam-g2 "unable to satisfy dependency avifile"hg
