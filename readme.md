@@ -45,9 +45,36 @@ Script names:
 - If the name includes .fedora.*, then it will work on Fedora but may not work on other rpm distros.
 
 ### Modular Features
-#### install_any.py
-You can use utilities/install_any.py to install deb packages!
-It seems to only be able to use tar to extract xz files if you use Python 3 (not Python 2).
-![Screenshot of using install_any.py and the resulting installed
-shortcuts from a directories, archive, deb, or appimage](media/screenshot-install_any.jpg)
 
+#### sortversion
+The linuxpreinstall.versioning module helps identify version strings
+inside of names. A "." will only be included as part of the version if
+a number follows. Otherwise it will end the version, since it would
+seem to be the start of a file extension in that case. The usual use of
+it is using the utilities/sortversion command such as via:
+```bash
+ls | sortversion
+```
+
+To use the `sortversion` command in the utilities folder you must
+either have the linuxpreinstall module in your path or install
+`sortversion` as a symlink such as via (replace
+`/home/user/git/linux-preinstall` or `~/git/linux-preinstall` with the
+location of your cloned linux-preinstall repo in the following
+commands!):
+```
+echo "If you copied and pasted this without changing it, don't expect it to work--You failed to follow the documentation."
+sudo ln -s /home/user/git/linux-preinstall/utilities/sortversion /usr/local/bin/
+# or:
+# ln -s ~/git/linux-preinstall/utilities/sortversion ~/.local/bin/
+# if that is in your user PATH. It can be added to your path in ~/.bash_profile (or whatever file is appropriate for your os) like:
+# PATH=$PATH:$HOME/.local/bin:$HOME/bin
+# # ^ before the "export PATH" line, otherwise add that afterward.
+```
+
+#### nopackage
+The old install_any.py script's features have been moved to
+<https://github.com/poikilos/nopackage> which provides the new command
+`nopackage`:
+
+You can use `nopackage` to install almost anything, such as a single file (AppImage or other), a zip file, or to install a deb package on any distro in your profile, all without superuser priveleges!

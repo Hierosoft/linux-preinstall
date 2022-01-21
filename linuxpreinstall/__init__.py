@@ -3,6 +3,7 @@
 import os
 import sys
 import subprocess
+from csv import reader
 
 osrelease = None
 data_path = os.path.dirname(__file__)
@@ -21,6 +22,28 @@ pkg_search_parts = None
 upgrade_parts = None
 package_type = None
 install_bin = None
+packageInfos = None
+verbose = False
+
+
+def set_verbose(v):
+    global verbose
+    if v is True:
+        verbose = True
+    elif v is False:
+        verbose = False
+    else:
+        raise ValueError("Verbose must be True or False but {} was"
+                         " tried".format(v))
+
+
+def is_verbose():
+    return verbose
+
+
+def prerr(msg):
+    sys.stderr.write("{}\n".format(msg))
+    sys.stderr.flush()
 
 
 class InstallManager:
@@ -64,10 +87,9 @@ class InstallManager:
         raise NotImplementedError("install_ported_package")
 
 
-def error(msg):
-    sys.stderr.write("{}\n".format(msg))
-
 def _init_commands():
+    if verbose:
+        prerr("* _init_commands...")
     global refresh_parts
     global install_parts
     global uninstall_parts
@@ -100,7 +122,7 @@ def _init_commands():
         # refresh_parts = ["#nothing do refresh since using pacman (pacman -Scc clears cache but that's rather brutal)...  # "]
         list_installed_parts = [install_bin, "-Q"]  # Qe lists packages explicitly installed (see pacman -Q --help)
         pkg_search_parts = [install_bin, "-Ss"]
-        error("WARNING: GTK3_DEV_PKG is unknown for pacman")
+        prerr("WARNING: GTK3_DEV_PKG is unknown for pacman")
 
     if package_type == "deb":
         install_parts = [install_bin, "install", "-y"]
@@ -117,11 +139,25 @@ def _init_commands():
     #elif bin_exists("apt-get"):
     #    refresh_result = subprocess.run(["apt-get", "refresh"])
     if refresh_parts is not None:
-        refresh_result = subprocess.run(refresh_parts)
-        result_msg = "FAILED"
-        if refresh_result.returncode == 0:
-            result_msg = "OK"
-        error("* refreshing package list..." + result_msg)
+        if os.geteuid() == 0:
+            # refresh_result = subprocess.run(refresh_parts, stdout=sys.stderr.buffer)
+            # returncode = refresh_result.returncode
+            # "run" returns an object but "call" only returns the code:
+            # returncode = subprocess.call(refresh_parts, stdout=sys.stderr.buffer)
+            returncode = subprocess.call(refresh_parts, stdout=sys.stderr.fileno())
+            # ^ fileno() is Python 2 compatible
+            #   https://stackoverflow.com/a/11495784/4541104
+            #   (redirect stderr so stdout isn't flooded such as when
+            #   using the sortversion command (which uses main from
+            #   linuxpreinstall.versioning).
+            result_msg = "FAILED ({} didn't succeed with your privileges)".format(refresh_parts)
+            if returncode == 0:
+                result_msg = "OK"
+            prerr("* refreshing package list..." + result_msg)
+        else:
+            prerr("* linuxpreinstall is not refreshing the package list since you are not a superuser.")
+    if verbose:
+        prerr("  * done _init_commands")
 
 
 def run_and_get_lists(cmd_parts, collect_stderr=True):
@@ -132,7 +168,7 @@ def run_and_get_lists(cmd_parts, collect_stderr=True):
     # See <https://stackabuse.com/executing-shell-commands-with-python>:
     # called = subprocess.run(list_installed_parts, stdout=subprocess.PIPE, text=True)
     # , input="Hello from the other side"
-    # error(called.stdout)
+    # prerr(called.stdout)
     outs = []
     errs = []
     # See <https://stackoverflow.com/a/7468726/4541104>
@@ -186,10 +222,10 @@ def get_installed():
     if list_installed_parts is not None:
         out, err = run_and_get_lists(list_installed_parts)
         if len(err) > 0:
-            error("Error running {}:"
+            prerr("Error running {}:"
                   "".format(" ".join(list_installed_parts)))
             for line in err:
-                error(line)
+                prerr(line)
             return None
     return out
 
@@ -219,6 +255,8 @@ def find_unquoted(haystack, needle, quotes=['"']):
 
 
 def _init_osrelease():
+    if verbose:
+        prerr("* _init_osrelease...")
     global osrelease
     if osrelease is None:
         osrelease = {}
@@ -247,8 +285,10 @@ def _init_osrelease():
                                       "".format(osrelease_path, lineN,
                                                 signRawI))
     else:
-        error("osrelease_path \"{}\" was not found. osrelease:{}"
+        prerr("osrelease_path \"{}\" was not found. osrelease:{}"
               "".format(osrelease_path, osrelease))
+    if verbose:
+        prerr("  * done _init_osrelease")
 
 
 def bin_exists(name):
@@ -260,12 +300,51 @@ def bin_exists(name):
 
 
 def _init_packagenames():
+    if verbose:
+        prerr("* _init_packagenames...")
+    global packageInfos
+    if packageInfos is None:
+        packageInfos = {}
     listPath = os.path.join(data_path, packages_name)
     if not os.path.isfile(listPath):
         raise FileNotFoundError(listPath)
-    raise NotImplementedError("_init_packagenames")
-
-
+    # raise NotImplementedError("_init_packagenames")
+    rowNum = 0
+    with open(listPath, 'r') as read_obj:
+        rowNum += 1  # Start counting at 1.
+        csv_reader = reader(read_obj)
+        header = next(csv_reader)
+        if header is not None:
+            for row in csv_reader:
+                rowNum += 1  # Start after header row, at 2.
+                pkgid = None
+                o = {}
+                for i in range(len(header)):
+                    fieldName = header[i]
+                    if fieldName == "id":
+                        pkgid = row[i].strip()
+                        o[fieldName] = pkgid
+                        if len(pkgid) < 1:
+                            prerr("{}:{}: Error: id is blank"
+                                  "".format(listPath, rowNum))
+                            continue
+                    else:
+                        if pkgid is None:
+                            raise ValueError("The id column must be"
+                                             "first in {}"
+                                             "".format(listPath))
+                        if o.get('names') is None:
+                            o['names'] = {}
+                        o['names'][fieldName] = row[i]
+                if packageInfos.get(pkgid) is None:
+                    packageInfos[pkgid] = o
+                else:
+                    for k, v in o.items():
+                        packageInfos[pkgid][k] = v
+                if verbose:
+                    prerr("object[{}]: {}".format(pkgid, o))
+    if verbose:
+        prerr("  * done _init_packagenames")
 _init_osrelease()
 _init_packagenames()
 _init_commands()

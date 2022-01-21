@@ -1,0 +1,20 @@
+#!/usr/bin/env python3
+import re
+try:
+    from linuxpreinstall.versioning import main
+except ModuleNotFoundError as ex:
+    if "No module named 'linuxpreinstall'" in str(ex):
+        import os
+        import sys
+        myFile = os.path.realpath(__file__)
+        myDir = os.path.dirname(myFile)
+        repoDir = os.path.dirname(myDir)
+        sys.path.insert(0, repoDir)
+        from linuxpreinstall.versioning import main
+    else:
+        raise ex
+
+
+if __name__ == '__main__':
+    sys.argv[0] = re.sub(r'(-script\.pyw|\.exe)?$', '', sys.argv[0])
+    sys.exit(main())
