@@ -1,0 +1,117 @@
+#!/bin/bash
+# Author & Purpose: See "usage" below.
+
+usage(){
+cat > /dev/null <<END
+ggrep
+by Jake Gustafson
+
+This program allows you to search using grep then get a geany command to go to a specific line.
+- It automatically is recursive, but you can prevent that by specifying a file (that exists) as any parameter.
+- It automatically includes *.py files, but you can change the file type using exactly one --include parameter.
+
+You can install it such as via:
+  cd linux-preinstall
+  sudo ln -s `pwd`/utilities/ggrep /usr/local/bin/ggrep
+
+
+Then you can use it any time.
+For example, if you run:
+    ggrep contains_vec3
+
+
+The output is:
+
+* ggrep is passing along extra arguments to grep:  contains_vec3
+grep -r contains_vec3 -n
+results:
+
+geany pyglops.py -l 606 #pyglops.py:606:def hitbox_contains_vec3(o, pos):
+geany kivyglops.py -l 1848 #kivyglops.py:1848:                                               self.glops[bumper_index].properties['hitbox'].contains_vec3(get_vec3_from_point(self.glops[bumpable_index]._t_ins)):
+# END of output
+
+
+Then you can simply paste (There is no need to copy and paste using
+hotkeys. Simply utilize the auto-copy feature of linux: select the
+command in the part above, then middle click in a terminal to get):
+  geany pyglops.py -l 606
+
+
+When you press enter, Geany will go to the exact line.
+
+END
+}
+
+me="ggrep"
+_new_cmd="grep"
+if [ -z "$GGREP_INCLUDE" ]; then
+    GGREP_INCLUDE="*.py"
+fi
+prev_var=""
+_found_include="false"
+_recursive_arg="-r"
+_more_args=""
+_n_arg="-n"
+
+for var in "$@"
+do
+    if [ "@$var" == "@--include" ]; then
+        GGREP_INCLUDE=""
+    elif [ "@$var" == "@-r" ]; then
+        >&2 echo "* -r (recursive) is already the default."
+    elif [ "@$var" == "@--recursive" ]; then
+        _recursive_arg="--recursive"
+        >&2 echo "* -r (recursive) is already the default."
+    else
+        if [ -f "$var" ]; then
+            _recursive_arg=""
+            >&2 echo "* turning off recursive mode (default in ggrep) since \"$var\" is a file"
+        elif [ "@$prev_var" = "@--include" ]; then
+            >&2 echo "* changing --include from default $GGREP_INCLUDE to $var"
+            GGREP_INCLUDE="$var"
+            if [ "@$_found_include" = "@true" ]; then
+                >&2 echo "ERROR: $me only allows one '$prev_var' since by default includes $GGREP_INCLUDE."
+                exit 1
+            fi
+            _found_include="true"
+        else
+            _more_args="$_more_args $var"
+        fi
+    fi
+
+    if [ "@$var" == "-n" ]; then
+        >&2 echo "* -n is already the default (required for the functionality of $me)."
+        prev_var=""
+    else
+        prev_var="$var"
+    fi
+done
+
+if [ ! -z "$_more_args" ]; then
+    >&2 echo "* $me is passing along extra arguments to grep: $_more_args"
+fi
+
+_new_args="$_recursive_arg$_more_args $_n_arg "
+# --include $GGREP_INCLUDE
+>&2 echo "$_new_cmd $_new_args --include \"$GGREP_INCLUDE\""
+>&2 echo "results:"
+>&2 echo
+# eval $_new_cmd $_new_args
+# >&2 echo $_new_args
+while read -r line ; do
+    # >&2 echo "line: $line"
+    _line_n=`echo "$line" | sed -r 's/^[^:]+: ?([^:]+):.*/\1/'`
+    # ^ <https://unix.stackexchange.com/a/432760>
+    _file=`echo "$line" | cut -d: -f1`
+    # ^ <https://stackoverflow.com/a/20348145/4541104>
+    #>&2 echo "_line_n: $_line_n"
+    #>&2 echo "_file: $_file"
+    echo "geany $_file -l $_line_n #$line"
+done < <(grep $_new_args --include "$GGREP_INCLUDE")
+# ^ WHY does trying to put "--include $GGREP_INCLUDE" in _new_args always cause grep to return 1 and output nothing??
+# ^ See <https://stackoverflow.com/a/16318005/4541104>.
+code=$?
+if [ $code -ne 0 ]; then
+    >&2 echo "ERROR: '$_new_cmd $_new_args --include \\$GGREP_INCLUDE' returned $code"
+    exit $code
+fi
