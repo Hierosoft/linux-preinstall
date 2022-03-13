@@ -32,8 +32,9 @@ geany kivyglops.py -l 1848 #kivyglops.py:1848:                                  
 
 
 Then you can simply paste (There is no need to copy and paste using
-hotkeys. Simply utilize the auto-copy feature of linux: select the
-command in the part above, then middle click in a terminal to get):
+hotkeys. Simply utilize the auto-copy feature of linux: In a GUI
+terminal window, select (left click and drag) the command in the part
+above, then middle click to get):
   geany pyglops.py -l 606
 
 
