@@ -1,4 +1,5 @@
-# Corrected Geany Configuration for OpenSCAD Editing with Shell Installer
+# Corrected Geany Configuration for OpenSCAD Editing (+ shell script installer)
+<https://www.thingiverse.com/thing:5327783>
 (based on [Geany Configuration for OpenSCAD Editing](https://www.thingiverse.com/thing:263620) by [cobra18t](https://www.thingiverse.com/cobra18t) March 05, 2014)
 
 ## Differences in Poikilos remix
