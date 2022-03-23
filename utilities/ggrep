@@ -26,8 +26,8 @@ The output is:
 grep -r contains_vec3 -n
 results:
 
-geany pyglops.py -l 606 #pyglops.py:606:def hitbox_contains_vec3(o, pos):
-geany kivyglops.py -l 1848 #kivyglops.py:1848:                                               self.glops[bumper_index].properties['hitbox'].contains_vec3(get_vec3_from_point(self.glops[bumpable_index]._t_ins)):
+geany pyglops.py -l 606 # < pyglops.py:606:def hitbox_contains_vec3(o, pos):
+geany kivyglops.py -l 1848 # < kivyglops.py:1848:                                               self.glops[bumper_index].properties['hitbox'].contains_vec3(get_vec3_from_point(self.glops[bumpable_index]._t_ins)):
 # END of output
 
 
@@ -107,7 +107,7 @@ while read -r line ; do
     # ^ <https://stackoverflow.com/a/20348145/4541104>
     #>&2 echo "_line_n: $_line_n"
     #>&2 echo "_file: $_file"
-    echo "geany $_file -l $_line_n #$line"
+    echo "geany $_file -l $_line_n # < $line"
 done < <(grep $_new_args --include "$GGREP_INCLUDE")
 # ^ WHY does trying to put "--include $GGREP_INCLUDE" in _new_args always cause grep to return 1 and output nothing??
 # ^ See <https://stackoverflow.com/a/16318005/4541104>.
