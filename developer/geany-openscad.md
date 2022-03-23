@@ -49,14 +49,11 @@ Right-click each file listed below, then right-click then "Save link as" or any 
 - Open Geany
 - Click "Tools", "Configuration files", "filetype_extensions.conf"
 - Paste the following:
-```
-[Extensions]
-OpenSCAD=*.scad;
 
-# Note: restarting is required after editing groups
-[Groups]
-Script=OpenSCAD
-```
+    [Extensions]
+    OpenSCAD=*.scad;
+    [Groups]
+    Script=OpenSCAD
 
 - Save the file.
 - Exit Geany & reopen it.
