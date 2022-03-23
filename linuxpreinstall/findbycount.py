@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 '''
-findbycount gets the directory(ies) with the file count specified.
+findbycount
+-----------
+Get a list of directories with the file count specified.
 
 --parent: You can specify a starting directory, otherwise the current
           directory is used.
@@ -44,8 +46,11 @@ integerOptions = ['counts']
 
 
 def usage():
-    print(__doc__)
-
+    error(__doc__)
+    error("Defaults:")
+    for k, v in defaults.items():
+        error("  {}: {}".format(k, v))
+    error("")
 
 def findByCount(options):
     '''
@@ -136,6 +141,9 @@ def main():
     thisKey = None
     for argi in range(len(sys.argv)):
         arg = sys.argv[argi]
+        if arg in ["/?", "--help"]:
+            usage()
+            exit(0)
         if thisKey is not None:
             if thisKey in integerOptions:
                 try:
