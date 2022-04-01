@@ -1,0 +1,25 @@
+#!/bin/sh
+logsDir=~/.var/log/ninja-ide
+mkdir -p $logsDir
+# Exec=~/.local/lib64/ninja-ide.py
+Exec=~/Downloads/git/ninja-ide/ninja-ide/ninja-ide.py
+if [ ! -f "$Exec" ]; then
+    echo "Error: \"$Exec\" doesn't exist."
+    ninja_installer=~/git/textManglePlugin/doc/development/1st_time_repo_setup-ninja-ide.sh
+    if [ -f "$ninja_installer" ]; then
+        echo "* repairing using \"$ninja_installer\"..."
+        $ninja_installer
+        code=$?
+        if [ $code -ne 0 ]; then
+            exit $code
+        fi
+    else
+        exit 1
+    fi
+fi
+python3 $Exec "$@" 1>$logsDir/out.log 2>$logsDir/err.log
+code=$?
+cat $logsDir/out.log
+cat $logsDir/err.log
+if [ $code -ne 0 ]; then exit $code; fi
+
