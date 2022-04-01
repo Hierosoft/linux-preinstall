@@ -48,11 +48,13 @@ _new_cmd="grep"
 if [ -z "$GGREP_INCLUDE" ]; then
     GGREP_INCLUDE="*.py"
 fi
+GREP_INCLUDE="--include"
 prev_var=""
 _found_include="false"
 _recursive_arg="-r"
-_more_args=""
+_more_args=()
 _n_arg="-n"
+
 
 for var in "$@"
 do
@@ -60,6 +62,8 @@ do
         GGREP_INCLUDE=""
     elif [ "@$var" == "@-r" ]; then
         >&2 echo "* -r (recursive) is already the default."
+    elif [ "@$var" == "@-n" ]; then
+        _n_arg=""
     elif [ "@$var" == "@--recursive" ]; then
         _recursive_arg="--recursive"
         >&2 echo "* -r (recursive) is already the default."
@@ -67,6 +71,11 @@ do
         if [ -f "$var" ]; then
             _recursive_arg=""
             >&2 echo "* turning off recursive mode (default in ggrep) since \"$var\" is a file"
+        elif [ "@$var" == "@--include-all" ]; then
+            >&2 echo "* removing the default --include option so all are included"
+            GREP_INCLUDE=""
+            GGREP_INCLUDE=""
+            _found_include="true"
         elif [ "@$prev_var" = "@--include" ]; then
             >&2 echo "* changing --include from default $GGREP_INCLUDE to $var"
             GGREP_INCLUDE="$var"
@@ -76,7 +85,8 @@ do
             fi
             _found_include="true"
         else
-            _more_args="$_more_args $var"
+            # _more_args+="$_more_args $var"
+            _more_args+=( "$var" )
         fi
     fi
 
@@ -88,31 +98,65 @@ do
     fi
 done
 
-if [ ! -z "$_more_args" ]; then
+# if [ ! -z "$_more_args" ]; then
+if [ ${#arr[@]} > 0 ]; then
     >&2 echo "* $me is passing along extra arguments to grep: $_more_args"
 fi
 
-_new_args="$_recursive_arg$_more_args $_n_arg "
+#_new_args="$_recursive_arg$_more_args $_n_arg "
+if [ ! -z "$_n_arg" ]; then
+    _more_args+=( "$_n_arg" )
+fi
+if [ ! -z "$_recursive_arg" ]; then
+    _more_args+=( "$_recursive_arg" )
+fi
+_new_args=("${_more_args[@]}")
+
 # --include $GGREP_INCLUDE
->&2 echo "$_new_cmd $_new_args --include \"$GGREP_INCLUDE\""
+# eval $_new_cmd "${_new_args[@]}"
+# >&2 echo "${_new_args[@]}"
+if [ ! -z "$GGREP_INCLUDE" ]; then
+>&2 echo "$_new_cmd ${_new_args[@]} $GREP_INCLUDE \"$GGREP_INCLUDE\""
 >&2 echo "results:"
 >&2 echo
-# eval $_new_cmd $_new_args
-# >&2 echo $_new_args
-while read -r line ; do
-    # >&2 echo "line: $line"
-    _line_n=`echo "$line" | sed -r 's/^[^:]+: ?([^:]+):.*/\1/'`
-    # ^ <https://unix.stackexchange.com/a/432760>
-    _file=`echo "$line" | cut -d: -f1`
-    # ^ <https://stackoverflow.com/a/20348145/4541104>
-    #>&2 echo "_line_n: $_line_n"
-    #>&2 echo "_file: $_file"
-    echo "geany $_file -l $_line_n # < $line"
-done < <(grep $_new_args --include "$GGREP_INCLUDE")
-# ^ WHY does trying to put "--include $GGREP_INCLUDE" in _new_args always cause grep to return 1 and output nothing??
+    while read -r line ; do
+        # >&2 echo "line: $line"
+        _line_n=`echo "$line" | sed -r 's/^[^:]+: ?([^:]+):.*/\1/'`
+        # ^ <https://unix.stackexchange.com/a/432760>
+        _file=`echo "$line" | cut -d: -f1`
+        # ^ <https://stackoverflow.com/a/20348145/4541104>
+        #>&2 echo "_line_n: $_line_n"
+        #>&2 echo "_file: $_file"
+        echo "geany $_file -l $_line_n # < $line"
+    done < <(grep "${_new_args[@]}" $GREP_INCLUDE "$GGREP_INCLUDE")
+else
+#>&2 echo "$_new_cmd" "${_new_args[@]}"
+printf "$_new_cmd" >&2
+for value in "${_new_args[@]}" ; do
+    if [[ "$value" != "${value%[[:space:]]*}" ]]; then
+        printf " \"$value\""
+    else
+        printf " $value"
+    fi
+done
+>&2 echo
+>&2 echo "results:"
+>&2 echo
+    while read -r line ; do
+        # >&2 echo "line: $line"
+        _line_n=`echo "$line" | sed -r 's/^[^:]+: ?([^:]+):.*/\1/'`
+        # ^ <https://unix.stackexchange.com/a/432760>
+        _file=`echo "$line" | cut -d: -f1`
+        # ^ <https://stackoverflow.com/a/20348145/4541104>
+        #>&2 echo "_line_n: $_line_n"
+        #>&2 echo "_file: $_file"
+        echo "geany $_file -l $_line_n # < $line"
+    done < <(grep "${_new_args[@]}")
+fi
+# ^ WHY does trying to put "--include $GGREP_INCLUDE" in ${_new_args[@]} always cause grep to return 1 and output nothing??
 # ^ See <https://stackoverflow.com/a/16318005/4541104>.
 code=$?
 if [ $code -ne 0 ]; then
-    >&2 echo "ERROR: '$_new_cmd $_new_args --include \\$GGREP_INCLUDE' returned $code"
+    >&2 echo "ERROR: '$_new_cmd ${_new_args[@]} --include \\$GGREP_INCLUDE' returned $code"
     exit $code
 fi
