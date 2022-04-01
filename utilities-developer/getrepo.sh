@@ -1,6 +1,7 @@
 #!/bin/bash
 echo
 echo
+me="$0"
 echo "Started $0 `date '+%Y-%m-%d %T'`"
 usage() {
     cat <<END
@@ -14,17 +15,17 @@ Otherwise, specify --user then the username.
 If the website is not GitHub, specify the base URL after --website,
 such as https://githab.com
 
-    gitclone.sh <repo_name> [--user <github user>] [--website <website>]
+    $me <repo_name> [--user <github user>] [--website <website>]
 
 EXAMPLES
-    gitclone.sh basic_materials --user VanessaE --website https://gitlab.com
-    # ends up as ~/Downloads/git/VanessaE/
+    $me basic_materials --user poikilos --website https://gitlab.com
+    # ends up as ~/Downloads/git/poikilos/
 
-    gitclone.sh filter --user poikilos --repos_dir ~/git
+    $me filter --user poikilos --repos_dir ~/git
     # - uses github.com/poikilos
     # - clones to ~/git/poikilos/filter
 
-    gitclone.sh filter --user poikilos --repos_dir ~/git --user_dir ~/git
+    $me filter --user poikilos --repos_dir ~/git --user_dir ~/git
     # - uses github.com/poikilos
     # - clones to ~/git/filter
 --repos_dir
@@ -184,6 +185,12 @@ if [ "$REPOS_DIR" != "$UNUSED_REPOS_DIR" ]; then
     # fi
 fi
 #if [ "$PWD" != "$USER_DIR" ]; then
+if [ ! -d "$USER_DIR" ]; then
+    usage
+    echo
+    echo "Error: \"$USER_DIR\" doesn't exist (You are in \"`pwd`\")"
+    exit 1
+fi
 cd "$USER_DIR" || customExit "Cannot cd to specified USER_DIR: \"$USER_DIR\" (You are in \"`pwd`\")."
 echo "* cd \"$USER_DIR\""
 #fi
