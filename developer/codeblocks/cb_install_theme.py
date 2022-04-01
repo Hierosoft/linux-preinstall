@@ -18,27 +18,27 @@ myDir = os.path.dirname(os.path.abspath(__file__))
 
 cbConf = None
 profile = None
-AppDatas = None
-LocalAppDatas = None
+AppData = None
+LocalAppData = None
 myAppData = None
 
 if platform.system() == "Windows":
     profile = os.environ['USERPROFILE']
-    AppDatas = os.environ['APPDATA']
-    LocalAppDatas = os.environ['LOCALAPPDATA']
-    myAppData = os.path.join(AppDatas, "CodeBlocks")
+    AppData = os.environ['APPDATA']
+    LocalAppData = os.environ['LOCALAPPDATA']
+    myAppData = os.path.join(AppData, "CodeBlocks")
 else:
     profile = os.environ['HOME']
     if platform.system() == "Darwin":
         Library = os.path.join(profile, "Library")
-        AppDatas = os.path.join(Library, "Application Support")
-        LocalAppDatas = os.path.join(Library, "Application Support")
-        # myAppData = os.path.join(LocalAppDatas, "codeblocks")
+        AppData = os.path.join(Library, "Application Support")
+        LocalAppData = os.path.join(Library, "Application Support")
+        # myAppData = os.path.join(LocalAppData, "codeblocks")
         # cbConf = os.path.join(myAppData, "default.conf")
     else:
-        AppDatas = os.path.join(profile, ".config")
-        LocalAppDatas = os.path.join(profile, ".config")
-    myAppData = os.path.join(AppDatas, "codeblocks")
+        AppData = os.path.join(profile, ".config")
+        LocalAppData = os.path.join(profile, ".config")
+    myAppData = os.path.join(AppData, "codeblocks")
 
 cbConf = os.path.join(myAppData, "default.conf")
 
