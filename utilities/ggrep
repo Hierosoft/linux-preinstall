@@ -2,7 +2,7 @@
 # Author & Purpose: See "usage" below.
 
 usage(){
-cat > /dev/null <<END
+cat <<END
 ggrep
 by Jake Gustafson
 
@@ -19,8 +19,11 @@ Then you can use it any time.
 For example, if you run:
     ggrep contains_vec3
 
+You can exclude the content and get the line number commands cleanly such as via:
+    ggrep contains_vec3 | cut -f1 -d:
 
-The output is:
+
+The output (if you don't use "| cut -f1 -d:") is:
 
 * ggrep is passing along extra arguments to grep:  contains_vec3
 grep -r contains_vec3 -n
@@ -174,3 +177,4 @@ if [ $code -ne 0 ]; then
     >&2 echo "ERROR: '$_new_cmd ${_new_args[@]} --include \\$GGREP_INCLUDE' returned $code"
     exit $code
 fi
+>&2 echo "* to reduce output further, append the following to your command: | cut -f1 -d\#"
