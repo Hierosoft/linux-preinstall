@@ -98,10 +98,14 @@ do
     fi
 done
 
-# if [ ! -z "$_more_args" ]; then
-if [ ${#arr[@]} > 0 ]; then
-    >&2 echo "* $me is passing along extra arguments to grep: $_more_args"
-fi
+# if [ ${#_more_args[@]} > 0 ]; then
+# ^ commented since it generates a file named 0 :(
+count=${#_more_args[@]}
+>&2 echo "* _more_args count: $count"
+# if [ $count > 0 ]; then
+# ^ commented since it generates a file named 0 :(
+#    >&2 echo "* $me is passing along extra arguments to grep:" # ${_more_args[@]}"
+# fi
 
 #_new_args="$_recursive_arg$_more_args $_n_arg "
 if [ ! -z "$_n_arg" ]; then
@@ -111,7 +115,6 @@ if [ ! -z "$_recursive_arg" ]; then
     _more_args+=( "$_recursive_arg" )
 fi
 _new_args=("${_more_args[@]}")
-
 # --include $GGREP_INCLUDE
 # eval $_new_cmd "${_new_args[@]}"
 # >&2 echo "${_new_args[@]}"
