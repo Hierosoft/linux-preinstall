@@ -41,9 +41,8 @@ def is_verbose():
     return verbose
 
 
-def prerr(msg):
-    sys.stderr.write("{}\n".format(msg))
-    sys.stderr.flush()
+def prerr(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
 
 
 class InstallManager:
