@@ -120,6 +120,12 @@ _new_args=("${_more_args[@]}")
 # >&2 echo "${_new_args[@]}"
 if [ ! -z "$GGREP_INCLUDE" ]; then
     >&2 echo "$_new_cmd ${_new_args[@]} $GREP_INCLUDE \"$GGREP_INCLUDE\""
+    if [ "@$_found_include" = "@false" ]; then
+        echo " [use --include-all for the default grep behavior (all files) instead of \"$GGREP_INCLUDE\"]"
+    else
+        echo "_found_include: $_found_include"
+    fi
+    >&2 echo
     >&2 echo "results:"
     >&2 echo
         while read -r line ; do
@@ -142,6 +148,11 @@ else
             printf " $value"
         fi
     done
+    if [ "@$_found_include" = "@false" ]; then
+        echo " (use --include-all for all files, the default grep behavior)"
+    else
+        echo "_found_include: $_found_include"
+    fi
     >&2 echo
     >&2 echo "results:"
     >&2 echo
