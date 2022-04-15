@@ -12,6 +12,8 @@ from linuxpreinstall.versioning import (
     prerr,
 )
 
+# TODO: Require nopackage and use the version feature from it instead?
+
 set_verbose(True)
 
 class TestStringMethods(unittest.TestCase):

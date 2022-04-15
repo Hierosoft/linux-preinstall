@@ -5,11 +5,23 @@ These scripts automatically install programs and configure settings many users e
 
 Install only the packages you want for the specific task (such as development, video, streaming, desktop publishing, etc), but don't miss any you need (These groups may be lighter or heavier than distro-specific groups defined in the repositories, but usually lighter and more comprehensive for creators of any sort. The project is moving toward using metadata and Python to avoid the overlap between different groups and reduce the size of each group).
 
+Installing the linuxpreinstall python module also adds some useful commands:
+- findmime: Find files by full/partial mimetype (such as "jpeg" or "image"!) in the current directory.
+- cleanif: remove files from directory 1 if they exist in directory 2 (great for if you unzip or copy a load of files to the wrong place!)
 
 ## GOALS
 * Make the GNU+Linux system ready to use from day one.
 * Separate scripts by distro (Ubuntu, Fedora).
 * Separate scripts by workflow (end user, developer, server).
+* Move as many features to the python linuxpreinstall module as seems
+  reasonable.
+
+
+## Related Projects
+Related projects
+- [nopackage](https://github.com/poikilos/nopackage): Install any AppImage, archive, deb, or binary as an icon (download icons automatically when known!) on any GNU+Linux system!
+  - formerly the linux-preinstall tool called install_any.py
+- [rotocanvas](https://github.com/poikilos/rotocanvas): has several useful commands related to image sequences including (browseable) image "playlists".
 
 
 ## Usage
@@ -26,6 +38,9 @@ else
   cd linux-preinstall
   git pull
 fi
+
+echo "Installing `pwd`..."
+python3 -m pip install --user `pwd`
 ```
 For best results, the following usage order is recommended. All scripts
 except `*-nonroot.sh` scripts must run as `root` (or with `sudo bash`):

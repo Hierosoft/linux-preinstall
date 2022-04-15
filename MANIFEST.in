@@ -1,0 +1,2 @@
+include linuxpreinstall/*.py
+include linuxpreinstall/*.csv

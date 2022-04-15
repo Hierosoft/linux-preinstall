@@ -1,0 +1,21 @@
+#!/usr/bin/python3
+# -*- coding: utf-8 -*-
+import re
+import sys
+import platform
+import os
+profile = None
+if platform.system() == "Windows":
+    profile = os.environ['USERPROFILE']
+else:
+    profile = os.environ['HOME']
+reposDir = os.path.join(profile, "git")
+tryRepo = os.path.join(reposDir, "linux-preinstall")
+if os.path.isdir(tryRepo):
+    sys.path.append(tryRepo)
+
+from linuxpreinstall.findmime import main
+
+if __name__ == '__main__':
+    sys.argv[0] = re.sub(r'(-script\.pyw|\.exe)?$', '', sys.argv[0])
+    sys.exit(main())
