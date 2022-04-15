@@ -27,32 +27,32 @@ Installing the linuxpreinstall python module also adds some useful commands:
 ## Overview
 
 In some cases, instructions for beginners are included. Scripts such as those listed below may be helpful for you if you are starting linux or starting someone else on linux:
-- [Lubuntu - most essential tips only.md](Lubuntu - most essential tips only.md)
+- [Lubuntu - most essential tips only.md](Lubuntu%20-%20most%20essential%20tips%20only.md)
   - [GettingStarted-LXQt.md](GettingStarted-LXQt.md)
 
 Where there may be things that are too simple to script but too obscure to memorize, various tutorials and/or examples are included, such as:
-- [Always Install (any GNU+Linux System).md](Always Install (any GNU+Linux System).md)
-- [AlwaysAdd](AlwaysAdd)
-- [AlwaysRemove](AlwaysRemove)
-- [MissingMimetypes-optional.md](MissingMimetypes-optional.md)
+- [Always Install (any GNU+Linux System).md](Always%20Install%20(any%20GNU+Linux%20System).md)
+- [AlwaysAdd/](AlwaysAdd)
+- [AlwaysRemove/](AlwaysRemove)
+- [MissingMimetypes/](MissingMimetypes)
 - [drivers/Broadcom_B43_Wifi.ubuntu.sh](drivers/Broadcom_B43_Wifi.ubuntu.sh)
 - [Camera.md](Camera.md)
-- [game listings and stores, Linux.md](game listings and stores, Linux.md)
-  - [Games for linux, semi-popular.md](Games for linux, semi-popular.md)
-  - [games, casual from AUR.md](games, casual from AUR.md) (applies to Arch-based distros including Manjaro).
-- [JNLP files, launching.md](JNLP files, launching.md)
+- [game listings and stores, Linux.md](game%20listings%20and%20stores,%20Linux.md)
+  - [Games for linux, semi-popular.md](Games%20for%20linux,%20semi-popular.md)
+  - [games, casual from AUR.md](games,%20casual%20from%20AUR.md) (applies to Arch-based distros including Manjaro).
+- [JNLP files, launching.md](JNLP%20files,%20launching.md)
 - [centos kiosk with screensaver picture list sync from windows via samba](samba-examples/centos-kiosk/)
-- [TV Tuners, analog.md](TV Tuners, analog.md)
+- [TV Tuners, analog.md](TV%20Tuners,%20analog.md)
 - [tar.md](tar.md)
-- [forensic imaging tools.md](forensic imaging tools.md)
+- [forensic imaging tools.md](forensic%20imaging%20tools.md)
   - See also [rotocanvas](https://github.com/poikilos/rotocanvas) (visual diff and algorithmic (non-ai) similarity search).
 - [macOS](macOS)
 
 WIP (Work in progress) documents:
 - [Music.md](Music.md)
-- [Fedora tips - with notes on 26.md](Fedora tips - with notes on 26.md)
+- [Fedora tips - with notes on 26.md](Fedora%20tips%20-%20with%20notes%20on%2026.md)
 - [troubleshooting-developer/](troubleshooting-developer/)
-- [Word or Writer image extraction via unzip and emf conversion.md](Word or Writer image extraction via unzip and emf conversion.md)
+- [Word or Writer image extraction via unzip and emf conversion.md](Word%20or%20Writer%20image%20extraction%20via%20unzip%20and%20emf%20conversion.md)
 - [doc](doc): Additional and WIP documentation for linux-preinstall or programs with which linux-preinstall assists.
 - [projects](projects): This generally contains project files content that becomes part of linux-preinstall (not necessarily WIP, but may have previous WIP versions as separate files or layers).
 
