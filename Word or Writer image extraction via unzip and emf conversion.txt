@@ -1,3 +1,4 @@
+```
 #!/bin/bash
 # Neither of the websites provide a pixel perfect method.
 # see also https://stackoverflow.com/questions/15063349/imagemagick-on-linux-to-convert-emf-to-png/28749719#28749719
@@ -60,3 +61,4 @@ try_convert_emf "image7"
 try_convert_emf "image8"
 try_convert_emf "image9"
 try_convert_emf "image10"
+```

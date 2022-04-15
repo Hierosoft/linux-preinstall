@@ -34,14 +34,14 @@ Where there may be things that are too simple to script but too obscure to memor
 - [AlwaysAdd](AlwaysAdd)
 - [AlwaysRemove](AlwaysRemove)
 - [MissingMimetypes-optional.md](MissingMimetypes-optional.md)
-- [Broadcom B43 Wifi on linux.txt](Broadcom B43 Wifi on linux.txt)
+- [drivers/Broadcom_B43_Wifi.ubuntu.sh](drivers/Broadcom_B43_Wifi.ubuntu.sh)
 - [Camera.md](Camera.md)
 - [game listings and stores, Linux.md](game listings and stores, Linux.md)
-  - [Games for linux, semi-popular.txt](Games for linux, semi-popular.txt)
+  - [Games for linux, semi-popular.md](Games for linux, semi-popular.md)
   - [games, casual from AUR.txt](games, casual from AUR.txt) (applies to Arch-based distros including Manjaro).
 - [JNLP files, launching.txt](JNLP files, launching.txt)
 - [centos kiosk with screensaver picture list sync from windows via samba](samba-examples/centos-kiosk/)
-- [TV Tuners, analog.txt](TV Tuners, analog.txt)
+- [TV Tuners, analog.md](TV Tuners, analog.md)
 - [tar.md](tar.md)
 - [forensic imaging tools.txt](forensic imaging tools.txt)
   - See also [rotocanvas](https://github.com/poikilos/rotocanvas) (visual diff and algorithmic (non-ai) similarity search).
@@ -61,8 +61,9 @@ There are some parts of linux-preinstall that are in current use for computer cl
 
 Beyond tutorials and examples, there are many scripts.
 
-Install scripts are categorized by a person's role and/or workflow, such as:
+Install scripts are categorized by a person's role and/or workflow, and specified by OS when necessary (if a distro is not not specified in the filename [deb means Debian/Ubuntu/variants], the script attempts to adapt to all popular distros), such as:
 - [everyone](everyone)
+- [drivers](drivers)
 - [developer](developer)
 - [educational](educational)
 - [migration](migration)
