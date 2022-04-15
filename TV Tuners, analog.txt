@@ -1,5 +1,6 @@
-#Trying to get WinTV-HVR 850 to work in linux (hybrid dtv stick with analog and digital tv)
+# Trying to get WinTV-HVR 850 to work in linux (hybrid dtv stick with analog and digital tv)
 
+```
 #lsusb shows:
 #Bus 002 Device 006: ID 2040:b140 Hauppauge
 
@@ -27,4 +28,4 @@ ivtv-tune --freqtable=us-bcast --channel=3
 #most reliable method:
 #TUNE first (see above) to channel 3 for VCR, then:
 cat /dev/video0 > ~/capture.mpg
-
+```

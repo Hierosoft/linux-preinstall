@@ -15,6 +15,83 @@ Installing the linuxpreinstall python module also adds some useful commands:
 * Separate scripts by workflow (end user, developer, server).
 * Move as many features to the python linuxpreinstall module as seems
   reasonable.
+  - [ ] A major feature that would have to be ported is selecting the
+    correct package name depending on the distro (See the bash-based [api.rc](api.rc) and the python-based
+    [linuxpreinstall/package_names.csv](linuxpreinstall/package_names.csv) (WIP)).
+
+## Design Choices
+- Flatpaks are installed as root. In edge cases, that fixes small issues related to permissions and accessibility of binary paths, shortcuts, etc.
+- The flatpak is preferred over another package usually, for the most up-to-date version, and one that can be updated in one command rather than many which is the case for AppImage. For help with AppImage "install" and "uninstall" including icons (trimmed to one command each!) See [nopackage](https://github.com/poikilos/nopackage).
+
+## Overview
+
+In some cases, instructions for beginners are included. Scripts such as those listed below may be helpful for you if you are starting linux or starting someone else on linux:
+- [Lubuntu - most essential tips only.md](Lubuntu - most essential tips only.md)
+  - [GettingStarted-LXQt.md](GettingStarted-LXQt.md)
+
+Where there may be things that are too simple to script but too obscure to memorize, various tutorials and/or examples are included, such as:
+- [Always Install (any GNU+Linux System).md](Always Install (any GNU+Linux System).md)
+- [AlwaysAdd](AlwaysAdd)
+- [AlwaysRemove](AlwaysRemove)
+- [MissingMimetypes-optional.md](MissingMimetypes-optional.md)
+- [Broadcom B43 Wifi on linux.txt](Broadcom B43 Wifi on linux.txt)
+- [Camera.md](Camera.md)
+- [game listings and stores, Linux.md](game listings and stores, Linux.md)
+  - [Games for linux, semi-popular.txt](Games for linux, semi-popular.txt)
+  - [games, casual from AUR.txt](games, casual from AUR.txt) (applies to Arch-based distros including Manjaro).
+- [JNLP files, launching.txt](JNLP files, launching.txt)
+- [centos kiosk with screensaver picture list sync from windows via samba](samba-examples/centos-kiosk/)
+- [TV Tuners, analog.txt](TV Tuners, analog.txt)
+- [tar.md](tar.md)
+- [forensic imaging tools.txt](forensic imaging tools.txt)
+  - See also [rotocanvas](https://github.com/poikilos/rotocanvas) (visual diff and algorithmic (non-ai) similarity search).
+- [macOS](macOS)
+
+WIP (Work in progress) documents:
+- [Music.md](Music.md)
+- [Fedora tips - with notes on 26.txt](Fedora tips - with notes on 26.txt)
+- [troubleshooting-developer/](troubleshooting-developer/)
+- [Word or Writer image extraction via unzip and emf conversion.txt](Word or Writer image extraction via unzip and emf conversion.txt)
+- [doc](doc): Additional and WIP documentation for linux-preinstall or programs with which linux-preinstall assists.
+- [projects](projects): This generally contains project files content that becomes part of linux-preinstall (not necessarily WIP, but may have previous WIP versions as separate files or layers).
+
+There are some parts of linux-preinstall that are in current use for computer clients:
+- One use for the documents such as ones above is that you can place a link to them on a person's desktop, and then update them with git automatically such as a cron job running git pull as that user (`cd /home/user/git/linux-preinstall && sudo -u user git pull # where user is the username`).
+- The "expertmultimedia-managed" folder is only for setting up computers to "phone home" (provide self-identification and an IP address for remoting) to Expert Multimedia, and isn't for general use.
+
+Beyond tutorials and examples, there are many scripts.
+
+Install scripts are categorized by a person's role and/or workflow, such as:
+- [everyone](everyone)
+- [developer](developer)
+- [educational](educational)
+- [migration](migration)
+
+Additional scripts (scripts that do things rather than install things) are for IT and developer use, but may serve other people as well:
+- [utilities](utilities)
+- [utilities-developer](utilities-developer)
+
+After installing scripts, post-install instructions are often appended to PostInstallInstructions.md.
+
+The most frequent type of script included is one that installs a program that is hard to install or installs a list of programs related to a specific type of user. This is more effective than `tasksel` (for Debian/Ubuntu) or `groupinstall` (for RedHat/Fedora) because the programs and groups here are recommendations not merely a full list that may leave you unsure of what will work well, or a list that is only for a fixed role of a computer rather than a circumstantially elected or self-selected role of a person. In the case of the server folder here, that is a computer role, but that is mostly an exception and applies to webmasters. It is also more fine-grained than an "x server" group in group systems (where "x" is LAMP or something like that) in that each of this repo's scripts handles installation for a specific workflow and not more.
+
+The scripts automatically install necessary repos and/or PPAs where necessary, so that the lists in software install scripts or folders here can be maintained based on effectiveness and fit rather that on the best (or selected as default based on opinion) of what one particular distro has to offer.
+
+The lists are more comprehensive and/or have more updated versions in some cases as well (including ones significantly more up-to-date on flatpak or only on flatpak).
+
+The lists and individual program install scripts make programs in linux-preinstall generally easier to install.
+
+If there is a program that is not available in a repo and not available on here, it may yet be within one of the scripts (suchas developer/developer.fedora.sh). If not, it may be on flathub even if not in any install script in this repo. Otherwise, if only an AppImage, zipped build, or single binary is available, you can usually use [nopackage](https://github.com/poikilos/nopackage) to install it (and an icon!) in one shot.
+
+
+
+
+## Developer Tools
+There are various useful tools for developers in the developer folder, including:
+- An improved fork of a geany-openscad highlighter.
+
+## Server Tools
+- ./server/optional/php-set-version.apache.ubuntu.sh or ./server/optional/php-set-version.nginx.deb.sh: Choose a specific version of php as the system's php and get all of the matching dependencies such as for WordPress, and uninstall all other versions and their packages.
 
 
 ## Related Projects
@@ -22,6 +99,7 @@ Related projects
 - [nopackage](https://github.com/poikilos/nopackage): Install any AppImage, archive, deb, or binary as an icon (download icons automatically when known!) on any GNU+Linux system!
   - formerly the linux-preinstall tool called install_any.py
 - [rotocanvas](https://github.com/poikilos/rotocanvas): has several useful commands related to image sequences including (browseable) image "playlists".
+- [TemperatureSanitizer](https://github.com/poikilos/TemperatureSanitizer): See also TEMPerV1 verbose output files (files named with -vvv) for technical info.
 
 
 ## Usage
@@ -93,3 +171,9 @@ The old install_any.py script's features have been moved to
 `nopackage`:
 
 You can use `nopackage` to install almost anything, such as a single file (AppImage or other), a zip file, or to install a deb package on any distro in your profile, all without superuser priveleges!
+
+## Changelog
+See [changelog.md](changelog.md)
+
+## References
+See [References.md](References.md)
