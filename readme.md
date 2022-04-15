@@ -38,20 +38,20 @@ Where there may be things that are too simple to script but too obscure to memor
 - [Camera.md](Camera.md)
 - [game listings and stores, Linux.md](game listings and stores, Linux.md)
   - [Games for linux, semi-popular.md](Games for linux, semi-popular.md)
-  - [games, casual from AUR.txt](games, casual from AUR.txt) (applies to Arch-based distros including Manjaro).
-- [JNLP files, launching.txt](JNLP files, launching.txt)
+  - [games, casual from AUR.md](games, casual from AUR.md) (applies to Arch-based distros including Manjaro).
+- [JNLP files, launching.md](JNLP files, launching.md)
 - [centos kiosk with screensaver picture list sync from windows via samba](samba-examples/centos-kiosk/)
 - [TV Tuners, analog.md](TV Tuners, analog.md)
 - [tar.md](tar.md)
-- [forensic imaging tools.txt](forensic imaging tools.txt)
+- [forensic imaging tools.md](forensic imaging tools.md)
   - See also [rotocanvas](https://github.com/poikilos/rotocanvas) (visual diff and algorithmic (non-ai) similarity search).
 - [macOS](macOS)
 
 WIP (Work in progress) documents:
 - [Music.md](Music.md)
-- [Fedora tips - with notes on 26.txt](Fedora tips - with notes on 26.txt)
+- [Fedora tips - with notes on 26.md](Fedora tips - with notes on 26.md)
 - [troubleshooting-developer/](troubleshooting-developer/)
-- [Word or Writer image extraction via unzip and emf conversion.txt](Word or Writer image extraction via unzip and emf conversion.txt)
+- [Word or Writer image extraction via unzip and emf conversion.md](Word or Writer image extraction via unzip and emf conversion.md)
 - [doc](doc): Additional and WIP documentation for linux-preinstall or programs with which linux-preinstall assists.
 - [projects](projects): This generally contains project files content that becomes part of linux-preinstall (not necessarily WIP, but may have previous WIP versions as separate files or layers).
 
