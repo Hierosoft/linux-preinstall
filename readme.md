@@ -125,12 +125,7 @@ For an explanation of the expertmultimedia-managed folder, see the "[IT](#IT)" s
 
 The names of scripts specify the distro when necessary. See the "[Script Naming Conventions](#script-naming-conventions)" section below for more information.
 
-### Utility Scripts
-Additional scripts (scripts that do things rather than install things) are for IT and developer use, but may serve other people as well:
-- [utilities](utilities)
-- [utilities-developer](utilities-developer)
-
-After installing scripts, post-install instructions are often appended
+After running install scripts, post-install instructions are often appended
 to a file called PostInstallInstructions.md (It should appear on the
 Desktop--See [issue
 #18](https://github.com/poikilos/linux-preinstall/issues/18) for more
@@ -143,6 +138,11 @@ not in any install script in this repo. Otherwise, if only an AppImage,
 zipped build, or single binary is available, you can usually use
 [nopackage](https://github.com/poikilos/nopackage) to install it (and
 an icon!) in one shot.
+
+### Utility Scripts
+Additional scripts (scripts that do things rather than install things) are for IT and developer use, but may serve other people as well:
+- [utilities](utilities)
+- [utilities-developer](utilities-developer)
 
 ### Script Naming Conventions
 Pick which folders and scripts to run based on whatever you want to do
