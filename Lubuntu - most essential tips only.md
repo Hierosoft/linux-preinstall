@@ -12,7 +12,4 @@ Lubuntu text mode terminal tips:
 * For typing commands, click menu, Accessories, LXTerminal
 * If commands say they have no permission, type sudo then a space then the command.
 * If stuck in a text-only terminal, try Ctrl Alt F7 to get back to GUI terminal. If still stuck:
-``
-sudo reboot
-```
-Then press the Enter key.
+  `sudo reboot` Then press the Enter key.
