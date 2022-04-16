@@ -139,10 +139,12 @@ zipped build, or single binary is available, you can usually use
 [nopackage](https://github.com/poikilos/nopackage) to install it (and
 an icon!) in one shot.
 
-### Utility Scripts
-Additional scripts (scripts that do things rather than install things) are for IT and developer use, but may serve other people as well:
-- [utilities](utilities)
-- [utilities-developer](utilities-developer)
+#### Developer Tools
+The linux-preinstall project includes various useful tools for developers in the developer folder, including:
+- An improved fork of a geany-openscad highlighter.
+
+#### Server Tools
+- `./server/optional/php-set-version.apache.ubuntu.sh` or `./server/optional/php-set-version.nginx.deb.sh`: Choose (specify as a parameter) a specific version of php as the system's php and get all of the matching dependencies such as for WordPress, and uninstall all other versions and their packages. Only use the script that matches your chosen server technology (Apache or NGINX)!
 
 ### Script Naming Conventions
 Pick which folders and scripts to run based on whatever you want to do
@@ -165,12 +167,10 @@ For best results, the following usage order is recommended:
 - If the name includes .fedora.*, then it will work on Fedora but may not work on other rpm-based distros.
 - If the name doesn't include any distro name, the script attempts to adapt to all popular distros *(If such a script fails to detect a known package installer command or other known and applicable distro-specific feature, it will show an error and return non-zero on exit)*.
 
-### Developer Tools
-The linux-preinstall project includes various useful tools for developers in the developer folder, including:
-- An improved fork of a geany-openscad highlighter.
-
-### Server Tools
-- ./server/optional/php-set-version.apache.ubuntu.sh or ./server/optional/php-set-version.nginx.deb.sh: Choose a specific version of php as the system's php and get all of the matching dependencies such as for WordPress, and uninstall all other versions and their packages.
+### Utility Scripts
+Additional scripts (scripts that do things rather than install things) are for IT and developer use, but may serve other people as well:
+- [utilities](utilities)
+- [utilities-developer](utilities-developer)
 
 
 ## Related Projects
@@ -180,7 +180,15 @@ Related projects
 - [rotocanvas](https://github.com/poikilos/rotocanvas): has several useful commands related to image sequences including (browseable) image "playlists".
 - [TemperatureSanitizer](https://github.com/poikilos/TemperatureSanitizer): See also TEMPerV1 verbose output files (files named with -vvv) for technical info.
 
+
 ## Modular Features
+The linux-preinstall project makes some commands available to you to
+use via any terminal (within the scope of the installation, whether
+that be a root or user install). The following subsections describe
+those features.  To get the linuxpreinstall (The Python module, as
+opposed to scripts not in the linuxpreinstall directory but still
+inside linux-preinstall), you must perform the Python installation (See
+the "[Install](#install)" section).
 
 ### sortversion
 The linuxpreinstall.versioning module helps identify version strings
@@ -213,10 +221,14 @@ The old install_any.py script's features have been moved to
 <https://github.com/poikilos/nopackage> which provides the new command
 `nopackage`:
 
-You can use `nopackage` to install almost anything, such as a single file (AppImage or other), a zip file, or to install a deb package on any distro in your profile, all without superuser priveleges!
+You can use `nopackage` to install almost anything, such as a single
+file (AppImage or other), a zip file, or to install a deb package on
+any distro in your profile, all without superuser priveleges!
+
 
 ## Changelog
 See [changelog.md](changelog.md)
+
 
 ## References
 See [References.md](References.md)
