@@ -5,9 +5,7 @@ These scripts automatically install programs and configure settings many users e
 
 Install only the packages you want for the specific task (such as development, video, streaming, desktop publishing, etc), but don't miss any you need (These groups may be lighter or heavier than distro-specific groups defined in the repositories, but usually lighter and more comprehensive for creators of any sort. The project is moving toward using metadata and Python to avoid the overlap between different groups and reduce the size of each group).
 
-Installing the linuxpreinstall python module also adds some useful commands:
-- `findmime`: Find files by full/partial mimetype (such as "jpeg" or "image"!) in the current directory.
-- `cleanif`: remove files from directory 1 if they exist in directory 2 (great for if you unzip or copy a load of files to the wrong place!)
+Installing the linuxpreinstall python module also adds some useful commands (See the "[Modular Features](modular-eatures)" section).
 
 ## GOALS
 * Make the GNU+Linux system ready to use from day one.
@@ -224,6 +222,12 @@ The old install_any.py script's features have been moved to
 You can use `nopackage` to install almost anything, such as a single
 file (AppImage or other), a zip file, or to install a deb package on
 any distro in your profile, all without superuser priveleges!
+
+### Other Python commands
+- `findmime`: Find files by full/partial mimetype (such as "jpeg" or
+  "image"!) in the current directory.
+- `cleanif`: remove files from directory 1 if they exist in directory 2
+  (great for if you unzip or copy a load of files to the wrong place!)
 
 
 ## Changelog
