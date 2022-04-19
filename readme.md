@@ -229,8 +229,9 @@ any distro in your profile, all without superuser priveleges!
 - `cleanif`: Remove files from directory 1 if they exist in directory 2
   (great for if you unzip or copy a load of files to the wrong place!)
 - `unredirect_md`: Change every redirect in a Markdown file to a real
-  URL, whether there is an encoded URL in any query param or there is a
-  302 response.
+  URL, whether there is an encoded URL in any query param (such as
+  `q=https%3A%2F%2Fblendermarket.com%2Fproducts%2FNatureClicker`)
+  or there is a 302 response.
 
 
 ## Changelog

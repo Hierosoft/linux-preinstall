@@ -6,8 +6,11 @@ by Jake "Poikilos" Gustafson
 Purpose:
 For each captioned hyperlink in Markdown format ("[...](...)"), check
 for an implicit redirect (a query param has an encoded URL, that is,
-any value in the query starting with http:// or https://) or explicit
-redirect (302 error) and replace it with the final real (direct) URL.
+any value in the query starting with http:// or https:// even if encoded
+such as
+`q=https%3A%2F%2Fblendermarket.com%2Fproducts%2FNatureClicker`)
+or explicit redirect (302 error) and replace it with the final real
+(direct) URL.
 
 Usage:
   unredirect_md <markdown_path>
