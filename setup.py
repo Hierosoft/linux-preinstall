@@ -62,6 +62,7 @@ setuptools.setup(
         'console_scripts': [
             'cleanif=linuxpreinstall.cleanif:main',
             'findmime=linuxpreinstall.findmime:main',
+            'unredirect_md=linuxpreinstall.unredirect:main',
         ],
     },
     install_requires=install_requires,
