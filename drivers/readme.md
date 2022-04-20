@@ -23,13 +23,13 @@ Ralink chipsets
     * Compiling it doesn't work on Fedora 35, apparently because the kernel headers on the Fedora 35 aren't configured correctly. Using documentation to construct the sh file didn't help on Fedora 35.
 
 ## Printers
-Many printers are plug and play on Linux, but some may require installation steps either to make the printer work or provide you with printer controls. The "Printers" application of your desktop environment will contain a list of installed printers, and may have all of the settings you need depending on your printer.
+Many printers are plug and play on Linux, but some may require installation steps either to make the printer work or provide you with printer controls. The "Printers" or "Printer Settings" application of your desktop environment will contain a list of installed printers, and may have all of the settings you need depending on your printer.
 
 ### Brother
 The driver from the brother website is usually fine. See examples in this folder of how install could be automated.
 
 ### HP
-Usually installing the hplib package is enough to get an HP printer working and configure it.
+Usually installing the `hplip` package is enough to get an HP printer working and configure it.
 
 ### Canon
 The driver from the Canon website is recommended. See [Canon_TS_Series.deb.sh](Canon_TS_Series.deb.sh) for an example of how this could be automated (for the TS series).
