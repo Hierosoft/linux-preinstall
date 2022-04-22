@@ -1,0 +1,99 @@
+#!/bin/bash
+
+CONF_PATH="$HOME/.config/linux-preinstall/globals.rc"
+if [ ! -f "`command -v rsync`" ]; then
+    if [ ! -f "`command -v scp`" ]; then
+        echo "Error: $0 requires rsync or scp."
+    fi
+fi
+usage(){
+    cat <<END
+download-add
+------------
+Add a file to a server's temporary downloads folder, then signal the
+server to change it to the correct location (actual downloads folder),
+user, and group that the server (that has download-move from
+https://github.com/poikilos/linux-preinstall is installed) is
+configured to use.
+
+download-add should only run on the client, and download-move should
+only run on the server.
+
+To configure download-add properly, install download-move on the server
+such as in /usr/local/bin/ and set the following in "$CONF_PATH" in
+server's copy of "$CONF_PATH":
+  DL_TMP, DL_DIR, WWW_USER, WWW_GROUP
+
+Note that you can do the first step of installation and see the
+installation instructions by configuring download-add then running:
+# cd to the directory containing download-move then:
+download-add download-move
+
+On the client, set the following:
+  REMOTE_HOST, REMOTE_DL_TMP, REMOTE_USER (optional, but if not set, current local username is used)
+  - where REMOTE_DL_TMP must match the (DL_TMP) setting on the server.
+
+END
+}
+
+if [ ! -f "$HOME/.config/linux-preinstall/globals.rc" ]; then
+    usage
+    exit 1
+fi
+
+. "$CONF_PATH"
+
+if [ -z "$REMOTE_HOST" ]; then
+    usage
+    echo "Error: The REMOTE_HOST setting is not configured."
+    exit 1
+fi
+if [ -z "$REMOTE_DL_TMP" ]; then
+    usage
+    echo "Error: The REMOTE_DL_TMP setting is not configured."
+    exit 1
+fi
+if [ -z "$REMOTE_USER" ]; then
+    REMOTE_USER="$USER"
+fi
+
+if [ "@$1" != "@" ]; then
+    FILE_PATH="$1"
+fi
+
+if [ -z "$FILE_PATH" ]; then
+    echo "Error: You must specify a filename."
+    exit 1
+fi
+
+if [ ! -f "$FILE_PATH" ]; then
+    echo "Error: \"$FILE_PATH\" does not exist."
+    exit 1
+fi
+
+if [ -f "`command -v rsync`" ]; then
+    rsync -tv "$FILE_PATH" "$REMOTE_HOST:$REMOTE_DL_TMP/"
+else
+    scp -p "$FILE_PATH" "$REMOTE_HOST:$REMOTE_DL_TMP/"
+    # -p: "Preserves modification times, access times, and modes from the original file."
+fi
+if [ $? -ne 0 ]; then
+    exit 1
+fi
+FILE_NAME="`basename $FILE_PATH`"
+ssh -t "$REMOTE_USER@$REMOTE_HOST" "download-move $FILE_NAME"
+if [ $? -ne 0 ]; then
+    if [ "@$FILE_NAME" = "@download-move" ]; then
+        cat <<END
+If the output above says \"download-move: command not found\" (or you want to upgrade and it says "download-move is already installed"), simply login to the server and run:
+  sudo mv $REMOTE_DL_TMP/download-move /usr/local/bin/
+If it still fails, run the above again then:
+  sudo chmod +x /usr/local/bin/download-move
+If it still fails, ensure DL_TMP=$REMOTE_DL_TMP in the server's copy of "$CONF_PATH".
+END
+    else
+        echo "Error: The remote command failed."
+    fi
+else
+    echo "The file $FILE_NAME seems to have been added to downloads successfully."
+fi

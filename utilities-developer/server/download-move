@@ -1,0 +1,99 @@
+#!/bin/bash
+
+CONF_PATH="$HOME/.config/linux-preinstall/globals.rc"
+
+usage(){
+cat <<END
+download-move
+-------------
+Move a file to the configured downloads folder and set the configured
+owner and group.
+
+download-move is part of https://github.com/poikilos/linux-preinstall.
+Place the script in the home directory of the remote server or whatever
+directory is specified as REMOTE_DL_TMP in the client. It places a
+file in a downloads folder and sets the permissons. Normally, this
+script is called remotely by download-add by linux-preinstall.
+
+download-add should only run on the client, and download-move should
+only run on the server.
+
+To configure download-move properly, install download-move on the
+server such as in /usr/local/bin/ and set the following in the server's
+copy of "$CONF_PATH":
+  DL_TMP, DL_DIR, WWW_USER, WWW_GROUP
+
+On the client, install download-add from linux-preinstall, and set the
+following in its "$CONF_PATH":
+  REMOTE_HOST, REMOTE_DL_TMP
+  - where REMOTE_DL_TMP must match the (DL_TMP) setting on the server.
+
+END
+}
+
+
+if [ -f "$CONF_PATH" ]; then
+    source "$CONF_PATH"
+    if [ $? -ne 0 ]; then
+        echo "Error: \"$CONF_PATH\" is not formatted correctly for the shell."
+        exit 1
+    fi
+fi
+
+if [ "@$1" != "@" ]; then
+    FILE_NAME="$1"
+fi
+if [ "@$FILE_NAME" = "@" ]; then
+    echo "Error: You must specify a FILE_NAME."
+    exit 1
+fi
+
+_orig_file_name="$FILE_NAME"
+FILE_NAME=`realpath $FILE_NAME`
+FILE_NAME=`basename $FILE_NAME`
+
+if [ "@$FILE_NAME" != "@$_orig_file_name" ]; then
+    echo "Error: For security, the filename must not include a path (\"$_orig_file_name\" resolves to \"$FILE_NAME\")."
+    exit 1
+fi
+
+if [ "@$DL_DIR" = "@" ]; then
+    usage
+    echo "Error: You must configure a DL_DIR."
+    exit 1
+fi
+if [ ! -d "$DL_DIR" ]; then
+    usage
+    echo "Error: DL_DIR \"$DL_DIR\" does not exist."
+    exit 1
+fi
+
+if [ "@$WWW_USER" = "@" ]; then
+    usage
+    echo "Error: You must configure a WWW_USER."
+    exit 1
+fi
+
+if [ "@$WWW_GROUP" = "@" ]; then
+    usage
+    echo "Error: You must configure a WWW_GROUP."
+    exit 1
+fi
+
+if [ ! -f "$DL_TMP/$FILE_NAME" ]; then
+    echo "Error: \"$FILE_NAME\" doesn't exist in \"$DL_TMP\"."
+    exit 1
+fi
+if [ "@$FILE_NAME" = "@download-add" ]; then
+    echo "Error: download-add should only be installed on the client, but was specified as the FILE_NAME parameter. See <https://github.com/poikilos/linux-preinstall>."
+    exit 1
+fi
+if [ "@$FILE_NAME" = "@download-move" ]; then
+    echo "Error: download-move is already installed, but was specified as the FILE_NAME parameter. See <https://github.com/poikilos/linux-preinstall>."
+    exit 1
+fi
+echo "[remote command] sudo mv \"$DL_TMP/$FILE_NAME\" \"$DL_DIR/\""
+sudo mv "$DL_TMP/$FILE_NAME" "$DL_DIR/"
+echo "[remote command] sudo chown $WWW_USER:$WWW_GROUP \"$DL_DIR/$FILE_NAME\""
+sudo chown $WWW_USER:$WWW_GROUP "$DL_DIR/$FILE_NAME"
+exit $?
