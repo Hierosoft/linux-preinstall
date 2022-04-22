@@ -81,7 +81,7 @@ if [ "@$WWW_GROUP" = "@" ]; then
 fi
 
 if [ ! -f "$DL_TMP/$FILE_NAME" ]; then
-    echo "Error: \"$FILE_NAME\" doesn't exist in \"$DL_TMP\"."
+    echo "Error: \"$FILE_NAME\" doesn't exist in the DL_TMP directory \"$DL_TMP\". For security, this script will only move files from the configured DL_TMP directory."
     exit 1
 fi
 if [ "@$FILE_NAME" = "@download-add" ]; then
