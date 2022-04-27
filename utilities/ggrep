@@ -156,34 +156,34 @@ done
 # eval grep "${_new_args[@]}"
 # >&2 echo "${_new_args[@]}"
 
-    #>&2 echo "grep" "${_new_args[@]}"
-    if [ "@$_found_include" = "@false" ]; then
-        >&2 echo "  (use --include-all for all files, the default grep behavior)"
+#>&2 echo "grep" "${_new_args[@]}"
+if [ "@$_found_include" = "@false" ]; then
+    >&2 echo "  (use --include-all for all files, the default grep behavior)"
+else
+    >&2 echo "* _found_include: $_found_include"
+fi
+printf "grep" >&2
+for value in "${_new_args[@]}" ; do
+    if [[ "$value" != "${value%[[:space:]]*}" ]]; then
+        >&2 printf " \"$value\""
     else
-        >&2 echo "* _found_include: $_found_include"
+        >&2 printf " $value"
     fi
-    printf "grep" >&2
-    for value in "${_new_args[@]}" ; do
-        if [[ "$value" != "${value%[[:space:]]*}" ]]; then
-            >&2 printf " \"$value\""
-        else
-            >&2 printf " $value"
-        fi
-    done
-    >&2 echo
-    >&2 echo
-    >&2 echo "results:"
-    >&2 echo
-    while read -r line ; do
-        # >&2 echo "line: $line"
-        _line_n=`echo "$line" | sed -r 's/^[^:]+: ?([^:]+):.*/\1/'`
-        # ^ <https://unix.stackexchange.com/a/432760>
-        _file=`echo "$line" | cut -d: -f1`
-        # ^ <https://stackoverflow.com/a/20348145/4541104>
-        #>&2 echo "_line_n: $_line_n"
-        #>&2 echo "_file: $_file"
-        echo "geany '$_file' -l $_line_n  # < $line"
-    done < <(grep "${_new_args[@]}")
+done
+>&2 echo
+>&2 echo
+>&2 echo "results:"
+>&2 echo
+while read -r line ; do
+    # >&2 echo "line: $line"
+    _line_n=`echo "$line" | sed -r 's/^[^:]+: ?([^:]+):.*/\1/'`
+    # ^ <https://unix.stackexchange.com/a/432760>
+    _file=`echo "$line" | cut -d: -f1`
+    # ^ <https://stackoverflow.com/a/20348145/4541104>
+    #>&2 echo "_line_n: $_line_n"
+    #>&2 echo "_file: $_file"
+    echo "geany '$_file' -l $_line_n  # < $line"
+done < <(grep "${_new_args[@]}")
 
 # ^ WHY does trying to put "--include $DEFAULT_INCLUDE_VALUE" in ${_new_args[@]} always cause grep to return 1 and output nothing??
 # ^ See <https://stackoverflow.com/a/16318005/4541104>.
