@@ -194,7 +194,8 @@ if [ $code -ne 0 ]; then
 fi
 >&2 echo "* to reduce output further, try:"
 >&2 printf "`basename $0`"
+# ^ Placing >&2 before or after doesn't seem to matter.
 >&2 printf " "
 >&2 printf "$@"
-# ^ Placing >&2 before or after doesn't seem to matter.
+# ^ TODO: Place quotes around the param if necessary.
 >&2 echo " | cut -f1 -d\#"
