@@ -47,23 +47,30 @@ END
 }
 
 me="ggrep"
-_new_cmd="grep"
-if [ -z "$GGREP_INCLUDE" ]; then
-    GGREP_INCLUDE="*.py"
-fi
-GREP_INCLUDE="--include"
 prev_var=""
 _found_include="false"
 _recursive_arg="-r"
 _more_args=()
+_include_args=()
+_include_args+=( "--include" )
+_include_args+=( "*.py" )
+_include_args+=( "--include" )
+_include_args+=( "*.lua" )
+_include_args+=( "--include" )
+_include_args+=( "*.cpp" )
+_include_args+=( "--include" )
+_include_args+=( "*.h" )
+_include_args+=( "--include" )
+_include_args+=( "*.js" )
+# ^ defaults
 _n_arg="-n"
-_first_include=""
-_add_first_include="true"
+_include_all="false"
 
 for var in "$@"
 do
     if [ "@$var" == "@--include" ]; then
-        GGREP_INCLUDE=""
+        true
+        # ^ pass
     elif [ "@$var" == "@-r" ]; then
         >&2 echo "* -r (recursive) is already the default."
     elif [ "@$var" == "@-n" ]; then
@@ -76,31 +83,29 @@ do
             _recursive_arg=""
             >&2 echo "* turning off recursive mode (default in ggrep) since \"$var\" is a file"
         elif [ "@$var" == "@--include-all" ]; then
-            >&2 echo "* removing the default --include option so all are included"
-            GREP_INCLUDE=""
-            GGREP_INCLUDE=""
-            _found_include="true"
-        elif [ "@$prev_var" = "@--include" ]; then
             if [ "@$_found_include" = "@true" ]; then
-                #>&2 echo "ERROR: $me only allows one '$prev_var' since by default includes $GGREP_INCLUDE."
-                #exit 1
-                # grep can accept more than one --include, so force the
-                # old one and the new one:
-                if [ "@$_add_first_include" = "@true" ]; then
-                    _more_args+=( "--include" )
-                    _more_args+=( "$_first_include" )
-                    _add_first_include=false
-                fi
-                _more_args+=( "--include" )
-                _more_args+=( "$var" )
-            else
-                >&2 echo "* changing --include from default $GGREP_INCLUDE to $var"
-                GGREP_INCLUDE="$var"
-                # ^ GGREP_INCLUDE gets erased if there is another
-                #   include, so store the value here:
-                _first_include="$var"
+                >&2 echo "Error: '--include-all' isn't compatible with '--include'."
+                exit 1
+            fi
+            >&2 echo "* removing the default '--include' option so all are included."
+            _include_args=()
+            _found_include="true"
+            _include_all="true"
+        elif [ "@$prev_var" = "@--include" ]; then
+            if [ "@$_include_all" = "@true" ]; then
+                >&2 echo "Error: '--include' isn't compatible with '--include-all'."
+                exit 1
+            fi
+            if [ "@$_found_include" != "@true" ]; then
+                _include_args=()
             fi
             _found_include="true"
+            #>&2 echo "ERROR: $me only allows one '$prev_var' since by default includes $DEFAULT_INCLUDE_VALUE."
+            #exit 1
+            # grep can accept more than one --include, so force the
+            # old one and the new one:
+            _include_args+=( "--include" )
+            _include_args+=( "$var" )
         else
             # _more_args+="$_more_args $var"
             _more_args+=( "$var" )
@@ -114,11 +119,17 @@ do
         prev_var="$var"
     fi
 done
+if [ "@$prev_var" = "@--include" ]; then
+    >&2 echo "Error: You must specify a filename pattern after --include such as \"*.lua\" (including quotes if using asterisk(s)!) ."
+    exit 1
+fi
 
 # if [ ${#_more_args[@]} > 0 ]; then
 # ^ commented since it generates a file named 0 :(
 count=${#_more_args[@]}
 >&2 echo "* _more_args count: $count"
+includeCount=${#_include_args[@]}
+>&2 echo "* _include_args count: $includeCount"
 # if [ $count > 0 ]; then
 # ^ commented since it generates a file named 0 :(
 #    >&2 echo "* $me is passing along extra arguments to grep:" # ${_more_args[@]}"
@@ -126,46 +137,32 @@ count=${#_more_args[@]}
 
 #_new_args="$_recursive_arg$_more_args $_n_arg "
 if [ ! -z "$_n_arg" ]; then
-    #echo "* adding $_n_arg"
+    # >&2 echo "* adding $_n_arg"
     _more_args+=( "$_n_arg" )
+    # The line number (obtained via -n) is required for this script's
+    # main purpose.
 fi
 if [ ! -z "$_recursive_arg" ]; then
-    #echo "* adding $_recursive_arg"
+    >&2 echo "* adding $_recursive_arg automatically"
     _more_args+=( "$_recursive_arg" )
 fi
-echo "* _more_args: ${_more_args[@]}"
+>&2 echo "* _more_args: ${_more_args[@]}"
+>&2 echo "* _include_args: ${_include_args[@]}"
 _new_args=("${_more_args[@]}")
-# --include $GGREP_INCLUDE
-# eval $_new_cmd "${_new_args[@]}"
+for value in "${_include_args[@]}" ; do
+    _new_args+=( "$value" )
+done
+# --include $DEFAULT_INCLUDE_VALUE
+# eval grep "${_new_args[@]}"
 # >&2 echo "${_new_args[@]}"
-if [ ! -z "$GGREP_INCLUDE" ]; then
-    >&2 echo "$_new_cmd ${_new_args[@]} $GREP_INCLUDE \"$GGREP_INCLUDE\""
-    if [ "@$_found_include" = "@false" ]; then
-        >&2 echo " [use --include-all for the default grep behavior (all files) instead of \"$GGREP_INCLUDE\"]"
-    else
-        >&2 echo "_found_include: $_found_include"
-    fi
-    >&2 echo
-    >&2 echo "results:"
-    >&2 echo
-        while read -r line ; do
-            # >&2 echo "line: $line"
-            _line_n=`echo "$line" | sed -r 's/^[^:]+: ?([^:]+):.*/\1/'`
-            # ^ <https://unix.stackexchange.com/a/432760>
-            _file=`echo "$line" | cut -d: -f1`
-            # ^ <https://stackoverflow.com/a/20348145/4541104>
-            #>&2 echo "_line_n: $_line_n"
-            #>&2 echo "_file: $_file"
-            echo "geany $_file -l $_line_n # < $line"
-        done < <(grep "${_new_args[@]}" $GREP_INCLUDE "$GGREP_INCLUDE")
-else
-    #>&2 echo "$_new_cmd" "${_new_args[@]}"
+
+    #>&2 echo "grep" "${_new_args[@]}"
     if [ "@$_found_include" = "@false" ]; then
         >&2 echo "  (use --include-all for all files, the default grep behavior)"
     else
         >&2 echo "* _found_include: $_found_include"
     fi
-    printf "$_new_cmd" >&2
+    printf "grep" >&2
     for value in "${_new_args[@]}" ; do
         if [[ "$value" != "${value%[[:space:]]*}" ]]; then
             >&2 printf " \"$value\""
@@ -185,14 +182,18 @@ else
         # ^ <https://stackoverflow.com/a/20348145/4541104>
         #>&2 echo "_line_n: $_line_n"
         #>&2 echo "_file: $_file"
-        echo "geany $_file -l $_line_n # < $line"
+        echo "geany '$_file' -l $_line_n  # < $line"
     done < <(grep "${_new_args[@]}")
-fi
-# ^ WHY does trying to put "--include $GGREP_INCLUDE" in ${_new_args[@]} always cause grep to return 1 and output nothing??
+
+# ^ WHY does trying to put "--include $DEFAULT_INCLUDE_VALUE" in ${_new_args[@]} always cause grep to return 1 and output nothing??
 # ^ See <https://stackoverflow.com/a/16318005/4541104>.
 code=$?
 if [ $code -ne 0 ]; then
-    >&2 echo "ERROR: '$_new_cmd ${_new_args[@]} --include \\$GGREP_INCLUDE' returned $code"
+    >&2 echo "ERROR: 'grep ${_new_args[@]} returned $code"
     exit $code
 fi
->&2 echo "* to reduce output further, append the following to your command: | cut -f1 -d\#"
+>&2 echo "* to reduce output further, try:"
+printf "`basename $0`" >&2
+printf " " >&2
+printf "$@" >&2
+>&2 echo " | cut -f1 -d\#"
