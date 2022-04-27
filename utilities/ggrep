@@ -193,7 +193,8 @@ if [ $code -ne 0 ]; then
     exit $code
 fi
 >&2 echo "* to reduce output further, try:"
-printf "`basename $0`" >&2
-printf " " >&2
-printf "$@" >&2
+>&2 printf "`basename $0`"
+>&2 printf " "
+>&2 printf "$@"
+# ^ Placing >&2 before or after doesn't seem to matter.
 >&2 echo " | cut -f1 -d\#"
