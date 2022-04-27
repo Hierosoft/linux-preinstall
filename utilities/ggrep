@@ -57,7 +57,8 @@ _found_include="false"
 _recursive_arg="-r"
 _more_args=()
 _n_arg="-n"
-
+_first_include=""
+_add_first_include="true"
 
 for var in "$@"
 do
@@ -80,11 +81,24 @@ do
             GGREP_INCLUDE=""
             _found_include="true"
         elif [ "@$prev_var" = "@--include" ]; then
-            >&2 echo "* changing --include from default $GGREP_INCLUDE to $var"
-            GGREP_INCLUDE="$var"
             if [ "@$_found_include" = "@true" ]; then
-                >&2 echo "ERROR: $me only allows one '$prev_var' since by default includes $GGREP_INCLUDE."
-                exit 1
+                #>&2 echo "ERROR: $me only allows one '$prev_var' since by default includes $GGREP_INCLUDE."
+                #exit 1
+                # grep can accept more than one --include, so force the
+                # old one and the new one:
+                if [ "@$_add_first_include" = "@true" ]; then
+                    _more_args+=( "--include" )
+                    _more_args+=( "$_first_include" )
+                    _add_first_include=false
+                fi
+                _more_args+=( "--include" )
+                _more_args+=( "$var" )
+            else
+                >&2 echo "* changing --include from default $GGREP_INCLUDE to $var"
+                GGREP_INCLUDE="$var"
+                # ^ GGREP_INCLUDE gets erased if there is another
+                #   include, so store the value here:
+                _first_include="$var"
             fi
             _found_include="true"
         else
@@ -112,11 +126,14 @@ count=${#_more_args[@]}
 
 #_new_args="$_recursive_arg$_more_args $_n_arg "
 if [ ! -z "$_n_arg" ]; then
+    #echo "* adding $_n_arg"
     _more_args+=( "$_n_arg" )
 fi
 if [ ! -z "$_recursive_arg" ]; then
+    #echo "* adding $_recursive_arg"
     _more_args+=( "$_recursive_arg" )
 fi
+echo "* _more_args: ${_more_args[@]}"
 _new_args=("${_more_args[@]}")
 # --include $GGREP_INCLUDE
 # eval $_new_cmd "${_new_args[@]}"
@@ -124,9 +141,9 @@ _new_args=("${_more_args[@]}")
 if [ ! -z "$GGREP_INCLUDE" ]; then
     >&2 echo "$_new_cmd ${_new_args[@]} $GREP_INCLUDE \"$GGREP_INCLUDE\""
     if [ "@$_found_include" = "@false" ]; then
-        echo " [use --include-all for the default grep behavior (all files) instead of \"$GGREP_INCLUDE\"]"
+        >&2 echo " [use --include-all for the default grep behavior (all files) instead of \"$GGREP_INCLUDE\"]"
     else
-        echo "_found_include: $_found_include"
+        >&2 echo "_found_include: $_found_include"
     fi
     >&2 echo
     >&2 echo "results:"
@@ -143,32 +160,33 @@ if [ ! -z "$GGREP_INCLUDE" ]; then
         done < <(grep "${_new_args[@]}" $GREP_INCLUDE "$GGREP_INCLUDE")
 else
     #>&2 echo "$_new_cmd" "${_new_args[@]}"
+    if [ "@$_found_include" = "@false" ]; then
+        >&2 echo "  (use --include-all for all files, the default grep behavior)"
+    else
+        >&2 echo "* _found_include: $_found_include"
+    fi
     printf "$_new_cmd" >&2
     for value in "${_new_args[@]}" ; do
         if [[ "$value" != "${value%[[:space:]]*}" ]]; then
-            printf " \"$value\""
+            >&2 printf " \"$value\""
         else
-            printf " $value"
+            >&2 printf " $value"
         fi
     done
-    if [ "@$_found_include" = "@false" ]; then
-        echo " (use --include-all for all files, the default grep behavior)"
-    else
-        echo "_found_include: $_found_include"
-    fi
+    >&2 echo
     >&2 echo
     >&2 echo "results:"
     >&2 echo
-        while read -r line ; do
-            # >&2 echo "line: $line"
-            _line_n=`echo "$line" | sed -r 's/^[^:]+: ?([^:]+):.*/\1/'`
-            # ^ <https://unix.stackexchange.com/a/432760>
-            _file=`echo "$line" | cut -d: -f1`
-            # ^ <https://stackoverflow.com/a/20348145/4541104>
-            #>&2 echo "_line_n: $_line_n"
-            #>&2 echo "_file: $_file"
-            echo "geany $_file -l $_line_n # < $line"
-        done < <(grep "${_new_args[@]}")
+    while read -r line ; do
+        # >&2 echo "line: $line"
+        _line_n=`echo "$line" | sed -r 's/^[^:]+: ?([^:]+):.*/\1/'`
+        # ^ <https://unix.stackexchange.com/a/432760>
+        _file=`echo "$line" | cut -d: -f1`
+        # ^ <https://stackoverflow.com/a/20348145/4541104>
+        #>&2 echo "_line_n: $_line_n"
+        #>&2 echo "_file: $_file"
+        echo "geany $_file -l $_line_n # < $line"
+    done < <(grep "${_new_args[@]}")
 fi
 # ^ WHY does trying to put "--include $GGREP_INCLUDE" in ${_new_args[@]} always cause grep to return 1 and output nothing??
 # ^ See <https://stackoverflow.com/a/16318005/4541104>.
