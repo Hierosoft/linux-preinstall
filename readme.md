@@ -232,9 +232,14 @@ any distro in your profile, all without superuser priveleges!
   URL, whether there is an encoded URL in any query param (such as
   `q=https%3A%2F%2Fblendermarket.com%2Fproducts%2FNatureClicker`)
   or there is a 302 response.
+- `selectoutput`: Select an output using a fuzzy search string such as
+  analog or HDMI (not case-sensitive; requires pulseaudio-utils).
+  - For an automated reconnect to run first, see 
+	utilities/reconnect-audio.sh which calls `selectoutput hdmi` if 
+	`selectoutput` is in the path.
 
 
-## Changelog
+## Changes
 See [changelog.md](changelog.md)
 
 

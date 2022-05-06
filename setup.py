@@ -63,6 +63,7 @@ setuptools.setup(
             'cleanif=linuxpreinstall.cleanif:main',
             'findmime=linuxpreinstall.findmime:main',
             'unredirect_md=linuxpreinstall.unredirect:main',
+            'selectoutput=linuxpreinstall.selectoutput:main',
         ],
     },
     install_requires=install_requires,
