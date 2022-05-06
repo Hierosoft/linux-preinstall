@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Reconnect Audio
+GenericName=Reconnect Audio
+Comment=Restart PulseAudio to fix missing HDMI output after Sleep.
+Keywords=system;audio;pulseaudio;
+Exec=/usr/local/bin/reconnect-audio.sh
+Icon=pulseaudio
+Terminal=true
+Type=Application
+Categories=System
