@@ -28,6 +28,7 @@ EXAMPLES
     $me filter --user poikilos --repos_dir ~/git --user_dir ~/git
     # - uses github.com/poikilos
     # - clones to ~/git/filter
+
 --repos_dir
 
 END
@@ -77,13 +78,29 @@ if [ -z "$USER_DIR" ]; then
 else
     echo "* using environment's USER_DIR: '$USER_DIR'"
 fi
+
 for var in "$@"
 do
     if [ ! -z "$NEXT_VAR" ]; then
         if [ "$NEXT_VAR" = "--user" ]; then
             REMOTE_GIT_USER="$var"
         elif [ "$NEXT_VAR" = "--website" ]; then
-            WEBSITE=$(echo $var | sed 's:/*$::')  # remove trailing /'s
+            WEBSITE="$var"
+            if [ "@$WEBSITE" = "@github" ]; then
+                WEBSITE="https://github.com"
+            elif [ "@$WEBSITE" = "@gitlab" ]; then
+                WEBSITE="https://gitlab.com"
+            elif [ "@$WEBSITE" = "@notabug"]; then
+                WEBSITE="https://notabug.org"
+            else
+                echo "* unknown website will be used as repo base URL: $WEBSITE"
+                WEBSITE=$(echo $var | sed 's:/*$::')  # remove trailing /'s
+            fi
+            echo "* using WEBSITE $WEBSITE"
+            # CUSTOM_WEBSITE="$WEBSITE"
+        elif [ "$NEXT_VAR" = "--url" ]; then
+            CUSTOM_URL="$var"
+            # CUSTOM_WEBSITE="$WEBSITE"
         elif [ "$NEXT_VAR" = "--repos_dir" ]; then
             REPOS_DIR="$var"
         elif [ "$NEXT_VAR" = "--user_dir" ]; then
@@ -94,13 +111,18 @@ do
         fi
         NEXT_VAR=""
     else
-        if [ "@$var" = "@--user" ]; then
+        if [ "@$var" = "@--help" ]; then
+            usage
+            exit 0
+        elif [ "@$var" = "@--user" ]; then
             NEXT_VAR="$var"
         elif [ "@$var" = "@--website" ]; then
             NEXT_VAR="$var"
         elif [ "@$var" = "@--repos_dir" ]; then
             NEXT_VAR="$var"
         elif [ "@$var" = "@--user_dir" ]; then
+            NEXT_VAR="$var"
+        elif [ "@$var" = "@--url" ]; then
             NEXT_VAR="$var"
         elif [ "@$var" = "@--mirror" ]; then
             OPTIONS="$OPTIONS --mirror"
@@ -119,16 +141,18 @@ do
         fi
     fi
 done
-if [ ! -z "$USER_DIR" ]; then
+
+if [ "@$USER_DIR" != "@" ]; then
     echo "* USER_DIR: '$USER_DIR'."
 fi
+
 WEBSITE_GITHUB="https://github.com"
 WEBSITE_GITLAB="https://gitlab.com"
 WEBSITE_NOTABUG="https://notabug.org"
-if [ -z "$WEBSITE" ]; then
-    WEBSITE="$WEBSITE_GITHUB"
-    echo "* assuming website is GitHub since you did not specify one (others will be tried first just in case the repo was migrated and is maintained more elsewhere)"
-fi
+# if [ -z "$WEBSITE" ]; then
+#     WEBSITE="$WEBSITE_GITHUB"
+#     echo "* assuming website is GitHub since you did not specify one (others will be tried first just in case the repo was migrated and is maintained more elsewhere)"
+# fi
 
 if [ ! -z "$REPOS_DIR" ]; then
     if [ ! -z "$USER_DIR" ]; then
@@ -170,7 +194,7 @@ else
         REMOTE_GIT_USER="$THIS_DIR_NAME"
         echo "* assuming user from current directory: $REMOTE_GIT_USER"
         USER_DIR="$REPOS_DIR/$REMOTE_GIT_USER"
-        echo "* The user's repos will go under: '$USER_DIR' (under DEFAULT_REPOS_DIR)"
+        echo "* The user's repos will go under: '$USER_DIR' (under DEFAULT_REPOS_DIR \"$DEFAULT_REPOS_DIR\")"
     else
         customExit "You didn't provide the --user option and you are not in a directory under the REPOS_DIR (\"$REPOS_DIR\"), so the username cannot be assumed to be the current directory name \"$THIS_DIR_NAME\" (If you run this script from a directory under \"$DEFAULT_REPOS_DIR\" (DEFAULT_REPOS_DIR) and it matches REPOS_DIR (such as if you do not set other options for custom directories), then you do not have to provide the --user option)."
     fi
@@ -198,7 +222,31 @@ echo "* cd \"$USER_DIR\""
 echo "  - USER (--user) directories such as \"$REMOTE_GIT_USER\" will appear under USER_DIR ('$USER_DIR')"
 echo "    - Repo directories will appear under that."
 
+
+if [ "@$WEBSITE" = "@" ]; then
+    WEBSITE=""
+else
+    echo "* using WEBSITE: $WEBSITE"
+    if [ "@$CUSTOM_URL" = "@" ]; then
+        CUSTOM_URL="$WEBSITE/$REMOTE_GIT_USER/$REPO_NAME.git"
+        echo "  * constructed CUSTOM_URL: \"$CUSTOM_URL\""
+    else
+        echo "  * overridden by CUSTOM_URL: \"$CUSTOM_URL\""
+    fi
+fi
+
+if [ "@$CUSTOM_URL" = "@" ]; then
+    CUSTOM_URL=""
+else
+    echo "* using CUSTOM_URL: $CUSTOM_URL"
+    if [ "@$WEBSITE" != "@" ]; then
+        echo "  * Warning: CUSTOM_URL overrides WEBSITE \"$WEBSITE\"."
+    fi
+fi
+
 # At this point, the WEBSITE, REPOS_DIR, and REMOTE_GIT_USER are set.
+
+
 
 if [ -z "$REPO_NAME" ]; then
     REPO_NAME="$_ENV_REPO_NAME"
@@ -215,8 +263,9 @@ fi
 
 
 GITHUB_URL="$WEBSITE_GITHUB/$REMOTE_GIT_USER/$REPO_NAME.git"
-CUSTOM_URL="$WEBSITE/$REMOTE_GIT_USER/$REPO_NAME.git"
-URL="$CUSTOM_URL"
+# CUSTOM_URL="$WEBSITE/$REMOTE_GIT_USER/$REPO_NAME.git"
+# URL="$CUSTOM_URL"
+URL=""
 GITLAB_URL="$WEBSITE_GITLAB/$REMOTE_GIT_USER/$REPO_NAME.git"
 NOTABUG_URL="$WEBSITE_NOTABUG/$REMOTE_GIT_USER/$REPO_NAME.git"
 LOCAL_REPO_NAME="$REPO_NAME$REPO_DIR_SUFFIX"
@@ -225,6 +274,32 @@ DEST="$USER_DIR/$LOCAL_REPO_NAME"
 _found=false
 _path_suffix=""
 if [ ! -d "$DEST" ]; then
+    if [ "@$CUSTOM_URL" != "@" ]; then
+        echo "* [$myName] using CUSTOM_URL $CUSTOM_URL..."
+        echo "\n\n" | git ls-remote $CUSTOM_URL -q
+        if [ $? -eq 0 ]; then
+            # echo "* [$myName] detected $WEBSITE repo"
+            URL="$CUSTOM_URL"
+            if [ "$_found" = "true" ]; then
+                if [ "$CUSTOM_URL" = "$GITHUB_URL" ]; then
+                    _path_suffix="/1.github"
+                else
+                    _path_suffix="/1.custom_git_site"
+                fi
+                DEST="$USER_DIR$_path_suffix/$LOCAL_REPO_NAME"
+            fi
+            echo "* cloning $URL to $DEST (OPTIONS=$OPTIONS)"
+            _found=true
+            # git clone $OPTIONS $CUSTOM_URL $DEST
+            update_repo $DEST $URL $OPTIONS
+        else
+            echo "  * not found"
+        fi
+        if [ "$_found" != "true" ]; then
+            echo "Error: A git URL $REMOTE_GIT_USER/$REPO_NAME wasn't detected (tried git ls-remote <url> -q) in $NOTABUG_URL, $GITLAB_URL or $WEBSITE."
+            exit 1
+        fi
+    else
     echo "* checking for $NOTABUG_URL..."
     echo "\n\n" | git ls-remote $NOTABUG_URL -q
     if [ $? -eq 0 ]; then
@@ -233,7 +308,7 @@ if [ ! -d "$DEST" ]; then
         URL="$NOTABUG_URL"
         echo "* cloning the detected $URL in `pwd` (OPTIONS=$OPTIONS)"
         # git clone $OPTIONS $NOTABUG_URL $DEST
-        update_repo $DEST $NOTABUG_URL $OPTIONS
+        update_repo $DEST $URL $OPTIONS
     else
         echo "  * not found"
     fi
@@ -250,17 +325,17 @@ if [ ! -d "$DEST" ]; then
         URL="$GITLAB_URL"
         echo "* cloning $URL to $DEST (OPTIONS=$OPTIONS)"
         # git clone $OPTIONS $GITLAB_URL $DEST
-        update_repo $DEST $GITLAB_URL $OPTIONS
+        update_repo $DEST $URL $OPTIONS
     else
         echo "  * not found: yes | git ls-remote -h --exit-code $GITLAB_URL -q"
     fi
-    echo "* checking for $CUSTOM_URL last..."
-    echo "\n\n" | git ls-remote $CUSTOM_URL -q
+    echo "* checking for $GITHUB_URL last..."
+    echo "\n\n" | git ls-remote $GITHUB_URL -q
     if [ $? -eq 0 ]; then
-        echo "* [$myName] detected $WEBSITE repo"
-        URL="$CUSTOM_URL"
+        echo "* [$myName] detected $WEBSITE_GITHUB repo"
+        URL="$GITHUB_URL"
         if [ "$_found" = "true" ]; then
-            if [ "$CUSTOM_URL" = "$GITHUB_URL" ]; then
+            if [ "$GITHUB_URL" = "$GITHUB_URL" ]; then
                 _path_suffix="/1.github"
             else
                 _path_suffix="/1.custom_git_site"
@@ -269,8 +344,8 @@ if [ ! -d "$DEST" ]; then
         fi
         echo "* cloning $URL to $DEST (OPTIONS=$OPTIONS)"
         _found=true
-        # git clone $OPTIONS $CUSTOM_URL $DEST
-        update_repo $DEST $CUSTOM_URL $OPTIONS
+        # git clone $OPTIONS $GITHUB_URL $DEST
+        update_repo $DEST $URL $OPTIONS
     else
         echo "  * not found"
     fi
@@ -280,6 +355,7 @@ if [ ! -d "$DEST" ]; then
     fi
     # git clone $URL $USER_DIR/$REPO_NAME
     # git clone $URL || customExit "'git clone $URL' failed in '`pwd`'"
+    fi
 else
     cd "$DEST" || customExit "'cd \"$DEST\"' failed in '`pwd`'"
     if [ "@$IS_MIRROR" = "@true" ]; then
