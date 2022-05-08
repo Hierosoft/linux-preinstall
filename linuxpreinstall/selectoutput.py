@@ -35,6 +35,9 @@ def main():
 	# ^ pass input as the param with "\n" characters if necessary
 	# print("type(out): {}".format(type(out).__name__))
 	# ^ bytes
+	e = err.decode("utf-8")
+	if len(e) > 0:
+		print("ERROR: {}".format(e))
 	s = out.decode('utf-8')
 	indent = ""
 	prev_indent = ""
@@ -105,7 +108,11 @@ def main():
 		data = result.stdout.decode('utf-8')
 		print(data)
 	else:
-		print("* A preferred sink was not detected.")
+		print("* A preferred sink matching \"{}\" was not detected."
+			  "".format(preferred_string.lower()))
+		print("Found ({}):".format(len(sinks)))
+		for sink in sinks:
+			print("* {}".format(sink))
 	
 if __name__ == "__main__":
 	main()
