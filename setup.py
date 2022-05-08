@@ -57,10 +57,9 @@ setuptools.setup(
     include_package_data=True,  # look for MANIFEST.in
     # scripts=['example'],
     # ^ Don't use scripts anymore (according to
-    #   <https://stackoverflow.com/a/28119736>).
-    # See <https://stackoverflow.com/questions/27784271/
-    # how-can-i-use-setuptools-to-generate-a-console-scripts-entry-
-    # point-which-calls>
+    #   <https://packaging.python.org/en/latest/guides
+    #   /distributing-packages-using-setuptools
+    #   /?highlight=scripts#scripts>).
     entry_points={
         'console_scripts': [
             'cleanif=linuxpreinstall.cleanif:main',
@@ -70,10 +69,12 @@ setuptools.setup(
         ],
     },
     install_requires=install_requires,
-    #     versionedModule['urllib'],
+    # versionedModule['urllib'],
     # ^ "ERROR: Could not find a version that satisfies the requirement
     #   urllib (from nopackage) (from versions: none)
-    #   ERROR: No matching distribution found for urllib"
+    # ERROR: No matching distribution found for urllib"
+    # (urllib imports fine in Python3 on Fedora 35 though
+    # pip uninstall urllib and pip uninstall urllib2 do nothing)
     test_suite='nose.collector',
     tests_require=['nose', 'nose-cover3'],
     zip_safe=False,  # It can't run zipped due to needing data files.
