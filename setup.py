@@ -13,9 +13,6 @@ import sys
 # versionedModule['urllib'] = 'urllib'
 # if python_mr == 2:
 #     versionedModule['urllib'] = 'urllib2'
-# long_description = ""
-with open("readme.md", "r") as fh:
-    long_description = fh.read()
 
 install_requires = []
 
@@ -30,6 +27,10 @@ description = '''The linuxpreinstall module has useful features
 for system and file management. The larger linux-preinstall project has
 many shell scripts for setting up GNU+Linux systems more quickly.
 Features will be moved to Python as seems reasonable.'''
+long_description = description
+if os.path.isfile("readme.md"):
+    with open("readme.md", "r") as fh:
+        long_description = fh.read()
 
 setuptools.setup(
     name='linuxpreinstall',
