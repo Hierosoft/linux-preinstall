@@ -3,6 +3,15 @@ echo
 echo
 me="$0"
 echo "Started $0 `date '+%Y-%m-%d %T'`"
+myPath="$0"
+realMyPath="`readlink $myPath`"
+if [ ! -z "$realMyPath" ]; then
+    myPath="$realMyPath"
+fi
+myName="`basename "$0"`"
+myDir="`dirname $myPath`"
+repoDir="`dirname $myDir`"
+tryRC="$repoDir/utilities/git.rc"
 usage() {
     cat <<END
 $0
@@ -15,7 +24,27 @@ Otherwise, specify --user then the username.
 If the website is not GitHub, specify the base URL after --website,
 such as https://githab.com
 
-    $me <repo_name> [--user <github user>] [--website <website>]
+    $me <repo_name> [options]
+
+(The first CLI argument that isn't a non-boolean "--" switch and doesn't
+have one before it will be used as REPO_NAME.)
+
+OPTIONS:
+(Unless CUSTOM_URL is set directly, it is constructed as follows:
+CUSTOM_URL="\$WEBSITE/\$REMOTE_GIT_USER/\$REPO_NAME.git")
+
+--repos_dir        (REPOS_DIR) Set the base directory for repos.
+--user             (REMOTE_GIT_USER) Set the repo user
+--user_dir         (USER_DIR) Construct the local repo path from
+                   \$USER_DIR/\$REPO_NAME instead of
+                   \$DEFAULT_REPO_DIR/\$REMOTE_GIT_USER/\$REPO_NAME
+                   (DEFAULT_REPO_DIR is in $tryRC)
+--website          (WEBSITE) Set the base url for CUSTOM_URL. If it is
+                   a known name (notabug, gitlab, or github), it will
+                   be automatically converted to a URL and set
+                   CUSTOM_URL.
+--url              (CUSTOM_URL) Set the repo url directly. This option
+                   overrides the WEBSITE option.
 
 EXAMPLES
     $me basic_materials --user poikilos --website https://gitlab.com
@@ -29,21 +58,14 @@ EXAMPLES
     # - uses github.com/poikilos
     # - clones to ~/git/filter
 
---repos_dir
+    $me filter --website github
+    # - uses github.com (doesn't check other git sites first)
+    # - clones to ~/Downloads/git/poikilos/filter
 
 END
 }
 
 
-myPath="$0"
-realMyPath="`readlink $myPath`"
-if [ ! -z "$realMyPath" ]; then
-    myPath="$realMyPath"
-fi
-myName="`basename "$0"`"
-myDir="`dirname $myPath`"
-repoDir="`dirname $myDir`"
-tryRC="$repoDir/utilities/git.rc"
 . $tryRC
 if [ $? -ne 0 ]; then
     echo "Error: \"$tryRC\" doesn't exist."
@@ -128,7 +150,7 @@ do
             OPTIONS="$OPTIONS --mirror"
             REPO_DIR_SUFFIX=".git"
             IS_MIRROR=true
-        elif [ -z "$REPO_NAME" ]; then
+        elif [ "@$REPO_NAME" = "@" ]; then
             REPO_NAME="$var"
             if [ ! -z "$_ENV_REPO_NAME" ]; then
                 echo "* WARNING: you specified REPO_NAME (first sequential argument), which overrides an existing REPO_NAME value in the environment: \"$_ENV_REPO_NAME\""
