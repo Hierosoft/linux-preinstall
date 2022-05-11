@@ -1,12 +1,15 @@
 #!/bin/bash
 # See <https://docs.docker.com/engine/install/debian/>:
-
+if [ "@$1" = "@--uninstall" ]; then
+    apt-get remove -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+    exit $?
+fi
 apt-get remove -y docker
 apt-get remove -y docker.io
 apt-get remove -y containerd
 apt-get remove -y runc
 apt-get remove -y docker-engine
-# ^ Not on Devuan Chimera (based on Debian 10 Buster)
+# ^ Not on Devuan 4 Chimera (based on Debian 11 Bullseye)
 apt-get update
 apt-get install \
     ca-certificates \
@@ -22,8 +25,8 @@ curl -fsSL https://download.docker.com/linux/debian/gpg | sudo gpg --dearmor -o 
 
 lsb_release_name="$(lsb_release -cs)"
 if [ "@$lsb_release_name" = "@chimera" ]; then
-    # Devuan Chimera is based on Debian Buster
-    lsb_release_name=buster
+    # Devuan 4 Chimera is based on Debian 11 Bullseye
+    lsb_release_name=bullseye
 fi
 
 echo \
