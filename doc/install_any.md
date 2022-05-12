@@ -1,4 +1,8 @@
 # install_any
+
+**deprecation notice** install_any has been renamed to nopackage and
+moved to <https://github.com/poikilos/nopackage>.
+
 Install **any** software (including deb) using ONE COMMAND on **any** GNU-like OS!
 
 Step 1: install_any.py <packagename>
