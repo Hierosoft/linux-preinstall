@@ -1,0 +1,41 @@
+
+devuanCodenameUsage(){
+    cat <<END
+
+The comparison of Devuan to Debian codenames is as follows as of 2021-12-12 (from <https://www.devuan.org/os/releases>):
+Jessie 	oldoldoldstable 	10464 	Jessie 	Archived
+ASCII 	oldoldstable 	3568 	Stretch 	Maintained
+Beowulf 	oldstable 	38086 	Buster 	Maintained
+Chimaera 	stable 	623 	Bullseye 	Maintained
+Daedalus 	in development 	1864 	Bookworm 	Maintained
+Ceres 	unstable 	1 	Sid 	Maintained
+
+END
+}
+
+. /etc/os-release
+
+if [ "@$VERSION_CODENAME" = "@" ]; then
+    devuanCodenameUsage
+    echo "Error: VERSION_CODENAME wasn't found in /etc/os-release."
+    exit 1
+fi
+
+debianV=
+
+if [ "@$VERSION_CODENAME" = "@jessie" ]; then
+    debianV=jessie
+elif [ "@$VERSION_CODENAME" = "@ascii" ]; then
+    debianV=stretch
+elif [ "@$VERSION_CODENAME" = "@beowulf" ]; then
+    debianV=buster
+elif [ "@$VERSION_CODENAME" = "@chimaera" ]; then
+    debianV=bullseye
+elif [ "@$VERSION_CODENAME" = "@daedalus" ]; then
+    debianV=bookworm
+elif [ "@$VERSION_CODENAME" = "@ceres" ]; then
+    debianV=sid
+    # sid is the rolling unstable release (Ubuntu is based partially
+    # on a release and partially on sid).
+fi
+
