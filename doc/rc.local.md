@@ -49,7 +49,7 @@ If you do not want systemd, consider [Devuan](devuan).
 ### Deprecates rc.local
 
 #### Workaround
-This workaround is not for Devuan 4 Chimera (based on Debian 11 Bullseye). It has a device called /etc/systemd/system/rc.local.service to emulate rc.local from a systemd perspective but does not have systemd.
+This workaround is not for Devuan 4 Chimaera (based on Debian 11 Bullseye). It has a device called /etc/systemd/system/rc.local.service to emulate rc.local from a systemd perspective but does not have systemd.
 - See the [Devuan Chimaera 4.0 stable release](https://www.devuan.org/os/announce/chimaera-release-announce-2021-10-14) announcement.
 
 A workaround is at [Home / Sysadmin / rc.local deprecated](https://mox.sh/sysadmin/rc-local-deprecated/) by mox.

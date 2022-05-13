@@ -1,11 +1,58 @@
 # Docker
 
-## Setup a docker image
+A docker container is based on a docker image. A docker image can
+inherit another docker image. A docker image is defined by a directory
+containing a file named Dockerfile, but an image from docker hub can
+also be used.
+
+## Install
+See <https://docs.docker.com/engine/install/debian> or
+[linux-preinstall/server/docker.debian.sh](../server/docker.debian.sh).
+
+## Create a docker container
+
+In this case, the `docker pull` step isn't applicable since
+Dockerfile will download the base image then construct a new image
+based on it:
+```
+FROM dyne/devuan:chimaera
+```
+
+Example output (using
+EnlivenMinetest/containers/lmk.devuan-chimaera.sh):
+```
+Sending build context to Docker daemon  689.1MB
+Step 1/2 : FROM dyne/devuan:chimaera
+ ---> dec98fda5b69
+Step 2/2 : COPY linux-minetest-kit.zip /opt
+ ---> ffcfee6d4d5a
+Successfully built ffcfee6d4d5a
+Successfully tagged lmk-devuan-chimaera-img:latest
+```
+
+To create a container from a custom image, type something like:
+
+
+### From a custom image
+- Create a project folder.
+- Manually create an empty file called Dockerfile.
+- It must have a FROM statement
+- A COPY statement copies something into the image.
+
+
+### From dockerhub
+You can import an image from the internet.
+#### Devuan
+dyne/devuan is the most recently updated one as of May 2022, though the
+documentation doesn't list "chimaera as an option, but the following is
+verified to work (2022-05-12):
+- `sudo docker pull dyne/devuan:chimaera`
+
 
 ## Setup Docker
 
 See docker.debian.sh in linux-preinstall
-- also tested with Devuan 4 Chimera
+- also tested with Devuan 4 Chimaera
 
 `sudo docker run hello-world`
 
