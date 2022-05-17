@@ -344,7 +344,7 @@ def _init_osrelease():
     # other release files and formats:
     # /etc/centos-release: CentOS Linux release 8.4.2105
     # /etc/debian_version: 11.1
-    # /etc/devuan_version: chimera
+    # /etc/devuan_version: chimaera
     # ^ devuan also has /etc/debian_version
     if os.path.isfile(osrelease_path):
         osrelease = {}
