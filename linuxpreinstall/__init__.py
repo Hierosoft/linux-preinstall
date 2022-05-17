@@ -8,6 +8,16 @@ import platform
 from csv import reader
 
 verbose = False
+
+for argI in range(1, len(sys.argv)):
+    arg = sys.argv[argI]
+    if arg.startswith("--"):
+        if arg == "--debug":
+            verbose = True
+        elif arg == "--verbose":
+            verbose = True
+
+
 def is_verbose():
     return verbose
 
