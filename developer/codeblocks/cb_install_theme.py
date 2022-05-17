@@ -17,28 +17,13 @@ import sys
 myDir = os.path.dirname(os.path.abspath(__file__))
 
 cbConf = None
-profile = None
-AppData = None
-LocalAppData = None
-myAppData = None
 
-if platform.system() == "Windows":
-    profile = os.environ['USERPROFILE']
-    AppData = os.environ['APPDATA']
-    LocalAppData = os.environ['LOCALAPPDATA']
-    myAppData = os.path.join(AppData, "CodeBlocks")
-else:
-    profile = os.environ['HOME']
-    if platform.system() == "Darwin":
-        Library = os.path.join(profile, "Library")
-        AppData = os.path.join(Library, "Application Support")
-        LocalAppData = os.path.join(Library, "Application Support")
-        # myAppData = os.path.join(LocalAppData, "codeblocks")
-        # cbConf = os.path.join(myAppData, "default.conf")
-    else:
-        AppData = os.path.join(profile, ".config")
-        LocalAppData = os.path.join(profile, ".config")
-    myAppData = os.path.join(AppData, "codeblocks")
+from linuxpreinstall import(
+    profile,
+    AppData,
+    LocalAppData,
+    myAppData,
+)
 
 cbConf = os.path.join(myAppData, "default.conf")
 

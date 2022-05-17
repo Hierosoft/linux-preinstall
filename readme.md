@@ -234,9 +234,10 @@ any distro in your profile, all without superuser priveleges!
   or there is a 302 response.
 - `selectoutput`: Select an output using a fuzzy search string such as
   analog or HDMI (not case-sensitive; requires pulseaudio-utils).
-  - For an automated reconnect to run first, see 
-	utilities/reconnect-audio.sh which calls `selectoutput hdmi` if 
-	`selectoutput` is in the path.
+  - For an automated reconnect to run first, see
+    utilities/reconnect-audio.sh which calls `selectoutput hdmi` if
+    `selectoutput` is in the path.
+- `whichicon`: Find what icon (.desktop) file provides a given command.
 
 
 ## Changes

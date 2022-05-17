@@ -1,17 +1,43 @@
 #!/usr/bin/env python3
+'''
+Move files already in the profile directory to the proper
+ones on the new operating system.
+- The files must already be correctly transferred to the
+  new computer.
+  - Before example 1, you must have already done something
+    (on the old macOS computer) like:
+    rsync -rtP ~/ user@192.168.1.98:/home/user
+    # ^ where 192.168.1.98 is the IP address of the
+        computer with a GNU+Linux operating system
+        and user is the name of the user that exists on
+        that machine but who has not yet used (or has
+        renamed or cleared) profiles for:
+        {programs}
+
+-------------------------- Usage --------------------------
+Run the command on the destination computer after the
+transfer is complete:
+  {migrateconfig} <source system> <destination system>
+
+Example 1 (migrate macOS files to Linux):
+{migrateconfig} Darwin Linux
+'''
+
+from __future__ import print_function
 import os
 import shutil
 import sys
 import platform
 
 
-profile = None
+from linuxpreinstall import (
+    profile,
+)
+
+
 mvCmd = "mv -f"
 if platform.system() == "Windows":
-    profile = os.environ['USERPROFILE']
     mvCmd = "move /y"
-else:
-    profile = os.environ['HOME']
 
 
 def error(msg):
@@ -19,29 +45,10 @@ def error(msg):
 
 
 def usage():
-    error("Move files already in the profile directory to the proper")
-    error("ones on the new operating system.")
-    error("- The files must already be correctly transferred to the")
-    error("  new computer.")
-    error("  - Before example 1, you must have already done something")
-    error("    (on the old macOS computer) like:")
-    error("    rsync -rtP ~/ user@192.168.1.98:/home/user")
-    error("    # ^ where 192.168.1.98 is the IP address of the")
-    error("        computer with a GNU+Linux operating system")
-    error("        and user is the name of the user that exists on")
-    error("        that machine but who has not yet used (or has")
-    error("        renamed or cleared) profiles for:")
-    error("        {}".format(subs.keys()))
-    error("")
-    error("-------------------------- Usage --------------------------")
-    error("Run the command on the destination computer after the")
-    error("transfer is complete:")
-    error('  {} <source system> <destination system>'
-          ''.format(sys.argv[0]))
-    error("")
-    error("Example 1 (migrate macOS files to Linux):")
-    error('{} Darwin Linux'
-          ''.format(sys.argv[0]))
+    error(__doc__.format(
+        migrateconfig=sys.argv[0],
+        programs=subs.keys(),
+    ))
 
 
 subs = {}

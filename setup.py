@@ -66,6 +66,7 @@ setuptools.setup(
             'findmime=linuxpreinstall.findmime:main',
             'unredirect_md=linuxpreinstall.unredirect:main',
             'selectoutput=linuxpreinstall.selectoutput:main',
+            'whichicon=linuxpreinstall.whichicon:main',
         ],
     },
     install_requires=install_requires,

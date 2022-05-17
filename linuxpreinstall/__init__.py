@@ -1,9 +1,87 @@
 #!/usr/bin/env python3
 
+from __future__ import print_function
 import os
 import sys
 import subprocess
+import platform
 from csv import reader
+
+verbose = False
+def is_verbose():
+    return verbose
+
+
+def prerr(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
+
+
+def debug(*args, **kwargs):
+    if not verbose:
+        return
+    print(*args, file=sys.stderr, **kwargs)
+
+def endsWithAny(haystack, needles, CS=True):
+    '''
+    Haystack ends with any of the needles.
+
+    Keyword arguments:
+    CS -- Do case-sensitive comparison.
+    '''
+    if not CS:
+        haystack = haystack.lower()
+        for rawN in needles:
+            needle = rawN.lower()
+            if haystack.endswith(needle):
+                return True
+        return False
+    for needle in needles:
+        if haystack.endswith(needle):
+            return True
+    return False
+
+profile = None
+AppData = None
+LocalAppData = None
+myAppData = None
+
+if platform.system() == "Windows":
+    profile = os.environ['USERPROFILE']
+    AppData = os.environ['APPDATA']
+    LocalAppData = os.environ['LOCALAPPDATA']
+    myAppData = os.path.join(AppData, "CodeBlocks")
+else:
+    profile = os.environ['HOME']
+    if platform.system() == "Darwin":
+        Library = os.path.join(profile, "Library")
+        AppData = os.path.join(Library, "Application Support")
+        LocalAppData = os.path.join(Library, "Application Support")
+        # myAppData = os.path.join(LocalAppData, "codeblocks")
+        # cbConf = os.path.join(myAppData, "default.conf")
+    else:
+        AppData = os.path.join(profile, ".config")
+        LocalAppData = os.path.join(profile, ".config")
+    myAppData = os.path.join(AppData, "codeblocks")
+
+
+# from https://github.com/poikilos/DigitalMusicMC
+# and https://github.com/poikilos/blnk
+def which(cmd):
+    paths_str = os.environ.get('PATH')
+    if paths_str is None:
+        debug("Warning: There is no PATH variable, so returning {}"
+              "".format(cmd))
+        return cmd
+    paths = paths_str.split(os.path.pathsep)
+    for path in paths:
+        debug("looking in {}".format(path))
+        tryPath = os.path.join(path, cmd)
+        if os.path.isfile(tryPath):
+            return tryPath
+        else:
+            debug("There is no {}".format(tryPath))
+    return None
+
 
 osrelease = None
 data_path = os.path.dirname(__file__)
@@ -23,7 +101,6 @@ upgrade_parts = None
 package_type = None
 install_bin = None
 packageInfos = None
-verbose = False
 
 
 def set_verbose(v):
@@ -37,12 +114,6 @@ def set_verbose(v):
                          " tried".format(v))
 
 
-def is_verbose():
-    return verbose
-
-
-def prerr(*args, **kwargs):
-    print(*args, file=sys.stderr, **kwargs)
 
 
 class InstallManager:
@@ -260,6 +331,11 @@ def _init_osrelease():
     if osrelease is None:
         osrelease = {}
     osrelease_path = os.path.join("/etc", "os-release")
+    # other release files and formats:
+    # /etc/centos-release: CentOS Linux release 8.4.2105
+    # /etc/debian_version: 11.1
+    # /etc/devuan_version: chimera
+    # ^ devuan also has /etc/debian_version
     if os.path.isfile(osrelease_path):
         osrelease = {}
         lineN = 0
@@ -344,6 +420,8 @@ def _init_packagenames():
                     prerr("object[{}]: {}".format(pkgid, o))
     if verbose:
         prerr("  * done _init_packagenames")
+
+
 _init_osrelease()
 _init_packagenames()
 _init_commands()
