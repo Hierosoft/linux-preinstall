@@ -1,4 +1,5 @@
 include linuxpreinstall/*.py
+include linuxpreinstall/codeblocks/*.py
 include linuxpreinstall/*.csv
 include linuxpreinstall/codeblocks/sangams/Locate.bat
 include linuxpreinstall/codeblocks/sangams/readme.txt

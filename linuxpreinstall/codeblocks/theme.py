@@ -29,6 +29,21 @@ cbConf = os.path.join(myAppData, "default.conf")
 
 yzhong52 = os.path.join(myDir, "yzhong52", "colour_themes.conf")
 sangams = os.path.join(myDir, "sangams", "theme.conf")
+missing_files = []
+
+if not os.path.isfile(yzhong52):
+    missing_files.append(yzhong52)
+
+if not os.path.isfile(sangams):
+    missing_files.append(sangams)
+
+if len(missing_files) > 0:
+    raise FileNotFoundError(
+        "The linuxpreinstall module isn't installed correctly. The"
+        " missing data files should be included: {}"
+        "".format(missing_files)
+    )
+
 
 def usage():
     print(__doc__)
