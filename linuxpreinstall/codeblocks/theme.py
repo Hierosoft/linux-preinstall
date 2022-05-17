@@ -78,9 +78,10 @@ def main():
               "".format(destConf))
 
     usage()
-    print("Error: This script isn't implemented so you have to use"
-          " the cb_share_config GUI.")
-    sys.exit(1)
+    raise NotImplementedError(
+        "Error: This script isn't implemented so you have to use"
+        " the cb_share_config GUI."
+    )
 
 
 if __name__ == "__main__":
