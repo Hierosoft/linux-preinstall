@@ -1,2 +1,6 @@
 include linuxpreinstall/*.py
 include linuxpreinstall/*.csv
+include linuxpreinstall/codeblocks/sangams/Locate.bat
+include linuxpreinstall/codeblocks/sangams/readme.txt
+include linuxpreinstall/codeblocks/sangams/theme.conf
+include linuxpreinstall/codeblocks/yzhong52/colour_themes.conf
