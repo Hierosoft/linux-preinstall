@@ -1,5 +1,5 @@
 #!/bin/sh
-echo "* tested on Devuan Chimera"
+echo "* tested on Devuan 4 Chimaera"
 python3 -m pip install --upgrade --user virtualenv
 mkdir -p ~/venv
 python3 -m virtualenv ~/venv/kity

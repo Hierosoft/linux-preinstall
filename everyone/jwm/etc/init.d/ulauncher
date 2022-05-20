@@ -15,7 +15,7 @@
 
 # This file is by Poikilos and available in the
 # everyone/jwm/etc/init.d directory on https://github.com/poikilos/linux-preinstall
-# - It is based on the service file /etc/init.d/nohang from the nohang package in the Devuan 4 (Chimera) repository.
+# - It is based on the service file /etc/init.d/nohang from the nohang package in the Devuan 4 (Chimaera) repository.
 # - dbus looks for a service named but the Debian service script says:
 #   "start-stop-daemon: warning: this system is not able to track process names
 #   longer than 15 characters, please use --exec instead of --name."
