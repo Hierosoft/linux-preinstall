@@ -46,6 +46,8 @@ When you press enter, Geany will go to the exact line.
 END
 }
 
+# TODO: Ignore the .git directory.
+
 me="ggrep"
 prev_var=""
 _found_include="false"
@@ -62,6 +64,8 @@ _include_args+=( "--include" )
 _include_args+=( "*.h" )
 _include_args+=( "--include" )
 _include_args+=( "*.js" )
+_include_args+=( "--include" )
+_include_args+=( "*.sh" )
 # ^ defaults
 _n_arg="-n"
 _include_all="false"
@@ -192,10 +196,22 @@ if [ $code -ne 0 ]; then
     >&2 echo "ERROR: 'grep ${_new_args[@]} returned $code"
     exit $code
 fi
->&2 echo "* to reduce output further, try:"
->&2 printf "`basename $0`"
+>&2 echo
+>&2 echo
+>&2 echo "* to reduce output horizontally, hide line content via:"
+>&2 printf "  `basename $0`"
 # ^ Placing >&2 before or after doesn't seem to matter.
 >&2 printf " "
 >&2 printf "$@"
 # ^ TODO: Place quotes around the param if necessary.
 >&2 echo " | cut -f1 -d\#"
+
+if [ "@$_include_all" != "@true" ]; then
+    >&2 echo "* to show all file types (revert to default grep behavior), use:"
+    >&2 printf "  `basename $0`"
+    # ^ Placing >&2 before or after doesn't seem to matter.
+    >&2 printf " "
+    >&2 printf "$@"
+    # ^ TODO: Place quotes around the param if necessary.
+    >&2 echo " --include-all"
+fi
