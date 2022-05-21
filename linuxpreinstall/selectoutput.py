@@ -113,6 +113,8 @@ def main():
 		print("Found ({}):".format(len(sinks)))
 		for sink in sinks:
 			print("* {}".format(sink))
+		return 1
+	return 0
 	
 if __name__ == "__main__":
-	main()
+	sys.exit(main())
