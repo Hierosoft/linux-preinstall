@@ -78,7 +78,7 @@ def main():
         errorf("Warning: The path \"{}\" does not exist"
                "".format(BIN_PATH))
         TRY_CMD = which(BIN_PATH)
-        if os.path.isfile(TRY_CMD):
+        if TRY_CMD is not None:
             error(". Unless you specify:")
             error("  {} \"{}\"".format(me, TRY_CMD))
             error("  # or whichever is the correct {} to get the"
