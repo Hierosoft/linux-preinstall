@@ -5,11 +5,12 @@ by Jake Gustafson
 
 This program allows you to search using grep then get a geany command to go to a specific line.
 - It automatically is recursive, but you can prevent that by specifying a file (that exists) as any parameter.
-- It automatically includes *.py files, but you can change the file type using exactly one --include parameter.
+- It automatically includes only certain files as shown in the output, but you can change the file type using exactly one --include parameter.
+- Though it has more output than grep, only results go to standard output (other output goes to stderr).
+
 
 You can install it such as via:
-  cd linux-preinstall
-  sudo ln -s `pwd`/utilities/ggrep /usr/local/bin/ggrep
+  python3 -m pip install --user linux-preinstall
 
 
 Then you can use it any time.
@@ -17,10 +18,10 @@ For example, if you run:
     ggrep contains_vec3
 
 You can exclude the content and get the line number commands cleanly such as via:
-    ggrep contains_vec3 | cut -f1 -d:
+    ggrep contains_vec3 | cut -f1 -d\#
 
 
-The output (if you don't use "| cut -f1 -d:") is:
+The output (if you don't use "| cut -f1 -d\#") is:
 
 * ggrep is passing along extra arguments to grep:  contains_vec3
 grep -r contains_vec3 -n
@@ -37,8 +38,12 @@ terminal window, select (left click and drag) the command in the part
 above, then middle click to get):
   geany pyglops.py -l 606
 
+When you enter the command, Geany would go to the exact line.
 
-When you press enter, Geany will go to the exact line.
+Options
+-------
+--no-ignore          Do not read .gitignore (Otherwise ggrep will not only ignore .git directories but also read .gitignore files recursively and ignore files and directories specified in the files).
+--include-all        Include all file types (The default grep behavior, you must specify this).
 '''
 from __future__ import print_function
 import sys
@@ -49,8 +54,30 @@ from linuxpreinstall import (
     debug,
 )
 
+_include_args = [
+    "*.py",
+    "*.lua",
+    "*.cpp",
+    "*.h",
+    "*.js",
+    "*.sh",
+    "*.yml",
+    "*.yaml",
+    "*.json",
+    "*.htm",
+    "*.html",
+    "*.php",
+    "*.inc",
+    "*.tmpl",
+    "*.po",
+    "*.pot",
+    "*.twig",
+]
+
 def usage():
     print(__doc__)
+    print("Default types included: {}".format(_include_args))
+    print("")
 
 
 def _wild_increment(haystack_c, needle_c):
@@ -121,7 +148,8 @@ def is_like_any(haystack, needles):
     return False
 
 
-def grep(pattern, path, more_args=None, include=None, recursive=True, quiet=True):
+def grep(pattern, path, more_args=None, include=None, recursive=True,
+         quiet=True, ignore=None, ignore_root=None, gitignore=True):
     '''
     Keyword arguments:
     include -- Specify a single string or a list of strings that filter
@@ -130,7 +158,16 @@ def grep(pattern, path, more_args=None, include=None, recursive=True, quiet=True
     recursive -- Recursively search subdirectories (ignored if path
         is a file).
     quiet -- Only return lines, do not print them.
+    ignore -- Ignore a list of files (automatically changed to content
+        of .gitignore if present and path is a directory and gitignore
+        is True).
+    ignore_base -- This is required when using ignore since .gitignore
+        may have paths starting with "/" and they must be a path
+        relative to the gitignore file.
+    gitignore -- Set to True to read .gitignore files recursively and
+        to ignore files and directories specified in those files.
     '''
+
     if more_args is not None:
         for arg in more_args:
             if arg == "--include-all":
@@ -143,27 +180,88 @@ def grep(pattern, path, more_args=None, include=None, recursive=True, quiet=True
         include = ["*"]
     elif isinstance(include, str):
         include = [include]
+    if isinstance(ignore, str):
+        ignore = [ignore]
+    if ignore is not None:
+        if not isinstance(ignore_root, str):
+            raise ValueError("ignore requires ignore_root")
     sub = os.path.split(path)[1]
+    if os.path.isdir(path):
+        if sub == ".git":
+            error('* ignored "{}"'.format(path))
+            return results
+
+    if ignore is not None:
+        for rawIgnore in ignore:
+            ignore_s = rawIgnore
+            checkPath = path
+            absolute = False
+            if ignore_s.startswith("/"):
+                absolute = True
+                # ignore_s = [1:]
+                # ^ keep "/" since checkPath will start with "/" after
+                #   ignore_root is removed in the case of a match.
+                checkPath = path
+                if checkPath.startswith(ignore_root):
+                    checkPath = checkPath[len(ignore_root):]
+                    # ^ Now checkPath starts with "/" like ignore_s
+            if ignore_s.endswith("/"):
+                ignore_s = ignore_s[:-1]
+                if absolute:
+                    if os.path.isdir(path) and is_like(path, ignore_s):
+                        error("* ignored {} due to .gitignore".format(path))
+                        return results
+                else:
+                    if os.path.isdir(path) and is_like(sub, ignore_s):
+                        error("* ignored {} due to .gitignore".format(path))
+                        return results
+            else:
+                if absolute:
+                    if os.path.isfile(path) and is_like(path, ignore_s):
+                        error("* ignored {} due to .gitignore".format(path))
+                        return results
+                else:
+                    if os.path.isfile(path) and is_like(sub, ignore_s):
+                        error("* ignored {} due to .gitignore".format(path))
+                        return results
+            debug("- {} ({}) doesn't match {}".format(checkPath, path, ignore_s))
     if os.path.isfile(path):
         if not is_like_any(sub, include):
             return results
         else:
             with open(path, 'r') as ins:
                 lineN = 0
-                for rawL in ins:
-                    lineN += 1
-                    line = rawL.rstrip("\n\r")
-                    if re.search(pattern, line):
-                        result = "{}:{}:{}".format(
-                            path,
-                            lineN,
-                            line,
-                        )
-                        results.append(result)
-                        if not quiet:
-                            print(result)
-            return results
+                try:
+                    for rawL in ins:
+                        lineN += 1
+                        line = rawL.rstrip("\n\r")
+                        if re.search(pattern, line):
+                            result = "{}:{}:{}".format(
+                                path,
+                                lineN,
+                                line,
+                            )
+                            results.append(result)
+                            if not quiet:
+                                print(result)
+                except UnicodeDecodeError as ex:
+                    # 'utf-8' codec can't decode byte 0x89 in position 0: invalid start byte
+                    error('* ignored binary file "{}" due to: {}'.format(path, str(ex)))
+                    return results
 
+            return results
+    tryIgnore = os.path.join(path, ".gitignore")
+    if gitignore and os.path.isfile(tryIgnore):
+        ignore = []
+        ignore_root = path
+        with open(tryIgnore, 'r') as ins:
+            for rawL in ins:
+                line = rawL.strip()
+                if len(line) < 1:
+                    continue
+                if line.startswith("#"):
+                    continue
+                ignore.append(line)
     listPath = path
     if listPath == "":
         listPath = "."
@@ -176,8 +274,12 @@ def grep(pattern, path, more_args=None, include=None, recursive=True, quiet=True
             results += grep(
                 pattern,
                 subPath,
+                more_args=more_args,
                 include=include,
                 recursive=recursive,
+                quiet=quiet,
+                ignore=ignore,
+                ignore_root=ignore_root,
             )
 
     return results
@@ -201,28 +303,26 @@ def main():
     _found_include = False
     _recursive_arg = None
     _more_args = []
-    _include_args = [
-        "*.py",
-        "*.lua",
-        "*.cpp",
-        "*.h",
-        "*.js",
-        "*.sh",
-    ]
     # ^ defaults
     _n_arg = None
     _include_all = False
+    gitignore = True
     pattern = None
     path = None
 
     for argI in range(1, len(sys.argv)):
         arg = sys.argv[argI]
-        if arg == "--include":
+        if arg == "--help":
+            usage()
+            return 0
+        elif arg == "--include":
             pass
         elif arg == "-r":
             error("* -r (recursive) is already the default.")
         elif arg == "-n":
             _n_arg = "-n"
+        elif arg == "--no-ignore":
+            gitignore = False
         elif arg == "--recursive":
             _recursive_arg = True
             # error("* -r (recursive) is already the default.")
@@ -241,7 +341,7 @@ def main():
                     )
 
                 error("* removing the default '--include' option so all are included.")
-                _include_args=()
+                _include_args = None
                 _found_include = True
                 _include_all = True
             elif prev_var == "--include":
@@ -252,7 +352,7 @@ def main():
                     )
 
                 if not _found_include:
-                    _include_args=()
+                    _include_args = None
 
                 _found_include = True
                 # grep can accept more than one --include, so force the
@@ -285,8 +385,11 @@ def main():
 
     count = len(_more_args)
     error("* _more_args count: {}".format(count))
-    includeCount = len(_include_args)
-    error("* _include_args count: {}".format(includeCount))
+    if _include_args is not None:
+        includeCount = len(_include_args)
+        error("* _include_args count: {}".format(includeCount))
+    else:
+        error("* _include_args: {}".format(_include_args))
 
     if _n_arg is None:
         _n_arg = "-n"
@@ -301,7 +404,7 @@ def main():
     _new_args = _more_args
 
     if not _found_include:
-        error("  (use --include-all for all files, the default grep behavior)")
+        error("  (use --include-all for all file types and --no-ignore to search in .git and in files ignored by .gitignore files for the default grep behavior)")
     else:
         error("* _found_include: {}".format(_found_include))
 
@@ -316,7 +419,9 @@ def main():
     error()
     error('results (looking for "{}" in "{}"):'.format(pattern, path))
     error()
-    for line in grep(pattern, path, more_args=_new_args, include=_include_args):
+    results = grep(pattern, path, more_args=_new_args,
+                   include=_include_args)
+    for line in results:
         colon1 = line.find(":")
         colon2 = line.find(":", colon1+1)
         if colon2 <= colon1:
@@ -327,27 +432,44 @@ def main():
             )
         _line_n = line[colon1+1:colon2]
         _file = line[:colon1]
-        print("geany {} -l {}".format(quoted(_file), _line_n))
+        print("geany {} -l {}  # < {}".format(quoted(_file), _line_n, line[colon2+1:]))
 
     error()
+    error("({} match(es))".format(len(results)))
     error()
     error("* to reduce output horizontally, hide line content via:")
     space = ""
+    i = 0
+    sys.stderr.write("  ")
     for arg in sys.argv:
-        sys.stderr.write(space+quoted(arg))
+        if i == 0:
+            sys.stderr.write(os.path.split(arg)[1])
+        else:
+            sys.stderr.write(space+quoted(arg))
+        i += 1
         space = " "
     error(" | cut -f1 -d\#")
 
     if not _include_all:
-        error("* to show all file types (revert to default grep behavior), use:")
+        error("* to show all file types"
+              " (revert to default grep behavior), use:")
+        sys.stderr.write("  ")
         # sys.stderr.write("  `basename $0`")
         # ^ Placing >&2 before or after doesn't seem to matter.
         # sys.stderr.write(" ")
         # sys.stderr.write("$@")
+        i = 0
         for arg in sys.argv:
-            sys.stderr.write(" "+arg)
+            if i == 0:
+                sys.stderr.write(os.path.split(arg)[1])
+            else:
+                sys.stderr.write(" "+arg)
+            i += 1
         # ^ TODO: Place quotes around the param if necessary.
         error(" --include-all")
+        error(" # and --no-ignore to search in"
+              " .git directories and in files ignored by"
+              " .gitignore files")
     return 0
 
 
