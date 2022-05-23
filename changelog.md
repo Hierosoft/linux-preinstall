@@ -3,6 +3,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [git] - 2022-05-22
+### Changed
+- Change ggrep from bash to Python.
+
+
 ## [git] - 2021-03-03
 ### Added
 - Recover the installer if the destination appimage exists but the

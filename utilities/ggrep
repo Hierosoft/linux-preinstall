@@ -1,217 +1,28 @@
-#!/bin/bash
-# Author & Purpose: See "usage" below.
+#!/usr/bin/python3
+# -*- coding: utf-8 -*-
+import re
+import sys
+import os
+import platform
 
-usage(){
-cat <<END
-ggrep
-by Jake Gustafson
+profile = os.environ.get('HOME')
+if platform.system() == "Windows":
+    profile = os.environ['USERPROFILE']
 
-This program allows you to search using grep then get a geany command to go to a specific line.
-- It automatically is recursive, but you can prevent that by specifying a file (that exists) as any parameter.
-- It automatically includes *.py files, but you can change the file type using exactly one --include parameter.
+tryRepo = os.path.join(profile, "git", "linux-preinstall")
+tryModule = os.path.join(tryRepo, "linuxpreinstall")
 
-You can install it such as via:
-  cd linux-preinstall
-  sudo ln -s `pwd`/utilities/ggrep /usr/local/bin/ggrep
+if os.path.isdir(tryModule):
+    sys.path.insert(0, tryRepo)
 
-
-Then you can use it any time.
-For example, if you run:
-    ggrep contains_vec3
-
-You can exclude the content and get the line number commands cleanly such as via:
-    ggrep contains_vec3 | cut -f1 -d:
-
-
-The output (if you don't use "| cut -f1 -d:") is:
-
-* ggrep is passing along extra arguments to grep:  contains_vec3
-grep -r contains_vec3 -n
-results:
-
-geany pyglops.py -l 606 # < pyglops.py:606:def hitbox_contains_vec3(o, pos):
-geany kivyglops.py -l 1848 # < kivyglops.py:1848:                                               self.glops[bumper_index].properties['hitbox'].contains_vec3(get_vec3_from_point(self.glops[bumpable_index]._t_ins)):
-# END of output
+try:
+    from linuxpreinstall.ggrep import main
+except ImportError as ex:
+    print("ggrep is a Python module now. You must install the repo:")
+    print("# Clone it then:")
+    print("python3 -m pip install linux-preinstall")
 
 
-Then you can simply paste (There is no need to copy and paste using
-hotkeys. Simply utilize the auto-copy feature of linux: In a GUI
-terminal window, select (left click and drag) the command in the part
-above, then middle click to get):
-  geany pyglops.py -l 606
-
-
-When you press enter, Geany will go to the exact line.
-
-END
-}
-
-# TODO: Ignore the .git directory.
-
-me="ggrep"
-prev_var=""
-_found_include="false"
-_recursive_arg="-r"
-_more_args=()
-_include_args=()
-_include_args+=( "--include" )
-_include_args+=( "*.py" )
-_include_args+=( "--include" )
-_include_args+=( "*.lua" )
-_include_args+=( "--include" )
-_include_args+=( "*.cpp" )
-_include_args+=( "--include" )
-_include_args+=( "*.h" )
-_include_args+=( "--include" )
-_include_args+=( "*.js" )
-_include_args+=( "--include" )
-_include_args+=( "*.sh" )
-# ^ defaults
-_n_arg="-n"
-_include_all="false"
-
-for var in "$@"
-do
-    if [ "@$var" == "@--include" ]; then
-        true
-        # ^ pass
-    elif [ "@$var" == "@-r" ]; then
-        >&2 echo "* -r (recursive) is already the default."
-    elif [ "@$var" == "@-n" ]; then
-        _n_arg=""
-    elif [ "@$var" == "@--recursive" ]; then
-        _recursive_arg="--recursive"
-        >&2 echo "* -r (recursive) is already the default."
-    else
-        if [ -f "$var" ]; then
-            _recursive_arg=""
-            >&2 echo "* turning off recursive mode (default in ggrep) since \"$var\" is a file"
-        elif [ "@$var" == "@--include-all" ]; then
-            if [ "@$_found_include" = "@true" ]; then
-                >&2 echo "Error: '--include-all' isn't compatible with '--include'."
-                exit 1
-            fi
-            >&2 echo "* removing the default '--include' option so all are included."
-            _include_args=()
-            _found_include="true"
-            _include_all="true"
-        elif [ "@$prev_var" = "@--include" ]; then
-            if [ "@$_include_all" = "@true" ]; then
-                >&2 echo "Error: '--include' isn't compatible with '--include-all'."
-                exit 1
-            fi
-            if [ "@$_found_include" != "@true" ]; then
-                _include_args=()
-            fi
-            _found_include="true"
-            #>&2 echo "ERROR: $me only allows one '$prev_var' since by default includes $DEFAULT_INCLUDE_VALUE."
-            #exit 1
-            # grep can accept more than one --include, so force the
-            # old one and the new one:
-            _include_args+=( "--include" )
-            _include_args+=( "$var" )
-        else
-            # _more_args+="$_more_args $var"
-            _more_args+=( "$var" )
-        fi
-    fi
-
-    if [ "@$var" == "-n" ]; then
-        >&2 echo "* -n is already the default (required for the functionality of $me)."
-        prev_var=""
-    else
-        prev_var="$var"
-    fi
-done
-if [ "@$prev_var" = "@--include" ]; then
-    >&2 echo "Error: You must specify a filename pattern after --include such as \"*.lua\" (including quotes if using asterisk(s)!) ."
-    exit 1
-fi
-
-# if [ ${#_more_args[@]} > 0 ]; then
-# ^ commented since it generates a file named 0 :(
-count=${#_more_args[@]}
->&2 echo "* _more_args count: $count"
-includeCount=${#_include_args[@]}
->&2 echo "* _include_args count: $includeCount"
-# if [ $count > 0 ]; then
-# ^ commented since it generates a file named 0 :(
-#    >&2 echo "* $me is passing along extra arguments to grep:" # ${_more_args[@]}"
-# fi
-
-#_new_args="$_recursive_arg$_more_args $_n_arg "
-if [ ! -z "$_n_arg" ]; then
-    # >&2 echo "* adding $_n_arg"
-    _more_args+=( "$_n_arg" )
-    # The line number (obtained via -n) is required for this script's
-    # main purpose.
-fi
-if [ ! -z "$_recursive_arg" ]; then
-    >&2 echo "* adding $_recursive_arg automatically"
-    _more_args+=( "$_recursive_arg" )
-fi
->&2 echo "* _more_args: ${_more_args[@]}"
->&2 echo "* _include_args: ${_include_args[@]}"
-_new_args=("${_more_args[@]}")
-for value in "${_include_args[@]}" ; do
-    _new_args+=( "$value" )
-done
-# --include $DEFAULT_INCLUDE_VALUE
-# eval grep "${_new_args[@]}"
-# >&2 echo "${_new_args[@]}"
-
-#>&2 echo "grep" "${_new_args[@]}"
-if [ "@$_found_include" = "@false" ]; then
-    >&2 echo "  (use --include-all for all files, the default grep behavior)"
-else
-    >&2 echo "* _found_include: $_found_include"
-fi
-printf "grep" >&2
-for value in "${_new_args[@]}" ; do
-    if [[ "$value" != "${value%[[:space:]]*}" ]]; then
-        >&2 printf " \"$value\""
-    else
-        >&2 printf " $value"
-    fi
-done
->&2 echo
->&2 echo
->&2 echo "results:"
->&2 echo
-while read -r line ; do
-    # >&2 echo "line: $line"
-    _line_n=`echo "$line" | sed -r 's/^[^:]+: ?([^:]+):.*/\1/'`
-    # ^ <https://unix.stackexchange.com/a/432760>
-    _file=`echo "$line" | cut -d: -f1`
-    # ^ <https://stackoverflow.com/a/20348145/4541104>
-    #>&2 echo "_line_n: $_line_n"
-    #>&2 echo "_file: $_file"
-    echo "geany '$_file' -l $_line_n  # < $line"
-done < <(grep "${_new_args[@]}")
-
-# ^ WHY does trying to put "--include $DEFAULT_INCLUDE_VALUE" in ${_new_args[@]} always cause grep to return 1 and output nothing??
-# ^ See <https://stackoverflow.com/a/16318005/4541104>.
-code=$?
-if [ $code -ne 0 ]; then
-    >&2 echo "ERROR: 'grep ${_new_args[@]} returned $code"
-    exit $code
-fi
->&2 echo
->&2 echo
->&2 echo "* to reduce output horizontally, hide line content via:"
->&2 printf "  `basename $0`"
-# ^ Placing >&2 before or after doesn't seem to matter.
->&2 printf " "
->&2 printf "$@"
-# ^ TODO: Place quotes around the param if necessary.
->&2 echo " | cut -f1 -d\#"
-
-if [ "@$_include_all" != "@true" ]; then
-    >&2 echo "* to show all file types (revert to default grep behavior), use:"
-    >&2 printf "  `basename $0`"
-    # ^ Placing >&2 before or after doesn't seem to matter.
-    >&2 printf " "
-    >&2 printf "$@"
-    # ^ TODO: Place quotes around the param if necessary.
-    >&2 echo " --include-all"
-fi
+if __name__ == '__main__':
+    sys.argv[0] = re.sub(r'(-script\.pyw|\.exe)?$', '', sys.argv[0])
+    sys.exit(main())

@@ -67,6 +67,7 @@ setuptools.setup(
             'unredirect_md=linuxpreinstall.unredirect:main',
             'selectoutput=linuxpreinstall.selectoutput:main',
             'whichicon=linuxpreinstall.whichicon:main',
+            'ggrep=linuxpreinstall.ggrep:main',
             # 'cb-install-theme=linuxpreinstall.codeblocks.theme:main',  # WIP
         ],
     },

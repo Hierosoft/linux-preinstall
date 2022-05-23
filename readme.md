@@ -238,6 +238,8 @@ any distro in your profile, all without superuser priveleges!
     utilities/reconnect-audio.sh which calls `selectoutput hdmi` if
     `selectoutput` is in the path.
 - `whichicon`: Find what icon (.desktop) file provides a given command.
+- `ggrep`: Get a geany command to go to the line in the file from grep
+  (searching within file(s)). Recursively search directories by default.
 
 
 ## Changes
