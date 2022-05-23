@@ -8,6 +8,11 @@ This program allows you to search using grep then get a geany command to go to a
 - It automatically includes only certain files as shown in the output, but you can change the file type using exactly one --include parameter.
 - Though it has more output than grep, only results go to standard output (other output goes to stderr).
 
+Differences from grep:
+- The output is a geany command for each match rather than bare output.
+- Binary files are ignored.
+- Basically no special grep options are implemented (-n/--line-number is automatic, -r/--recursive is automatic)
+- stderr output differs significantly.
 
 You can install it such as via:
   python3 -m pip install --user linux-preinstall
@@ -42,6 +47,8 @@ When you enter the command, Geany would go to the exact line.
 
 Options
 -------
+--verbose            Show verbose output.
+--extra            Show extra verbose output.
 --no-ignore          Do not read .gitignore (Otherwise ggrep will not only ignore .git directories but also read .gitignore files recursively and ignore files and directories specified in the files).
 --include-all        Include all file types (The default grep behavior, you must specify this).
 '''
@@ -52,6 +59,8 @@ import re
 from linuxpreinstall import (
     prerr as error,
     debug,
+    extra,
+    set_verbose,
 )
 
 _include_args = [
@@ -137,7 +146,7 @@ def is_like(haystack, needle):
             matches += 1
         elif inc == -1:
             return False
-    debug("is_like matches={} req_count={}".format(matches, req_count))
+    extra("is_like matches={} req_count={}".format(matches, req_count))
     return matches == req_count
 
 
@@ -149,7 +158,8 @@ def is_like_any(haystack, needles):
 
 
 def grep(pattern, path, more_args=None, include=None, recursive=True,
-         quiet=True, ignore=None, ignore_root=None, gitignore=True):
+         quiet=True, ignore=None, ignore_root=None, gitignore=True,
+         show_args_warnings=True):
     '''
     Keyword arguments:
     include -- Specify a single string or a list of strings that filter
@@ -166,6 +176,10 @@ def grep(pattern, path, more_args=None, include=None, recursive=True,
         relative to the gitignore file.
     gitignore -- Set to True to read .gitignore files recursively and
         to ignore files and directories specified in those files.
+    show_args_warnings -- Show a warning for each command switch in
+        more_args that is not implemented. The value is True for only
+        one call. It will be automatically be changed to False before
+        another call.
     '''
 
     if more_args is not None:
@@ -173,8 +187,10 @@ def grep(pattern, path, more_args=None, include=None, recursive=True,
             if arg == "--include-all":
                 raise ValueError("--include-all should set include to None")
             else:
-                error("* Warning: {} is not implemented in ggrep."
-                      "".format(arg))
+                if show_args_warnings:
+                    show_args_warnings = False
+                    error("* Warning: {} is not implemented in ggrep."
+                          "".format(arg))
     results = []
     if include is None:
         include = ["*"]
@@ -208,8 +224,11 @@ def grep(pattern, path, more_args=None, include=None, recursive=True,
             if ignore_s.endswith("/"):
                 ignore_s = ignore_s[:-1]
                 if absolute:
-                    if os.path.isdir(path) and is_like(path, ignore_s):
-                        error("* ignored {} due to .gitignore".format(path))
+                    if os.path.isdir(path) and is_like(checkPath, ignore_s):
+                        error("* ignored {} due to {}".format(
+                            path,
+                            os.path.join(ignore_root, ".gitignore"),
+                        ))
                         return results
                 else:
                     if os.path.isdir(path) and is_like(sub, ignore_s):
@@ -217,15 +236,16 @@ def grep(pattern, path, more_args=None, include=None, recursive=True,
                         return results
             else:
                 if absolute:
-                    if os.path.isfile(path) and is_like(path, ignore_s):
+                    if os.path.isfile(path) and is_like(checkPath, ignore_s):
                         error("* ignored {} due to .gitignore".format(path))
                         return results
                 else:
                     if os.path.isfile(path) and is_like(sub, ignore_s):
                         error("* ignored {} due to .gitignore".format(path))
                         return results
-            debug("- {} ({}) doesn't match {}".format(checkPath, path, ignore_s))
+            extra("- {} ({}) doesn't match {}".format(checkPath, path, ignore_s))
     if os.path.isfile(path):
+        # debug('* checking "{}"'.format(path))
         if not is_like_any(sub, include):
             return results
         else:
@@ -252,6 +272,7 @@ def grep(pattern, path, more_args=None, include=None, recursive=True,
             return results
     tryIgnore = os.path.join(path, ".gitignore")
     if gitignore and os.path.isfile(tryIgnore):
+        debug('* reading "{}"'.format(tryIgnore))
         ignore = []
         ignore_root = path
         with open(tryIgnore, 'r') as ins:
@@ -280,6 +301,7 @@ def grep(pattern, path, more_args=None, include=None, recursive=True,
                 quiet=quiet,
                 ignore=ignore,
                 ignore_root=ignore_root,
+                show_args_warnings=show_args_warnings,
             )
 
     return results
@@ -298,6 +320,7 @@ def quoted(path):
 
 # TODO: Ignore the .git directory.
 def main():
+    global _include_args
     me = "ggrep"
     prev_var = ""
     _found_include = False
@@ -344,6 +367,10 @@ def main():
                 _include_args = None
                 _found_include = True
                 _include_all = True
+            elif arg == "--verbose":
+                set_verbose(True)
+            elif arg == "--extra":
+                set_verbose(2)
             elif prev_var == "--include":
                 if _include_all:
                     raise ValueError(
@@ -360,6 +387,12 @@ def main():
                 _include_args.append("--include")
                 _include_args.append(arg)
             elif path is None:
+                if arg.startswith("-"):
+                    if not os.path.exists(arg):
+                        raise ValueError(
+                            "{} is neither an implemented {} option"
+                            " nor a file.".format(arg, me)
+                        )
                 path = arg
             else:
                 _more_args.append(arg)
@@ -404,7 +437,7 @@ def main():
     _new_args = _more_args
 
     if not _found_include:
-        error("  (use --include-all for all file types and --no-ignore to search in .git and in files ignored by .gitignore files for the default grep behavior)")
+        error("  (using ggrep default types since not specified)")
     else:
         error("* _found_include: {}".format(_found_include))
 
@@ -467,8 +500,8 @@ def main():
             i += 1
         # ^ TODO: Place quotes around the param if necessary.
         error(" --include-all")
-        error(" # and --no-ignore to search in"
-              " .git directories and in files ignored by"
+        error("  # and add --no-ignore to search in"
+              " .git directories and in files listed in"
               " .gitignore files")
     return 0
 

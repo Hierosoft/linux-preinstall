@@ -46,5 +46,5 @@ class TestGrepStringMethods(unittest.TestCase):
         self.assertEqual(is_like("abcdef", "abcde"), False)
         self.assertEqual(is_like("abcdef", "bcdef"), False)
         self.assertEqual(is_like("ababab", "ab"), False)
-
+        self.assertEqual(is_like("/workspace.xml", "/workspace.xml"), True)
 

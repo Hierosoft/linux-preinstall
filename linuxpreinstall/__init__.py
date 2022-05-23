@@ -7,19 +7,20 @@ import subprocess
 import platform
 from csv import reader
 
-verbose = False
+verbose = 0
 
 for argI in range(1, len(sys.argv)):
     arg = sys.argv[argI]
     if arg.startswith("--"):
         if arg == "--debug":
-            verbose = True
+            verbose = 1
         elif arg == "--verbose":
-            verbose = True
-
+            verbose = 1
+        elif arg == "--extra":
+            verbose = 2
 
 def is_verbose():
-    return verbose
+    return verbose > 0
 
 
 def prerr(*args, **kwargs):
@@ -27,9 +28,16 @@ def prerr(*args, **kwargs):
 
 
 def debug(*args, **kwargs):
-    if not verbose:
+    if verbose < 1:
         return
     print(*args, file=sys.stderr, **kwargs)
+
+
+def extra(*args, **kwargs):
+    if verbose < 2:
+        return
+    print(*args, file=sys.stderr, **kwargs)
+
 
 def endsWithAny(haystack, needles, CS=True):
     '''
@@ -116,9 +124,11 @@ packageInfos = None
 def set_verbose(v):
     global verbose
     if v is True:
-        verbose = True
+        verbose = 1
     elif v is False:
-        verbose = False
+        verbose = 0
+    elif v == 2:
+        verbose = 2
     else:
         raise ValueError("Verbose must be True or False but {} was"
                          " tried".format(v))
