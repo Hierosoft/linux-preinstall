@@ -55,6 +55,15 @@ icon_paths = [
     "/var/lib/flatpak/exports/share/applications",
 ]
 
+identifier_keys = [
+    "Exec",
+    "TryExec",
+    "GenericName",
+    "Name",
+    # "Comment",
+    # "Icon",
+]
+
 icon_dot_extensions = [".desktop"]
 
 if platform.system() == "Windows":
@@ -130,7 +139,26 @@ def main():
             with open(subPath, 'r') as ins:
                 for rawL in ins:
                     line = rawL.strip()
-                    if BIN_PATH in line:
+                    name = ""
+                    value = ""
+                    if line.startswith("#"):
+                        if not line.startswith("#!"):
+                            # Some desktop files have a shebang which
+                            # runs the executable.
+                            continue
+                        value = line
+                    else:
+                        signI = line.find("=")
+                        if signI > -1:
+                            name = line[:signI]
+                            value = line[signI+1:]
+                            if name not in identifier_keys:
+                                continue
+                        else:
+                            value = ""
+                            continue
+
+                    if BIN_PATH in value:
                         found = line
                         break
                     # else
