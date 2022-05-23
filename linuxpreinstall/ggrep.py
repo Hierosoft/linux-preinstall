@@ -48,9 +48,9 @@ When you enter the command, Geany would go to the exact line.
 Options
 -------
 --verbose            Show verbose output.
---extra            Show extra verbose output.
---no-ignore          Do not read .gitignore (Otherwise ggrep will not only ignore .git directories but also read .gitignore files recursively and ignore files and directories specified in the files).
---include-all        Include all file types (The default grep behavior, you must specify this).
+--extra              Show extra verbose output.
+--no-ignore          Do not read .gitignore (If not specified, ggrep will not only ignore .git directories but also read .gitignore files recursively and ignore files and directories specified in the files).
+--include-all        Include all file types (For the default grep behavior, you must specify this and --no-ignore but binary files are still ignored).
 '''
 from __future__ import print_function
 import sys
@@ -379,7 +379,7 @@ def main():
                     )
 
                 if not _found_include:
-                    _include_args = None
+                    _include_args = []
 
                 _found_include = True
                 # grep can accept more than one --include, so force the
