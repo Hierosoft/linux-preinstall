@@ -99,13 +99,15 @@ def _wild_increment(haystack_c, needle_c):
     return -1
 
 
-def is_like(haystack, needle):
+def is_like(haystack, needle, allow_blank=False, quiet=False):
     '''
     It is a filename pattern not regex, so the only wildcards are '*'
     and '?'.
 
     Sequential arguments:
     needle -- a pattern such as "*.png"
+    allow_blank -- Instead of raising an exception on a blank needle,
+        return False and show a warning (unless quiet).
     '''
     req_count = 0
     prev_c = None
@@ -119,6 +121,16 @@ def is_like(haystack, needle):
             continue
         req_count += 1
         prev_c = c
+    if len(needle) == 0:
+        if not allow_blank:
+            raise ValueError(
+                'The needle can\'t be blank or it would match all.'
+                ' Set to "*" to match all explicitly.'
+            )
+        else:
+            if not quiet:
+                error("The needle is blank so the match will be False.")
+        return False
     if req_count == 0:
         return True
     hI = 0
@@ -150,9 +162,10 @@ def is_like(haystack, needle):
     return matches == req_count
 
 
-def is_like_any(haystack, needles):
+def is_like_any(haystack, needles, allow_blank=False, quiet=False):
     for needle in needles:
-        if is_like(haystack, needle):
+        if is_like(haystack, needle, allow_blank=allow_blank,
+                   quiet=quiet):
             return True
     return False
 

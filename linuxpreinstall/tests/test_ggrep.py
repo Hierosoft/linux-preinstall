@@ -8,6 +8,7 @@ from linuxpreinstall import (
 
 from linuxpreinstall.ggrep import (
     is_like,
+    is_like_any,
 )
 
 class TestGrepStringMethods(unittest.TestCase):
@@ -47,4 +48,47 @@ class TestGrepStringMethods(unittest.TestCase):
         self.assertEqual(is_like("abcdef", "bcdef"), False)
         self.assertEqual(is_like("ababab", "ab"), False)
         self.assertEqual(is_like("/workspace.xml", "/workspace.xml"), True)
+
+        got_the_right_error = False
+        try:
+            self.assertEqual(is_like("/workspace.xml", None), False)
+        except TypeError as ex:
+            self.assertEqual(str(ex), "'NoneType' object is not iterable")
+            got_the_right_error = True
+        self.assertEqual(got_the_right_error, True)
+
+        got_the_right_error = False
+        try:
+            self.assertEqual(is_like(None, "/workspace.xml"), False)
+        except TypeError as ex:
+            self.assertEqual(str(ex), "object of type 'NoneType' has no len()")
+            got_the_right_error = True
+        self.assertEqual(got_the_right_error, True)
+
+        got_the_right_error = False
+        try:
+            self.assertEqual(is_like("/workspace.xml", ""), False)
+        except ValueError as ex:
+            got_the_right_error = True
+        self.assertEqual(got_the_right_error, True)
+
+
+    def test_is_like_any(self):
+        set_verbose(True)
+
+        got_the_right_error = False
+        try:
+            self.assertEqual(is_like_any("/home/1/abab", None), False)
+        except TypeError as ex:
+            self.assertEqual(str(ex), "'NoneType' object is not iterable")
+            got_the_right_error = True
+        self.assertEqual(got_the_right_error, True)
+
+        got_the_right_error = False
+        try:
+            self.assertEqual(is_like_any(None, "/home/1/abab"), False)
+        except TypeError as ex:
+            self.assertEqual(str(ex), "object of type 'NoneType' has no len()")
+            got_the_right_error = True
+        self.assertEqual(got_the_right_error, True)
 

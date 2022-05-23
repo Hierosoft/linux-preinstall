@@ -30,6 +30,10 @@ from linuxpreinstall import (
     endsWithAny,
 )
 
+from linuxpreinstall.ggrep import (
+    is_like_any,
+)
+
 
 def error(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
@@ -83,8 +87,8 @@ def main():
 
     BIN_PATH = sys.argv[1]
     if not os.path.isfile(BIN_PATH):
-        error()
-        errorf("Warning: The path \"{}\" does not exist"
+        # error()
+        errorf("* Checking for \"{}\"...not a full path"
                "".format(BIN_PATH))
         TRY_CMD = which(BIN_PATH)
         if TRY_CMD is not None:
@@ -95,19 +99,19 @@ def main():
                   " detected path {} will"
                   " be displayed as standard output."
                   "".format(BIN_PATH, TRY_CMD))
-            error()
             # exit 2
         else:
-            error(".")
-            error("Warning: It is not in the environment's PATH either"
-                  " (which {}: {})."
-                  "".format(BIN_PATH, TRY_CMD))
-            error()
+            error(" and command is not in the environment's PATH"
+                  " either.".format(BIN_PATH, TRY_CMD))
+            #       " (which {}: {})."
             # exit 3
+        # error()
 
     result = ""
     error("* [{}] looking for a shortcut to \"{}\"..."
           "".format(me, BIN_PATH))
+    exact_results = []
+    fuzzy_results = []
     for SC_PATH in icon_paths:
         if not os.path.isdir(SC_PATH):
             # error("{} does not exist.".format(SC_PATH))
@@ -133,14 +137,17 @@ def main():
                           " points to inaccessible file {}"
                           "".format(subPath, got))
                 else:
-                    error("  * inaccessible file: {} from symlink {}".format(got, subPath))
+                    error('  * inaccessible file: {} from symlink {}'
+                          ''.format(got, subPath))
                 continue
             found = None
+            exact = False
             with open(subPath, 'r') as ins:
                 for rawL in ins:
                     line = rawL.strip()
                     name = ""
                     value = ""
+                    execSub = ""
                     if line.startswith("#"):
                         if not line.startswith("#!"):
                             # Some desktop files have a shebang which
@@ -154,36 +161,93 @@ def main():
                             value = line[signI+1:]
                             if name not in identifier_keys:
                                 continue
+                            if os.path.sep in value:
+                                execSub = os.path.split(value)[1]
                         else:
                             value = ""
                             continue
-
-                    if BIN_PATH in value:
+                    execParts = value.split(" ")
+                    launchCmd = ""
+                    if len(execParts) > 0:
+                        if os.path.split(execParts[0])[1] == "flatpak":
+                            # Example: "Exec=/usr/bin/flatpak run
+                            # --branch=stable --arch=x86_64
+                            # --command=gimp-2.10 --file-forwarding
+                            # org.gimp.GIMP @@u %U @@"
+                            for cmdI in range(1, len(execParts)):
+                                arg = execParts[cmdI]
+                                launchPre = "--command="
+                                if arg.startswith(launchPre):
+                                    launchCmd = arg[len(launchPre):]
+                    if BIN_PATH == execSub:
                         found = line
+                        error('* matched name "{}"'.format(found))
+                        exact = True
+                        break
+                    elif BIN_PATH == launchCmd:
+                        found = line
+                        error('* {} matches launch argument in "{}"'
+                              ''.format(BIN_PATH, launchCmd))
+                        exact = True
+                        break
+                    elif BIN_PATH in launchCmd.split("-"):
+                        # elif is_like_any(BIN_PATH,
+                        #                  launchCmd.split("-"),
+                        #                  allow_blank=True,
+                        #                  quiet=True):
+                        found = line
+                        error('* {} matches a part of a command in "{}"'
+                              ''.format(BIN_PATH, launchCmd))
+                        exact = True
+                        break
+                    elif is_like_any(BIN_PATH, execSub.split("-"),
+                                     allow_blank=True, quiet=True):
+                        found = line
+                        error('* {} is_like "{}"'
+                              ''.format(BIN_PATH, execSub))
+                        exact = True
+                        break
+                    elif BIN_PATH == value:
+                        found = line
+                        error('* matched path "{}"'.format(found))
+                        exact = True
+                        break
+                    elif BIN_PATH in execSub:
+                        found = line
+                        error('* matched part of "{}"'.format(found))
                         break
                     # else
                     #     error("NOT {}: {}"
                     #           "".format(subPath, line))
             if found is not None:
-                if not endsWithAny(sub, icon_dot_extensions, CS=False):
-                    error("  * skipping non-shortcut \"{}\""
-                          "".format(subPath))
-                    continue
-                if sub == "bamf-2.index":
-                    error("  * skipping non-shortcut \"{}\""
-                          "".format(subPath))
-                    continue
-                if sub == "mimeinfo.cache":
-                    error("  * skipping non-shortcut \"{}\""
-                          "".format(subPath))
-                    continue
-                if result != "":
-                    error("  * skipping \"{}\""
-                          " since already got a result!"
-                          "".format(subPath))
-                    continue
-                print(subPath)
-                result = subPath
+                if exact:
+                    exact_results.append(subPath)
+                else:
+                    fuzzy_results.append(subPath)
+    results = exact_results + fuzzy_results
+    result = ""
+    for subPath in results:
+        sub = os.path.split(subPath)[1]
+        # if found is not None:
+        if not endsWithAny(sub, icon_dot_extensions, CS=False):
+            error("  * skipping non-shortcut \"{}\""
+                  "".format(subPath))
+            continue
+        if sub == "bamf-2.index":
+            error("  * skipping non-shortcut \"{}\""
+                  "".format(subPath))
+            continue
+        if sub == "mimeinfo.cache":
+            error("  * skipping non-shortcut \"{}\""
+                  "".format(subPath))
+            continue
+        if result != "":
+            error("  * skipping \"{}\""
+                  " since already got a result!"
+                  "".format(subPath))
+            continue
+        print(subPath)
+        result = subPath
     if result != "":
         return 0
     else:
