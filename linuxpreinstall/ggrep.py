@@ -81,6 +81,8 @@ _include_args = [
     "*.po",
     "*.pot",
     "*.twig",
+    "*.ini",
+    "*.txt",
 ]
 
 def usage():
@@ -172,7 +174,7 @@ def is_like_any(haystack, needles, allow_blank=False, quiet=False):
 
 def grep(pattern, path, more_args=None, include=None, recursive=True,
          quiet=True, ignore=None, ignore_root=None, gitignore=True,
-         show_args_warnings=True):
+         show_args_warnings=True, allow_non_regex_pattern=True):
     '''
     Keyword arguments:
     include -- Specify a single string or a list of strings that filter
@@ -193,6 +195,8 @@ def grep(pattern, path, more_args=None, include=None, recursive=True,
         more_args that is not implemented. The value is True for only
         one call. It will be automatically be changed to False before
         another call.
+    allow_non_regex_pattern -- Allow the pattern to be in string even if
+        pattern is a substring rather than regex.
     '''
 
     if more_args is not None:
@@ -265,10 +269,13 @@ def grep(pattern, path, more_args=None, include=None, recursive=True,
             with open(path, 'r') as ins:
                 lineN = 0
                 try:
+                    extra('* Checking "{}"'.format(path))
                     for rawL in ins:
                         lineN += 1
                         line = rawL.rstrip("\n\r")
-                        if re.search(pattern, line):
+                        if (re.search(pattern, line)
+                                or (allow_non_regex_pattern
+                                    and (pattern in line))):
                             result = "{}:{}:{}".format(
                                 path,
                                 lineN,
@@ -277,12 +284,20 @@ def grep(pattern, path, more_args=None, include=None, recursive=True,
                             results.append(result)
                             if not quiet:
                                 print(result)
+                        else:
+                            extra('  * pattern {} is not in "{}"'
+                                  ''.format(pattern, line))
                 except UnicodeDecodeError as ex:
                     # 'utf-8' codec can't decode byte 0x89 in position 0: invalid start byte
                     error('* ignored binary file "{}" due to: {}'.format(path, str(ex)))
                     return results
 
             return results
+    if (len(path) != 0) and (not os.path.isdir(path)):
+        # Dangling symlink in this case probably, so return to avoid:
+        # "FileNotFoundError: [Errno 2] No such file or directory: "
+        # return results
+        pass
     tryIgnore = os.path.join(path, ".gitignore")
     if gitignore and os.path.isfile(tryIgnore):
         debug('* reading "{}"'.format(tryIgnore))
@@ -299,8 +314,14 @@ def grep(pattern, path, more_args=None, include=None, recursive=True,
     listPath = path
     if listPath == "":
         listPath = "."
-    for sub in os.listdir(listPath):
-        # The path is guaranteed to not be a file by now.
+    subs = None
+    try:
+        subs = os.listdir(listPath)
+    except FileNotFoundError:
+        error('* missing or inaccessible: "{}"'.format(listPath))
+        return results
+    for sub in subs:
+        # The path is guaranteed *not* to be a file by now.
         subPath = os.path.join(path, sub)
         if path == "":
             subPath = sub
@@ -466,7 +487,7 @@ def main():
     error('results (looking for "{}" in "{}"):'.format(pattern, path))
     error()
     results = grep(pattern, path, more_args=_new_args,
-                   include=_include_args)
+                   include=_include_args, gitignore=gitignore)
     for line in results:
         colon1 = line.find(":")
         colon2 = line.find(":", colon1+1)
