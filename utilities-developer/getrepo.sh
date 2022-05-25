@@ -21,8 +21,8 @@ Clone a github repo using only the name.
 USAGE
 The current directory name must be the user name.
 Otherwise, specify --user then the username.
-If the website is not GitHub, specify the base URL after --website,
-such as https://githab.com
+If the website is not GitHub, specify the base URL after --site,
+such as https://gitlab.com
 
     $me <repo_name> [options]
 
@@ -39,7 +39,7 @@ CUSTOM_URL="\$WEBSITE/\$REMOTE_GIT_USER/\$REPO_NAME.git")
                    \$USER_DIR/\$REPO_NAME instead of
                    \$DEFAULT_REPO_DIR/\$REMOTE_GIT_USER/\$REPO_NAME
                    (DEFAULT_REPO_DIR is in $tryRC)
---website          (WEBSITE) Set the base url for CUSTOM_URL. If it is
+--site             (WEBSITE) Set the base url for CUSTOM_URL. If it is
                    a known name (notabug, gitlab, or github), it will
                    be automatically converted to a URL and set
                    CUSTOM_URL.
@@ -47,7 +47,7 @@ CUSTOM_URL="\$WEBSITE/\$REMOTE_GIT_USER/\$REPO_NAME.git")
                    overrides the WEBSITE option.
 
 EXAMPLES
-    $me basic_materials --user poikilos --website https://gitlab.com
+    $me basic_materials --user poikilos --site https://gitlab.com
     # ends up as ~/Downloads/git/poikilos/
 
     $me filter --user poikilos --repos_dir ~/git
@@ -58,7 +58,7 @@ EXAMPLES
     # - uses github.com/poikilos
     # - clones to ~/git/filter
 
-    $me filter --website github
+    $me filter --site github
     # - uses github.com (doesn't check other git sites first)
     # - clones to ~/Downloads/git/poikilos/filter
 
@@ -106,7 +106,7 @@ do
     if [ ! -z "$NEXT_VAR" ]; then
         if [ "$NEXT_VAR" = "--user" ]; then
             REMOTE_GIT_USER="$var"
-        elif [ "$NEXT_VAR" = "--website" ]; then
+        elif [ "$NEXT_VAR" = "--site" ]; then
             WEBSITE="$var"
             if [ "@$WEBSITE" = "@github" ]; then
                 WEBSITE="https://github.com"
@@ -138,7 +138,7 @@ do
             exit 0
         elif [ "@$var" = "@--user" ]; then
             NEXT_VAR="$var"
-        elif [ "@$var" = "@--website" ]; then
+        elif [ "@$var" = "@--site" ]; then
             NEXT_VAR="$var"
         elif [ "@$var" = "@--repos_dir" ]; then
             NEXT_VAR="$var"
