@@ -90,7 +90,7 @@ import requests
 no_redirects = "-no_redirects"
 
 
-def error(*args, **kwargs):
+def echo0(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
 
 
@@ -149,7 +149,7 @@ def unredirect_file(path, dest):
                     closeI = line.find(closer, openI+len(openerPlus))
                 if closeI > -1:
                     rawLink = line[openI+len(opener):closeI]
-                    error("* processing {}".format(rawLink))
+                    echo0("* processing {}".format(rawLink))
                     # pr = urlsplit(rawLink)  # get SplitResult
 
                     # See <https://stackoverflow.com/a/43628262/4541104>
@@ -179,29 +179,29 @@ def unredirect_file(path, dest):
                                        "".format(v, encOpeners))
                                 raise NotImplementedError(msg)
                     # if len(pr.query) > 0:
-                    #     error(pr)
+                    #     echo0(pr)
                     method = None
                     if decLink is None:
                         method = "unredirect"
                         url = unredirect(rawLink)
                         pass
                         # else:
-                        #     error("  * unredirect: no change")
+                        #     echo0("  * unredirect: no change")
                     else:
                         method = "decoded"
                         url = decLink
-                        # error("  * decoded: {}".format(url))
+                        # echo0("  * decoded: {}".format(url))
                     if url is not None:
                         line = (line[:openI+len(opener)] + url
                                 + line[closeI:])
                         if url != rawLink:
-                            error("  * {}: {}".format(method, url))
+                            echo0("  * {}: {}".format(method, url))
 
                 outs.write(line + "\n")
 
 
 def usage():
-    error(__doc__.format(no_redirects=no_redirects))
+    echo0(__doc__.format(no_redirects=no_redirects))
 
 
 def main():
@@ -214,17 +214,17 @@ def main():
 
     if inFile is None:
         usage()
-        error("Error: You must at least specify a Markdown file.")
+        echo0("Error: You must at least specify a Markdown file.")
     elif os.path.isfile(inFile):
-        error('* reading "{}"'.format(inFile))
+        echo0('* reading "{}"'.format(inFile))
         fBase, fDotExt = os.path.splitext(inFile)
         if outFile is None:
             outFile = "{}{}{}".format(fBase, no_redirects, fDotExt)
         unredirect_file(inFile, outFile)
-        error('* wrote "{}"'.format(outFile))
+        echo0('* wrote "{}"'.format(outFile))
     else:
         usage()
-        error('Error: "{}" does not exist'.format(inFile))
+        echo0('Error: "{}" does not exist'.format(inFile))
 
 
 if __name__ == "__main__":

@@ -32,6 +32,7 @@ import platform
 
 from linuxpreinstall import (
     profile,
+    echo0,
 )
 
 
@@ -40,12 +41,8 @@ if platform.system() == "Windows":
     mvCmd = "move /y"
 
 
-def error(msg):
-    sys.stderr.write("{}\n".format(msg))
-
-
 def usage():
-    error(__doc__.format(
+    echo0(__doc__.format(
         migrateconfig=sys.argv[0],
         programs=subs.keys(),
     ))
@@ -84,17 +81,17 @@ def migrate(fromSystem, toSystem):
                   specify macOS.
     '''
     for program, systems in subs.items():
-        error("* processing {}...".format(program))
+        echo0("* processing {}...".format(program))
         srcSub = systems[fromSystem]
         dstSub = systems[toSystem]
         src = os.path.join(profile, srcSub)
         dst = os.path.join(profile, dstSub)
         if not os.path.exists(src):
-            error("  * INFO: \"{}\" doesn't exist"
+            echo0("  * INFO: \"{}\" doesn't exist"
                   " so it will not be migrated.".format(src))
             continue
         if os.path.exists(dst):
-            error("  * INFO: \"{}\" already exists"
+            echo0("  * INFO: \"{}\" already exists"
                   " so it will not be migrated.".format(dst))
             continue
         os.makedirs(dst)
@@ -112,7 +109,7 @@ def migrate(fromSystem, toSystem):
 def main():
     if len(sys.argv) != 3:
         usage()
-        error("ERROR: You must specify a source and destination"
+        echo0("ERROR: You must specify a source and destination"
               " platform.")
         exit(1)
     migrate(sys.argv[1], sys.argv[2])

@@ -8,32 +8,49 @@ import platform
 from csv import reader
 
 verbose = 0
-
 for argI in range(1, len(sys.argv)):
     arg = sys.argv[argI]
     if arg.startswith("--"):
-        if arg == "--debug":
+        if arg == "--verbose":
             verbose = 1
-        elif arg == "--verbose":
-            verbose = 1
-        elif arg == "--extra":
+        elif arg == "--debug":
             verbose = 2
+
 
 def is_verbose():
     return verbose > 0
 
 
-def prerr(*args, **kwargs):
+def write0(arg):
+    sys.stderr.write(arg)
+    sys.stderr.flush()
+
+
+def write1(arg):
+    if verbose < 1:
+        return
+    sys.stderr.write(arg)
+    sys.stderr.flush()
+
+
+def write2(arg):
+    if verbose < 2:
+        return
+    sys.stderr.write(arg)
+    sys.stderr.flush()
+
+
+def echo0(*args, **kwargs):  # formerly prerr
     print(*args, file=sys.stderr, **kwargs)
 
 
-def debug(*args, **kwargs):
+def echo1(*args, **kwargs):  # formerly debug
     if verbose < 1:
         return
     print(*args, file=sys.stderr, **kwargs)
 
 
-def extra(*args, **kwargs):
+def echo2(*args, **kwargs):  # formerly extra
     if verbose < 2:
         return
     print(*args, file=sys.stderr, **kwargs)
@@ -57,6 +74,7 @@ def endsWithAny(haystack, needles, CS=True):
         if haystack.endswith(needle):
             return True
     return False
+
 
 profile = None
 AppData = None
@@ -87,17 +105,17 @@ else:
 def which(cmd):
     paths_str = os.environ.get('PATH')
     if paths_str is None:
-        debug("Warning: There is no PATH variable, so returning {}"
+        echo1("Warning: There is no PATH variable, so returning {}"
               "".format(cmd))
         return cmd
     paths = paths_str.split(os.path.pathsep)
     for path in paths:
-        debug("looking in {}".format(path))
+        echo1("looking in {}".format(path))
         tryPath = os.path.join(path, cmd)
         if os.path.isfile(tryPath):
             return tryPath
         else:
-            debug("There is no {}".format(tryPath))
+            echo1("There is no {}".format(tryPath))
     return None
 
 
@@ -132,8 +150,6 @@ def set_verbose(v):
     else:
         raise ValueError("Verbose must be True or False but {} was"
                          " tried".format(v))
-
-
 
 
 class InstallManager:
@@ -179,7 +195,7 @@ class InstallManager:
 
 def _init_commands():
     if verbose:
-        prerr("* _init_commands...")
+        echo0("* _init_commands...")
     global refresh_parts
     global install_parts
     global uninstall_parts
@@ -212,7 +228,7 @@ def _init_commands():
         # refresh_parts = ["#nothing do refresh since using pacman (pacman -Scc clears cache but that's rather brutal)...  # "]
         list_installed_parts = [install_bin, "-Q"]  # Qe lists packages explicitly installed (see pacman -Q --help)
         pkg_search_parts = [install_bin, "-Ss"]
-        prerr("WARNING: GTK3_DEV_PKG is unknown for pacman")
+        echo0("WARNING: GTK3_DEV_PKG is unknown for pacman")
 
     if package_type == "deb":
         install_parts = [install_bin, "install", "-y"]
@@ -243,11 +259,11 @@ def _init_commands():
             result_msg = "FAILED ({} didn't succeed with your privileges)".format(refresh_parts)
             if returncode == 0:
                 result_msg = "OK"
-            prerr("* refreshing package list..." + result_msg)
+            echo0("* refreshing package list..." + result_msg)
         else:
-            prerr("* linuxpreinstall is not refreshing the package list since you are not a superuser.")
+            echo0("* linuxpreinstall is not refreshing the package list since you are not a superuser.")
     if verbose:
-        prerr("  * done _init_commands")
+        echo0("  * done _init_commands")
 
 
 def run_and_get_lists(cmd_parts, collect_stderr=True):
@@ -258,7 +274,7 @@ def run_and_get_lists(cmd_parts, collect_stderr=True):
     # See <https://stackabuse.com/executing-shell-commands-with-python>:
     # called = subprocess.run(list_installed_parts, stdout=subprocess.PIPE, text=True)
     # , input="Hello from the other side"
-    # prerr(called.stdout)
+    # echo0(called.stdout)
     outs = []
     errs = []
     # See <https://stackoverflow.com/a/7468726/4541104>
@@ -312,10 +328,10 @@ def get_installed():
     if list_installed_parts is not None:
         out, err = run_and_get_lists(list_installed_parts)
         if len(err) > 0:
-            prerr("Error running {}:"
+            echo0("Error running {}:"
                   "".format(" ".join(list_installed_parts)))
             for line in err:
-                prerr(line)
+                echo0(line)
             return None
     return out
 
@@ -346,7 +362,7 @@ def find_unquoted(haystack, needle, quotes=['"']):
 
 def _init_osrelease():
     if verbose:
-        prerr("* _init_osrelease...")
+        echo0("* _init_osrelease...")
     global osrelease
     if osrelease is None:
         osrelease = {}
@@ -380,10 +396,10 @@ def _init_osrelease():
                                       "".format(osrelease_path, lineN,
                                                 signRawI))
     else:
-        prerr("osrelease_path \"{}\" was not found. osrelease:{}"
+        echo0("osrelease_path \"{}\" was not found. osrelease:{}"
               "".format(osrelease_path, osrelease))
     if verbose:
-        prerr("  * done _init_osrelease")
+        echo0("  * done _init_osrelease")
 
 
 def bin_exists(name):
@@ -396,7 +412,7 @@ def bin_exists(name):
 
 def _init_packagenames():
     if verbose:
-        prerr("* _init_packagenames...")
+        echo0("* _init_packagenames...")
     global packageInfos
     if packageInfos is None:
         packageInfos = {}
@@ -420,7 +436,7 @@ def _init_packagenames():
                         pkgid = row[i].strip()
                         o[fieldName] = pkgid
                         if len(pkgid) < 1:
-                            prerr("{}:{}: Error: id is blank"
+                            echo0("{}:{}: Error: id is blank"
                                   "".format(listPath, rowNum))
                             continue
                     else:
@@ -437,9 +453,9 @@ def _init_packagenames():
                     for k, v in o.items():
                         packageInfos[pkgid][k] = v
                 if verbose:
-                    prerr("object[{}]: {}".format(pkgid, o))
+                    echo0("object[{}]: {}".format(pkgid, o))
     if verbose:
-        prerr("  * done _init_packagenames")
+        echo0("  * done _init_packagenames")
 
 
 _init_osrelease()

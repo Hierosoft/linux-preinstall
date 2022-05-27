@@ -3,7 +3,7 @@ import sys
 import select
 
 from linuxpreinstall import (
-    prerr,
+    echo0,  # formerly prerr
     is_verbose,
 )
 
@@ -36,6 +36,7 @@ def isVersionChar(s, i):
         return True
     return False
 
+
 def isVersionEnder(s, i):
     '''
     Only return true on special character, or on "." if there is not a
@@ -48,6 +49,7 @@ def isVersionEnder(s, i):
     elif s[i] in versionEnders:
         return True
     return False
+
 
 def splitVersion(s, onlyNumeric=False):
     '''
@@ -165,7 +167,7 @@ def main():
     # tests = TestStringMethods()
     # tests.test_version()
 
-    prerr("# [sortversion] is checking for data...")
+    echo0("# [sortversion] is checking for data...")
     # if sys.stdin.isatty():
     # ^ https://stackoverflow.com/a/17735803/4541104 hangs on no input :(
 
@@ -183,9 +185,9 @@ def main():
         for info in infos:
             print("".join(info['parts']))
 
-        prerr("# [sortversion] Done sorting")
+        echo0("# [sortversion] Done sorting")
     else:
-        prerr("# [sortversion] nothing to sort")
+        echo0("# [sortversion] nothing to sort")
 
 
 if __name__ == "__main__":

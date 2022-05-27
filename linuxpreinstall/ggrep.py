@@ -57,9 +57,9 @@ import sys
 import os
 import re
 from linuxpreinstall import (
-    prerr as error,
-    debug,
-    extra,
+    echo0,  # formerly prerr as error
+    echo1,  # formerly debug
+    echo2,  # formerly extra
     set_verbose,
 )
 
@@ -101,15 +101,93 @@ def _wild_increment(haystack_c, needle_c):
     return -1
 
 
-def is_like(haystack, needle, allow_blank=False, quiet=False):
+def contains(haystack, needle, allow_blank=False, quiet=False):
     '''
-    It is a filename pattern not regex, so the only wildcards are '*'
-    and '?'.
+    Check if the substring "needle" is in haystack. The behavior differs from
+    the Python "in" command according to the arguments described below.
 
     Sequential arguments:
-    needle -- a pattern such as "*.png"
+    haystack -- a string to look in
+    needle -- a string for which to look
+    allow_blank -- Instead of raising an exception on a blank needle, return
+        False and show a warning (unless quiet).
+    quiet -- Do not report errors to stderr.
+
+    Raises:
+    ValueError -- If allow_blank is not True, a blank needle will raise a
+        ValueError, otherwise there will simply be a False return.
+    TypeError -- If no other error occurs, the "in" command will raise
+        "TypeError: argument of type 'NoneType' is not iterable" if haystack is
+        None (or haystack and needle are None), or "TypeError: 'in <string>'
+        requires string as left operand, not NoneType" it needle is None.
+    '''
+    if len(needle) == 0:
+        if not allow_blank:
+            raise ValueError(
+                'The needle can\'t be blank or it would match all.'
+                ' Set to "*" to match all explicitly.'
+            )
+        else:
+            if not quiet:
+                echo0("The needle is blank so the match will be False.")
+        return False
+    return needle in haystack
+
+
+def any_contains(haystacks, needle, allow_blank=False, quiet=False,
+                 case_sensitive=True):
+    '''
+    Returns:
+    bool -- The needle is in any haystack.
+    '''
+    if not case_sensitive:
+        needle = needle.lower()
+    for rawH in haystacks:
+        haystack = rawH
+        if not case_sensitive:
+            haystack = rawH.lower()
+        # Passing case_sensitive isn't necessary since lower()
+        # is already one in that case above:
+        if contains(haystack, needle, allow_blank=allow_blank, quiet=quiet):
+            echo1("is_in_any: {} is in {}".format(needle, haystack))
+            return True
+    return False
+
+
+def contains_any(haystack, needles, allow_blank=False, quiet=False,
+                 case_sensitive=True):
+    '''
+    Returns:
+    bool -- Any needle is in the haystack.
+    '''
+    if not case_sensitive:
+        needle = haystack.lower()
+    for rawN in needles:
+        needle = rawN
+        if not case_sensitive:
+            needle = rawN.lower()
+        # Passing case_sensitive isn't necessary since lower()
+        # is already one in that case above:
+        if contains(haystack, needle, allow_blank=allow_blank, quiet=quiet):
+            echo1("is_in_any: {} is in {}".format(needle, haystack))
+            return True
+    return False
+
+
+def is_like(haystack, needle, allow_blank=False, quiet=False):
+    '''
+    Check if haystack is like needle (See needle and other arguments for
+    details).
+
+    Sequential arguments:
+    haystack -- a string in which to find the needle.
+    needle -- It is a filename pattern such as "*.png" not regex, so the
+        only wildcards are '*' and '?'.
+
+    Keyword arguments:
     allow_blank -- Instead of raising an exception on a blank needle,
         return False and show a warning (unless quiet).
+    quiet -- Do not report errors to stderr.
     '''
     req_count = 0
     prev_c = None
@@ -131,9 +209,10 @@ def is_like(haystack, needle, allow_blank=False, quiet=False):
             )
         else:
             if not quiet:
-                error("The needle is blank so the match will be False.")
+                echo0("The needle is blank so the match will be False.")
         return False
     if req_count == 0:
+        # req_count may be 0 even if has one character: "*"
         return True
     hI = 0
     nI = 0
@@ -160,7 +239,7 @@ def is_like(haystack, needle, allow_blank=False, quiet=False):
             matches += 1
         elif inc == -1:
             return False
-    extra("is_like matches={} req_count={}".format(matches, req_count))
+    echo2("is_like matches={} req_count={}".format(matches, req_count))
     return matches == req_count
 
 
@@ -176,27 +255,34 @@ def grep(pattern, path, more_args=None, include=None, recursive=True,
          quiet=True, ignore=None, ignore_root=None, gitignore=True,
          show_args_warnings=True, allow_non_regex_pattern=True):
     '''
+    Find a pattern within files in a given path (or one file if path is a file)
+
+    Sequential arguments:
+    pattern -- a regular expression or plain text substring
+    path -- Search this file or directory (limited by arguments described
+        below).
+
     Keyword arguments:
-    include -- Specify a single string or a list of strings that filter
-        which files to include. It is a filename pattern not regex (See
-        is_like documentation for details).
-    recursive -- Recursively search subdirectories (ignored if path
-        is a file).
+    include -- Specify a single string or a list of strings that filter which
+        files to include. It is a filename pattern not regex (See is_like
+        documentation for details).
+    recursive -- Recursively search subdirectories (ignored if path is a file).
     quiet -- Only return lines, do not print them.
-    ignore -- Ignore a list of files (automatically changed to content
-        of .gitignore if present and path is a directory and gitignore
-        is True).
-    ignore_base -- This is required when using ignore since .gitignore
-        may have paths starting with "/" and they must be a path
-        relative to the gitignore file.
-    gitignore -- Set to True to read .gitignore files recursively and
-        to ignore files and directories specified in those files.
-    show_args_warnings -- Show a warning for each command switch in
-        more_args that is not implemented. The value is True for only
-        one call. It will be automatically be changed to False before
-        another call.
+    ignore -- Ignore a list of files (automatically changed to content of
+        .gitignore if present and path is a directory and gitignore is True).
+    ignore_base -- This is required when using ignore since .gitignore may have
+        paths starting with "/" and they must be a path relative to the
+        gitignore file.
+    gitignore -- Set to True to read .gitignore files recursively and to ignore
+        files and directories specified in those files.
+    show_args_warnings -- Show a warning for each command switch in more_args
+        that is not implemented. The value is True for only one call. It will
+        be automatically be changed to False before another call.
     allow_non_regex_pattern -- Allow the pattern to be in string even if
         pattern is a substring rather than regex.
+
+    Returns:
+    list: A list of matching file paths.
     '''
 
     if more_args is not None:
@@ -206,7 +292,7 @@ def grep(pattern, path, more_args=None, include=None, recursive=True,
             else:
                 if show_args_warnings:
                     show_args_warnings = False
-                    error("* Warning: {} is not implemented in ggrep."
+                    echo0("* Warning: {} is not implemented in ggrep."
                           "".format(arg))
     results = []
     if include is None:
@@ -221,7 +307,7 @@ def grep(pattern, path, more_args=None, include=None, recursive=True,
     sub = os.path.split(path)[1]
     if os.path.isdir(path):
         if sub == ".git":
-            error('* ignored "{}"'.format(path))
+            echo0('* ignored "{}"'.format(path))
             return results
 
     if ignore is not None:
@@ -242,34 +328,34 @@ def grep(pattern, path, more_args=None, include=None, recursive=True,
                 ignore_s = ignore_s[:-1]
                 if absolute:
                     if os.path.isdir(path) and is_like(checkPath, ignore_s):
-                        error("* ignored {} due to {}".format(
+                        echo0("* ignored {} due to {}".format(
                             path,
                             os.path.join(ignore_root, ".gitignore"),
                         ))
                         return results
                 else:
                     if os.path.isdir(path) and is_like(sub, ignore_s):
-                        error("* ignored {} due to .gitignore".format(path))
+                        echo0("* ignored {} due to .gitignore".format(path))
                         return results
             else:
                 if absolute:
                     if os.path.isfile(path) and is_like(checkPath, ignore_s):
-                        error("* ignored {} due to .gitignore".format(path))
+                        echo0("* ignored {} due to .gitignore".format(path))
                         return results
                 else:
                     if os.path.isfile(path) and is_like(sub, ignore_s):
-                        error("* ignored {} due to .gitignore".format(path))
+                        echo0("* ignored {} due to .gitignore".format(path))
                         return results
-            extra("- {} ({}) doesn't match {}".format(checkPath, path, ignore_s))
+            echo2("- {} ({}) doesn't match {}".format(checkPath, path, ignore_s))
     if os.path.isfile(path):
-        # debug('* checking "{}"'.format(path))
+        # echo1('* checking "{}"'.format(path))
         if not is_like_any(sub, include):
             return results
         else:
             with open(path, 'r') as ins:
                 lineN = 0
                 try:
-                    extra('* Checking "{}"'.format(path))
+                    echo2('* Checking "{}"'.format(path))
                     for rawL in ins:
                         lineN += 1
                         line = rawL.rstrip("\n\r")
@@ -285,11 +371,11 @@ def grep(pattern, path, more_args=None, include=None, recursive=True,
                             if not quiet:
                                 print(result)
                         else:
-                            extra('  * pattern {} is not in "{}"'
+                            echo2('  * pattern {} is not in "{}"'
                                   ''.format(pattern, line))
                 except UnicodeDecodeError as ex:
                     # 'utf-8' codec can't decode byte 0x89 in position 0: invalid start byte
-                    error('* ignored binary file "{}" due to: {}'.format(path, str(ex)))
+                    echo0('* ignored binary file "{}" due to: {}'.format(path, str(ex)))
                     return results
 
             return results
@@ -300,7 +386,7 @@ def grep(pattern, path, more_args=None, include=None, recursive=True,
         pass
     tryIgnore = os.path.join(path, ".gitignore")
     if gitignore and os.path.isfile(tryIgnore):
-        debug('* reading "{}"'.format(tryIgnore))
+        echo1('* reading "{}"'.format(tryIgnore))
         ignore = []
         ignore_root = path
         with open(tryIgnore, 'r') as ins:
@@ -317,8 +403,9 @@ def grep(pattern, path, more_args=None, include=None, recursive=True,
     subs = None
     try:
         subs = os.listdir(listPath)
-    except FileNotFoundError:
-        error('* missing or inaccessible: "{}"'.format(listPath))
+    except FileNotFoundError as ex:
+        echo0('* missing or inaccessible: "{}" ({})'
+              ''.format(listPath, ex))
         return results
     for sub in subs:
         # The path is guaranteed *not* to be a file by now.
@@ -375,20 +462,20 @@ def main():
         elif arg == "--include":
             pass
         elif arg == "-r":
-            error("* -r (recursive) is already the default.")
+            echo0("* -r (recursive) is already the default.")
         elif arg == "-n":
             _n_arg = "-n"
         elif arg == "--no-ignore":
             gitignore = False
         elif arg == "--recursive":
             _recursive_arg = True
-            # error("* -r (recursive) is already the default.")
+            # echo0("* -r (recursive) is already the default.")
         elif pattern is None:
             pattern = arg
         else:
             if os.path.isfile(arg):
                 _recursive_arg = False
-                error('* turning off recursive mode (default in ggrep)'
+                echo0('* turning off recursive mode (default in ggrep)'
                       ' since "{}" is a file'.format(arg))
             elif arg == "--include-all":
                 if _found_include:
@@ -397,7 +484,7 @@ def main():
                         " '--include'."
                     )
 
-                error("* removing the default '--include' option so all are included.")
+                echo0("* removing the default '--include' option so all are included.")
                 _include_args = None
                 _found_include = True
                 _include_all = True
@@ -431,10 +518,8 @@ def main():
             else:
                 _more_args.append(arg)
 
-
-
         if arg == "-n":
-            error("* -n is already the default (required for"
+            echo0("* -n is already the default (required for"
                   " the functionality of {}).".format(me))
             prev_var = ""
         else:
@@ -451,12 +536,12 @@ def main():
         )
 
     count = len(_more_args)
-    error("* _more_args count: {}".format(count))
+    echo0("* _more_args count: {}".format(count))
     if _include_args is not None:
         includeCount = len(_include_args)
-        error("* _include_args count: {}".format(includeCount))
+        echo0("* _include_args count: {}".format(includeCount))
     else:
-        error("* _include_args: {}".format(_include_args))
+        echo0("* _include_args: {}".format(_include_args))
 
     if _n_arg is None:
         _n_arg = "-n"
@@ -466,14 +551,14 @@ def main():
     if _recursive_arg is None:
         _recursive_arg = True
 
-    error("* _more_args: {}".format(_more_args))
-    error("* _include_args: {}".format(_include_args))
+    echo0("* _more_args: {}".format(_more_args))
+    echo0("* _include_args: {}".format(_include_args))
     _new_args = _more_args
 
     if not _found_include:
-        error("  (using ggrep default types since not specified)")
+        echo0("  (using ggrep default types since not specified)")
     else:
-        error("* _found_include: {}".format(_found_include))
+        echo0("* _found_include: {}".format(_found_include))
 
     sys.stderr.write("grep")
     for value in _new_args:
@@ -482,10 +567,10 @@ def main():
         else:
             sys.stderr.write(" {}".format(value))
         sys.stderr.flush()
-    error()
-    error()
-    error('results (looking for "{}" in "{}"):'.format(pattern, path))
-    error()
+    echo0()
+    echo0()
+    echo0('results (looking for "{}" in "{}"):'.format(pattern, path))
+    echo0()
     results = grep(pattern, path, more_args=_new_args,
                    include=_include_args, gitignore=gitignore)
     for line in results:
@@ -501,10 +586,10 @@ def main():
         _file = line[:colon1]
         print("geany {} -l {}  # < {}".format(quoted(_file), _line_n, line[colon2+1:]))
 
-    error()
-    error("({} match(es))".format(len(results)))
-    error()
-    error("* to reduce output horizontally, hide line content via:")
+    echo0()
+    echo0("({} match(es))".format(len(results)))
+    echo0()
+    echo0("* to reduce output horizontally, hide line content via:")
     space = ""
     i = 0
     sys.stderr.write("  ")
@@ -515,10 +600,10 @@ def main():
             sys.stderr.write(space+quoted(arg))
         i += 1
         space = " "
-    error(" | cut -f1 -d\#")
+    echo0(" | cut -f1 -d\#")
 
     if not _include_all:
-        error("* to show all file types"
+        echo0("* to show all file types"
               " (revert to default grep behavior), use:")
         sys.stderr.write("  ")
         # sys.stderr.write("  `basename $0`")
@@ -533,8 +618,8 @@ def main():
                 sys.stderr.write(" "+arg)
             i += 1
         # ^ TODO: Place quotes around the param if necessary.
-        error(" --include-all")
-        error("  # and add --no-ignore to search in"
+        echo0(" --include-all")
+        echo0("  # and add --no-ignore to search in"
               " .git directories and in files listed in"
               " .gitignore files")
     return 0

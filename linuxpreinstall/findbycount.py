@@ -27,7 +27,7 @@ import os
 __author__ = 'Jake "Poikilos" Gustafson'
 # See <https://stackoverflow.com/questions/5574702/how-to-print-to-
 # stderr-in-python>
-def error(*args, **kwargs):
+def echo0(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
 
 
@@ -46,11 +46,11 @@ integerOptions = ['counts']
 
 
 def usage():
-    error(__doc__)
-    error("Defaults:")
+    echo0(__doc__)
+    echo0("Defaults:")
     for k, v in defaults.items():
-        error("  {}: {}".format(k, v))
-    error("")
+        echo0("  {}: {}".format(k, v))
+    echo0("")
 
 def findByCount(options):
     '''
@@ -92,7 +92,7 @@ def findByCount(options):
         for sub in os.listdir(parent):
             pass
     except FileNotFoundError as ex:
-        error("Error: File not found: {}".format(parent))
+        echo0("Error: File not found: {}".format(parent))
         return
     '''
     for sub in os.listdir(parent):
@@ -153,12 +153,12 @@ def main():
                                      " specified \"{}\"."
                                      "".format(thisKey, arg))
             if thisKey in lists:
-                # error("* appending to {}".format(thisKey))
+                # echo0("* appending to {}".format(thisKey))
                 if options.get(thisKey) is None:
                     options[thisKey] = []
                 options[thisKey].append(arg)
             else:
-                # error("* setting {}".format(thisKey))
+                # echo0("* setting {}".format(thisKey))
                 if options.get(thisKey) is not None:
                     raise ValueError("{} was already set."
                                      "".format(thisKey))

@@ -19,11 +19,11 @@ import sys
 # good = "/run/media/owner/BLACK16/"
 # oops = "/run/media/owner/JGustafsonExt/"
 
-from linuxpreinstall import prerr
+from linuxpreinstall import echo0
 
 
 def usage():
-    prerr(__doc__)
+    echo0(__doc__)
 
 
 def delIf(delPath, readPath, readRoot=None):
@@ -64,7 +64,7 @@ def main():
     # delIf(oops, good)
     if len(sys.argv) != 3:
         usage()
-        prerr("ERROR: You must specify one dir with extra files"
+        echo0("ERROR: You must specify one dir with extra files"
               " & one to be read for the original copies to keep.")
         exit(1)
     delif(sys.argv[1], sys.argv[2])
