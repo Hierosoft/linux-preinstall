@@ -69,6 +69,7 @@ setuptools.setup(
             'whichicon=linuxpreinstall.whichicon:main',
             'ggrep=linuxpreinstall.ggrep:main',
             # 'cb-install-theme=linuxpreinstall.codeblocks.theme:main',  # WIP
+            'backup-nginx-symlinks=linuxpreinstall.server.backup_nginx_symlinks:main',
         ],
     },
     install_requires=install_requires,

@@ -144,6 +144,9 @@ The linux-preinstall project includes various useful tools for developers in the
 #### Server Tools
 - `./server/optional/php-set-version.apache.ubuntu.sh` or `./server/optional/php-set-version.nginx.deb.sh`: Choose (specify as a parameter) a specific version of php as the system's php and get all of the matching dependencies such as for WordPress, and uninstall all other versions and their packages. Only use the script that matches your chosen server technology (Apache or NGINX)!
 
+##### Server Scripts
+- See [System commands][#system-commands].
+
 ### Script Naming Conventions
 Pick which folders and scripts to run based on whatever you want to do
 (See the "[Software and Software Group
@@ -223,7 +226,9 @@ You can use `nopackage` to install almost anything, such as a single
 file (AppImage or other), a zip file, or to install a deb package on
 any distro in your profile, all without superuser priveleges!
 
-### Other Python commands
+### System commands
+The system commands become available after installing the repository
+via pip (See the "[Install](#install)" section).
 - `findmime`: Find files by full/partial mimetype (such as "jpeg" or
   "image"!) in the current directory.
 - `cleanif`: Remove files from directory 1 if they exist in directory 2
@@ -240,6 +245,9 @@ any distro in your profile, all without superuser priveleges!
 - `whichicon`: Find what icon (.desktop) file provides a given command.
 - `ggrep`: Get a geany command to go to the line in the file from grep
   (searching within file(s)). Recursively search directories by default.
+
+#### System commands for servers
+- [backup-nginx-symlinks](linuxpreinstall/server/backup_nginx_symlinks.py)
 
 
 ## Changes
