@@ -1,16 +1,17 @@
 #!/usr/bin/env python
-
+from __future__ import print_function
 import os
 import shutil
 import traceback
 import math
-try:
+python_mr = sys.version_info.major
+if python_mr > 2:
     from tkinter import *
-    #from io import StringIO
-except:
+    # from io import StringIO
+else:
     # python 2
     from Tkinter import *
-    #from StringIO import StringIO
+    # from StringIO import StringIO
 
 def show_message(msg, console_enable=False):
     outputE.delete(0, END)

@@ -1,6 +1,5 @@
 #!/usr/bin/env python
-
-deprecated = """
+'''
 This is deprecated.
 You must use LBRY-Flatpak.sh, because:
 - The page blocks this application.
@@ -8,23 +7,28 @@ You must use LBRY-Flatpak.sh, because:
 - If you click "Yes" to upgrade LBRY using its own upgrade system, the
   icon created by this application will no longer work since it points
   to the old version and the updater removes the old version.
-"""
-exit(1)
+'''
+from __future__ import print_function
+import sys
+sys.stderr.write(__doc__)
+sys.stderr.flush()
+sys.exit(1)
 
-python_mr = 3  # major revision
-try:
+python_mr = sys.version_info.major
+if python_mr > 2:
     import urllib.request
     request = urllib.request
-except:
-    # python2
-    python_mr = 2
+else:
+    # Python 2
     import urllib2 as urllib
     request = urllib
-try:
+
+if python_mr > 2:
     from html.parser import HTMLParser
-except:
-    # python2
+else:
+    # Python 2
     from HTMLParser import HTMLParser
+
 import platform
 import os
 
@@ -56,10 +60,10 @@ class LBRYDownloadPageParser(HTMLParser):
         #   On the next commented line, python2 would say:
         #       "argument 1 must be type, not classobj"
         #     super(LBRYDownloadPageParser, self).__init__()
-        try:
+        if python_mr > 2:
             super().__init__()
             # print("Used python3 super syntax")
-        except:
+        else:
             # python2
             HTMLParser.__init__(self)
             # print("Used python2 super syntax")
@@ -263,13 +267,18 @@ class LBRYLinkManager:
 
     def get_urls(self, verbose=False, must_contain=None):
         # self.parser.urls = []  # done automatically on BODY tag
-        # python2 way: `urllib.urlopen(self.html_url)`
-        try:
-
-            response = request.urlopen(self.html_url)
-        except urllib.error.HTTPError as e:
-            print("Opening {}".format(e))
-            return None
+        if python_mr > 2:
+            try:
+                response = request.urlopen(self.html_url)
+            except urllib.error.HTTPError as e:
+                print("Opening {}".format(e))
+                return None
+        else:
+            try:
+                response = urllib.urlopen(self.html_url)
+            except urllib.error.HTTPError as e:
+                print("Opening {}".format(e))
+                return None
         dat = response.read()
         self.parser.must_contain = must_contain
         self.parser.verbose = verbose

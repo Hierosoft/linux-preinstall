@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+from __future__ import print_function
 from getpass import getpass
 # Not tried yet:
 # - pip install IpCamPy
@@ -12,25 +14,25 @@ ip = input("IP: ")
 username = input("Username: ")
 password = getpass()
 # NOTE: http://{u}:{p}@ format will not work with urlopen.
-# See HTTPBasicAuth further down instead.
+#     See HTTPBasicAuth further down instead.
 url = "http://{ip}/SnapShotJPEG?Resolution={r}&Quality={q}".format(
     ip = ip,
     r = resolution,
     q = quality
 )
-# See
-# <https://www.daniweb.com/programming/software-development/code/493004/display-an-image-from-the-web-pygame>
+# See <https://www.daniweb.com/programming/software-development/code/
+#     493004/display-an-image-from-the-web-pygame>
 
 import io
 import pygame as pg
 
-
-try:
-    # Python2
-    from urllib2 import urlopen
-except ImportError:
-    # Python3
+python_mr = sys.version_info.major
+if python_mr > 2:
+    # Python 3
     from urllib.request import urlopen
+else:
+    # Python 2
+    from urllib2 import urlopen
 # initialize pygame
 pg.init()
 pg.display.set_caption("PySecurityCam by Poikilos")

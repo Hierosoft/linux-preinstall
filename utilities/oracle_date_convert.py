@@ -1,5 +1,8 @@
 #!/usr/bin/env python
+from __future__ import print_function
 import os
+
+python_mr = sys.version_info.major
 
 digits = "0123456789"
 alphaLower = "abcdefghijklmnopqrstuvwxyz"
@@ -45,9 +48,9 @@ def addDateConv(path):
     changedCount = 0
     ins = None
     outs = None
-    try:
+    if python_mr > 2:
         ins = open(path, 'r', encoding="latin-1")
-    except TypeError:  # python 2
+    else:  # python 2
         ins = open(path, 'r')
     outs = None
     outPath = path + to_date_flag

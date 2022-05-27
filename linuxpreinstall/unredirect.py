@@ -35,19 +35,20 @@ import json
 import platform
 import copy
 from datetime import datetime, timedelta
-python_mr = sys.version_info.major
+
 try:
     import urllib.request
     request = urllib.request
 except ImportError:
-    # python2
-    # python_mr = 2
+    # Python 2
     print("* detected Python " + str(python_mr))
     import urllib2 as urllib
     request = urllib
 '''
 
-try:
+python_mr = sys.version_info.major
+
+if python_mr > 2:
     from urllib.parse import urlparse
     from urllib.parse import urlsplit
     # from urllib.parse import quote_plus
@@ -64,7 +65,7 @@ try:
                          "    sudo apt-get install python3-requests")
         sys.stderr.flush()
     from urllib.parse import parse_qs
-except ImportError:
+else:
     # Python 2
     # See <https://docs.python.org/2/howto/urllib2.html>
     from urlparse import urlparse

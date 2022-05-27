@@ -5,24 +5,26 @@ This file sends computer info to <http://expertmultimedia/ping.php>.
 Instead of this file, you can manually enter a hostname into
 <http://expertmultimedia/whoami.php>.
 """
+from __future__ import print_function
 import socket
 
-try:
+python_mr = sys.version_info.major
+
+if python_mr > 2:
     import urllib.request
     request = urllib.request
-except ImportError:
-    # python2
-    python_mr = 2
+else:
+    # Python 2
     import urllib2 as urllib
     request = urllib
 
-try:
+if python_mr > 2:
     from urllib.parse import urlparse
     from urllib.parse import urlencode
     from urllib.parse import quote
     from urllib.parse import unquote
-except ImportError:
-    # python2
+else:
+    # Python 2
     from urlparse import urlparse
     from urllib import urlencode
     from urllib import quote
