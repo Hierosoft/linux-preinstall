@@ -1,5 +1,7 @@
 #!/bin/bash
-
+# Install LBRY from flathub.
+# This script supersedes everyone/deprecated/LBRY-AppImage.py (See
+# docstring in that file for why).
 mkdir -p ~/tmp
 cd ~/tmp
 fname=io.lbry.lbry-app.flatpakref
