@@ -194,8 +194,7 @@ class InstallManager:
 
 
 def _init_commands():
-    if verbose:
-        echo0("* _init_commands...")
+    echo1("* _init_commands...")
     global refresh_parts
     global install_parts
     global uninstall_parts
@@ -259,11 +258,10 @@ def _init_commands():
             result_msg = "FAILED ({} didn't succeed with your privileges)".format(refresh_parts)
             if returncode == 0:
                 result_msg = "OK"
-            echo0("* refreshing package list..." + result_msg)
+            echo1("* refreshing package list..." + result_msg)
         else:
-            echo0("* linuxpreinstall is not refreshing the package list since you are not a superuser.")
-    if verbose:
-        echo0("  * done _init_commands")
+            echo1("* linuxpreinstall is not refreshing the package list since you are not a superuser.")
+    echo1("  * done _init_commands")
 
 
 def run_and_get_lists(cmd_parts, collect_stderr=True):
@@ -361,8 +359,7 @@ def find_unquoted(haystack, needle, quotes=['"']):
 
 
 def _init_osrelease():
-    if verbose:
-        echo0("* _init_osrelease...")
+    echo1("* _init_osrelease...")
     global osrelease
     if osrelease is None:
         osrelease = {}
@@ -398,8 +395,7 @@ def _init_osrelease():
     else:
         echo0("osrelease_path \"{}\" was not found. osrelease:{}"
               "".format(osrelease_path, osrelease))
-    if verbose:
-        echo0("  * done _init_osrelease")
+    echo1("  * done _init_osrelease")
 
 
 def bin_exists(name):
@@ -411,8 +407,7 @@ def bin_exists(name):
 
 
 def _init_packagenames():
-    if verbose:
-        echo0("* _init_packagenames...")
+    echo1("* _init_packagenames...")
     global packageInfos
     if packageInfos is None:
         packageInfos = {}
@@ -452,10 +447,8 @@ def _init_packagenames():
                 else:
                     for k, v in o.items():
                         packageInfos[pkgid][k] = v
-                if verbose:
-                    echo0("object[{}]: {}".format(pkgid, o))
-    if verbose:
-        echo0("  * done _init_packagenames")
+                echo1("object[{}]: {}".format(pkgid, o))
+    echo1("  * done _init_packagenames")
 
 
 _init_osrelease()

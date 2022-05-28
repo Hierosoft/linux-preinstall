@@ -3,7 +3,10 @@ import sys
 import select
 
 from linuxpreinstall import (
+    write0,
+    write1,
     echo0,  # formerly prerr
+    echo1,
     is_verbose,
 )
 
@@ -129,25 +132,18 @@ def splitNestedVersion(s, verbose=False):
       a dot) such as "b".
 
     '''
-    if verbose:
-        sys.stderr.write('  * running splitVersion("{}")...'
-                         ''.format(s))
-        sys.stderr.flush()
+    write1('  * running splitVersion("{}")...'.format(s))
     parts, version = splitVersion(s)
-    if verbose:
-        sys.stderr.write('got ("{}", "{}")\n'.format(parts, version))
-        sys.stderr.write('  * running splitVersion("{}", {})...'
-                         ''.format(version, True))
-        sys.stderr.flush()
+    write1('got ("{}", "{}")\n'.format(parts, version))
+    write1('  * running splitVersion("{}", {})...'
+           ''.format(version, True))
     if version is None:
         version = ""
         number = None
         suffix = None
     else:
         number, suffix = splitVersion(version, onlyNumeric=True)
-    if verbose:
-        sys.stderr.write('got ({}, "{}")\n'.format(number, suffix))
-        sys.stderr.flush()
+    write1('got ({}, "{}")\n'.format(number, suffix))
 
     if number is not None:
         number = float(number)
