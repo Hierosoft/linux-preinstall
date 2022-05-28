@@ -2,14 +2,13 @@ import unittest
 import sys
 
 from linuxpreinstall import (
-    prerr,
+    echo0,  # formerly prerr
     set_verbose,
 )
 
 from linuxpreinstall.versioning import (
     splitVersion,
     splitNestedVersion,
-    prerr,
 )
 
 # TODO: Require nopackage and use the version feature from it instead?
@@ -23,12 +22,12 @@ class TestStringMethods(unittest.TestCase):
         sys.stderr.write('* testing splitVersion("{}")...'
                          ''.format(testName))
         parts, version = splitVersion(testName)
-        prerr('got ("{}", "{}")\n'.format(parts, version))
+        echo0('got ("{}", "{}")\n'.format(parts, version))
         self.assertEqual(parts, ["something-", "2.79b", "+my_patch"])
         self.assertEqual(version, "2.79b")
-        # prerr('* testing splitVersion("{}", {})...'
+        # echo0('* testing splitVersion("{}", {})...'
         #       ''.format(version, True))
-        prerr('* testing splitNestedVersion("{}")...'.format(testName))
+        echo0('* testing splitNestedVersion("{}")...'.format(testName))
         vinfo = splitNestedVersion(testName, verbose=True)
         self.assertEqual(vinfo['parts'],
                          ["something-", "2.79b", "+my_patch"])
