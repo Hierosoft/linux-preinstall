@@ -41,6 +41,7 @@ if __name__ == "__main__":
         print("looking for module in repoDir last: {}".format(repoDir),
               file=sys.stderr)
     sys.path.append(repoDir)
+    # There is more code for the __name__ case at the bottom.
 
 
 from linuxpreinstall import (
