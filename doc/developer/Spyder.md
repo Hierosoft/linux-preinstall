@@ -24,6 +24,8 @@ If you do A or B:
 
 If you do A, B, or D, you must also restart Spyder since Spyder can't restart a kernel it didn't start.
 
+-I posted this answer along with the recommended actions (method A, but steps can apply to B above. Note that in the posted answer the solutions are simplified to A and B, so B there is equivalent to C above) at [Issue adding site-packages directory to PYTHONPATH in Spyder](https://stackoverflow.com/questions/63385123/issue-adding-site-packages-directory-to-pythonpath-in-spyder/72420773#72420773) on StackOverflow.
+
 ### Didn't work
 
 You may be able to adjust Spyder's PYTHONPATH as per
