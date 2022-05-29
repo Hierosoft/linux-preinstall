@@ -56,6 +56,7 @@ from __future__ import print_function
 import sys
 import os
 import re
+import json
 from linuxpreinstall import (
     echo0,  # formerly prerr as error
     echo1,  # formerly debug
@@ -174,7 +175,8 @@ def contains_any(haystack, needles, allow_blank=False, quiet=False,
     return False
 
 
-def is_like(haystack, needle, allow_blank=False, quiet=False):
+def is_like(haystack, needle, allow_blank=False, quiet=False,
+            haystack_start=None, needle_start=None):
     '''
     Check if haystack is like needle (See needle and other arguments for
     details).
@@ -188,14 +190,35 @@ def is_like(haystack, needle, allow_blank=False, quiet=False):
     allow_blank -- Instead of raising an exception on a blank needle,
         return False and show a warning (unless quiet).
     quiet -- Do not report errors to stderr.
+    haystack_start -- Start at this character index in haystack.
+    needle_start -- Start at this character index in needle.
     '''
+    if haystack_start is None:
+        haystack_start = 0
+    if needle_start is None:
+        needle_start = 0
+    haystack = haystack[haystack_start:]
+    needle = needle[needle_start:]
+    if (needle_start == 0) and needle.startswith("**/"):
+        needle = needle[1:]
+        # It is effectively the same, and is only different when
+        # a subfolder is specified (See
+        # <https://git-scm.com/docs/gitignore#:~:
+        # text=Two%20consecutive%20asterisks%20(%22%20**%20%22,
+        # means%20match%20in%20all%20directories.>.
+        # That circumstance is tested in test_ggrep.py.
     req_count = 0
     prev_c = None
-    for c in needle:
+    for i in range(0, len(needle)):
+        # ^ Start at 0 not needle_start, since needle is set to a
+        #   substring further up.
+        c = needle[i]
         if c == "*":
             if prev_c == "*":
                 raise ValueError(
-                    "More than one '*' in a row isn't allowed."
+                    "More than one '*' in a row in needle isn't allowed"
+                    "(needle={})"
+                    "".format(needle)
                 )
             prev_c = c
             continue
@@ -225,10 +248,36 @@ def is_like(haystack, needle, allow_blank=False, quiet=False):
         inc = _wild_increment(haystack[hI], needle[nI])
         if inc == 0:
             # *
-            if nI == (len(needle)-1):
+            if (nI+1) == len(needle):
                 # The needle ends with *, so the matching is complete.
                 return True
+            match_indices = []
             next_needle_c = needle[nI+1]
+            for try_h_i in range(hI, len(haystack)):
+                if haystack[try_h_i] == next_needle_c:
+                    echo2("  * is_like({}, {})"
+                          "".format(haystack[try_h_i:], needle[nI+1:]))
+                    if is_like(haystack, needle,
+                               allow_blank=allow_blank,
+                               quiet=quiet, haystack_start=try_h_i,
+                               needle_start=nI+1):
+                        echo2("    * True")
+                        # The rest may match from ANY starting point of
+                        # the character after *, such as:
+                        # abababc is like *ababc (should be True)
+                        # - If next_needle_c were used, that wouldn't
+                        #   return True as it should.
+                        # - To return True, the recursion will occur
+                        #   twice:
+                        #   - (abababc, ababc) -> False
+                        #   - (ababc, ababc) -> True
+                        #   - or:
+                        #     - (abababc, a*c) -> False
+                        #     - (ababc, a*c) -> True
+                        return True
+                    else:
+                        echo2("    * False")
+
             if next_needle_c == haystack[hI]:
                 nI += 2
                 matches += 1  # Only 1 since req_count doesn't have '*'
@@ -251,9 +300,10 @@ def is_like_any(haystack, needles, allow_blank=False, quiet=False):
     return False
 
 
-def grep(pattern, path, more_args=None, include=None, recursive=True,
-         quiet=True, ignore=None, ignore_root=None, gitignore=True,
-         show_args_warnings=True, allow_non_regex_pattern=True):
+def ggrep(pattern, path, more_args=None, include=None, recursive=True,
+          quiet=True, ignore=None, ignore_root=None, gitignore=True,
+          show_args_warnings=True, allow_non_regex_pattern=True,
+          trace_ignore_files={}):
     '''
     Find a pattern within files in a given path (or one file if path is a file)
 
@@ -280,6 +330,13 @@ def grep(pattern, path, more_args=None, include=None, recursive=True,
         be automatically be changed to False before another call.
     allow_non_regex_pattern -- Allow the pattern to be in string even if
         pattern is a substring rather than regex.
+    trace_ignore_files -- Like ignore, this is generated automatically.
+        If you set ignore manually, you should also initialize
+        trace_ignore_files manually, but it will be updated
+        automatically in the same way as ignore (See ignore
+        documentation). Set the key to the ignore and the value to the
+        file so that an invalid pattern can be traced back to a file
+        for error reporting purposes.
 
     Returns:
     list: A list of matching file paths.
@@ -324,29 +381,41 @@ def grep(pattern, path, more_args=None, include=None, recursive=True,
                 if checkPath.startswith(ignore_root):
                     checkPath = checkPath[len(ignore_root):]
                     # ^ Now checkPath starts with "/" like ignore_s
-            if ignore_s.endswith("/"):
-                ignore_s = ignore_s[:-1]
-                if absolute:
-                    if os.path.isdir(path) and is_like(checkPath, ignore_s):
-                        echo0("* ignored {} due to {}".format(
-                            path,
-                            os.path.join(ignore_root, ".gitignore"),
-                        ))
-                        return results
+            try:
+                if ignore_s.endswith("/"):
+                    ignore_s = ignore_s[:-1]
+                    if absolute:
+                        if (os.path.isdir(path) and is_like(checkPath, ignore_s)):
+                            echo0("* ignored {} due to {}".format(
+                                path,
+                                os.path.join(ignore_root, ".gitignore"),
+                            ))
+                            return results
+                    else:
+                        if os.path.isdir(path) and is_like(sub, ignore_s):
+                            echo0("* ignored {} due to .gitignore".format(path))
+                            return results
                 else:
-                    if os.path.isdir(path) and is_like(sub, ignore_s):
-                        echo0("* ignored {} due to .gitignore".format(path))
-                        return results
-            else:
-                if absolute:
-                    if os.path.isfile(path) and is_like(checkPath, ignore_s):
-                        echo0("* ignored {} due to .gitignore".format(path))
-                        return results
-                else:
-                    if os.path.isfile(path) and is_like(sub, ignore_s):
-                        echo0("* ignored {} due to .gitignore".format(path))
-                        return results
-            echo2("- {} ({}) doesn't match {}".format(checkPath, path, ignore_s))
+                    if absolute:
+                        if os.path.isfile(path) and is_like(checkPath, ignore_s):
+                            echo0("* ignored {} due to .gitignore".format(path))
+                            return results
+                    else:
+                        if os.path.isfile(path) and is_like(sub, ignore_s):
+                            echo0("* ignored {} due to .gitignore".format(path))
+                            return results
+            except ValueError as ex:
+                igs = ignore_s
+                rig = rawIgnore
+                echo0(
+                    'trace_ignore_files[{}] = {}  # effectively {}'
+                    ''.format(json.dumps(rawIgnore),
+                              json.dumps(trace_ignore_files.get(rig)),
+                              json.dumps(igs))
+                )
+                raise ex
+            echo2("- {} ({}) doesn't match {}"
+                  "".format(checkPath, path, ignore_s))
     if os.path.isfile(path):
         # echo1('* checking "{}"'.format(path))
         if not is_like_any(sub, include):
@@ -388,6 +457,7 @@ def grep(pattern, path, more_args=None, include=None, recursive=True,
     if gitignore and os.path.isfile(tryIgnore):
         echo1('* reading "{}"'.format(tryIgnore))
         ignore = []
+        trace_ignore_files = {}
         ignore_root = path
         with open(tryIgnore, 'r') as ins:
             for rawL in ins:
@@ -397,6 +467,7 @@ def grep(pattern, path, more_args=None, include=None, recursive=True,
                 if line.startswith("#"):
                     continue
                 ignore.append(line)
+                trace_ignore_files[line] = tryIgnore
     listPath = path
     if listPath == "":
         listPath = "."
@@ -413,7 +484,7 @@ def grep(pattern, path, more_args=None, include=None, recursive=True,
         if path == "":
             subPath = sub
         if recursive or not os.path.isdir():
-            results += grep(
+            results += ggrep(
                 pattern,
                 subPath,
                 more_args=more_args,
@@ -423,6 +494,7 @@ def grep(pattern, path, more_args=None, include=None, recursive=True,
                 ignore=ignore,
                 ignore_root=ignore_root,
                 show_args_warnings=show_args_warnings,
+                trace_ignore_files=trace_ignore_files,
             )
 
     return results
@@ -571,8 +643,8 @@ def main():
     echo0()
     echo0('results (looking for "{}" in "{}"):'.format(pattern, path))
     echo0()
-    results = grep(pattern, path, more_args=_new_args,
-                   include=_include_args, gitignore=gitignore)
+    results = ggrep(pattern, path, more_args=_new_args,
+                    include=_include_args, gitignore=gitignore)
     for line in results:
         colon1 = line.find(":")
         colon2 = line.find(":", colon1+1)

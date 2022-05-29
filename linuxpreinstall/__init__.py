@@ -141,15 +141,13 @@ packageInfos = None
 
 def set_verbose(v):
     global verbose
-    if v is True:
-        verbose = 1
-    elif v is False:
-        verbose = 0
-    elif v == 2:
-        verbose = 2
+    # NOTE: True in [0, 1] is also True!
+    verbosity_levels = [True, False, 0, 1, 2]
+    if v in verbosity_levels:
+        verbose = v
     else:
-        raise ValueError("Verbose must be True or False but {} was"
-                         " tried".format(v))
+        raise ValueError("Verbose must be any of {} but the value was"
+                         " {}.".format(verbosity_levels, v))
 
 
 class InstallManager:

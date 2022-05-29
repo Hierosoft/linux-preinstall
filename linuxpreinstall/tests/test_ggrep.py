@@ -47,23 +47,29 @@ class TestGrepStringMethods(unittest.TestCase):
         self.assertEqual(is_like("abcdef", "bcdef"), False)
         self.assertEqual(is_like("ababab", "ab"), False)
         self.assertEqual(is_like("/workspace.xml", "/workspace.xml"), True)
+        set_verbose(2)
+        self.assertEqual(is_like("abcdecde", "*cde"), True)
+        set_verbose(1)
+        self.assertEqual(is_like("abcabcde", "abc*"), True)
+        self.assertEqual(is_like("/home/foo", "*/foo"), True)
         # As per <https://git-scm.com/docs/gitignore#:~:
         # text=Two%20consecutive%20asterisks%20(%22%20**%20%22,
         # means%20match%20in%20all%20directories.>:
-        self.assertEqual(is_like("**/foo", "/home/foo"), True)
-        self.assertEqual(is_like("**/foo", "/home/example/foo"), True)
-        self.assertEqual(is_like("**/foo/bar", "/home/foo/bar"), True)
-        self.assertEqual(is_like("**/foo/bar", "/home/example/foo/bar"), True)
+        self.assertEqual(is_like("/home/foo", "**/foo"), True)
+        self.assertEqual(is_like("/home/example/foo", "**/foo"), True)
+        self.assertEqual(is_like("/home/foo/bar", "**/foo/bar"), True)
+        self.assertEqual(is_like("/home/example/foo/bar", "**/foo/bar"), True)
+        self.assertEqual(is_like("/home/example/foo/bar", "**/f*o/bar"), True)
 
         # As per python gitignore such as in
         # python-lsp-server/.gitignore such as in spyder/external-deps/:
-        self.assertEqual(is_like("**/*.vscode/", "/home/foo.vscode/"), True)
+        self.assertEqual(is_like("/home/foo.vscode/", "**/*.vscode/"), True)
 
         got_the_right_error = False
         try:
             self.assertEqual(is_like("/workspace.xml", None), False)
         except TypeError as ex:
-            self.assertEqual(str(ex), "'NoneType' object is not iterable")
+            self.assertTrue(str(ex) in ["'NoneType' object is not iterable", "'NoneType' object is not subscriptable"])
             got_the_right_error = True
         self.assertEqual(got_the_right_error, True)
 
@@ -71,7 +77,7 @@ class TestGrepStringMethods(unittest.TestCase):
         try:
             self.assertEqual(is_like(None, "/workspace.xml"), False)
         except TypeError as ex:
-            self.assertEqual(str(ex), "object of type 'NoneType' has no len()")
+            self.assertTrue(str(ex)in ["object of type 'NoneType' has no len()", "'NoneType' object is not subscriptable"])
             got_the_right_error = True
         self.assertEqual(got_the_right_error, True)
 
@@ -98,7 +104,7 @@ class TestGrepStringMethods(unittest.TestCase):
         try:
             self.assertEqual(is_like_any(None, "/home/1/abab"), False)
         except TypeError as ex:
-            self.assertEqual(str(ex), "object of type 'NoneType' has no len()")
+            self.assertTrue(str(ex) in ["object of type 'NoneType' has no len()", "'NoneType' object is not subscriptable"])
             got_the_right_error = True
         self.assertEqual(got_the_right_error, True)
 
