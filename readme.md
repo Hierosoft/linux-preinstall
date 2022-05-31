@@ -245,6 +245,8 @@ via pip (See the "[Install](#install)" section).
 - `whichicon`: Find what icon (.desktop) file provides a given command.
 - `ggrep`: Get a geany command to go to the line in the file from grep
   (searching within file(s)). Recursively search directories by default.
+- `sort-brisk-menu-favs`: can sort the favorites ("Favourites"
+  (en_GB)) menu.
 
 #### System commands for servers
 - [backup-nginx-symlinks](linuxpreinstall/server/backup_nginx_symlinks.py)
