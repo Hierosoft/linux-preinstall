@@ -200,6 +200,48 @@ def is_like(haystack, needle, allow_blank=False, quiet=False,
     haystack = haystack[haystack_start:]
     needle = needle[needle_start:]
     if (needle_start == 0):
+        double_star_i = needle.find("**")
+        if "***" in needle:
+            raise ValueError("*** is an invalid .gitignore wildcard.")
+        if needle == "**":
+            raise ValueError("** would match every directory!")
+        if (double_star_i > 0):
+            # and (double_star_i < len(needle) - 2):
+            # It is allowed to be at the end.
+            echo2("* splitting needle {} at **"
+                  "".format(json.dumps(needle)))
+            left_needle = needle[:double_star_i] + "*"
+            right_needle = needle[double_star_i+2:]
+            echo2("* testing left_needle={}"
+                  "".format(json.dumps(left_needle)))
+            if is_like(haystack, left_needle,
+                       allow_blank=allow_blank, quiet=quiet):
+                right_haystack = haystack[len(left_needle)-1:]
+                # ^ -1 to skip '*'
+                # ^ -2 to skip '*/' but that's not all that needs to be
+                #   skipped, the whole matching directory needs to be
+                #   skipped, so:
+                next_slash_i = right_haystack.find("/")
+                if next_slash_i > -1:
+                    right_haystack = right_haystack[next_slash_i:]
+                elif right_needle == "":
+                    # ** can match any folder, so the return is True
+                    # since:
+                    # - There is nothing to match after **, so any
+                    #   folder (leaf only though) matches.
+                    # - The remainder of haystack has no slash, so it is
+                    #   a leaf.
+                    return True
+                echo2("* testing right_haystack={}, right_needle={}"
+                      "".format(json.dumps(right_haystack),
+                                json.dumps(right_needle)))
+                if (right_needle == ""):
+                    if (right_haystack == ""):
+                        return True
+                    else:
+                        echo2("* WARNING: right_haystack")
+                return is_like(right_haystack, right_needle,
+                               allow_blank=True, quiet=quiet)
         if needle.startswith("**/"):
             needle = needle[1:]
             # It is effectively the same, and is only different when

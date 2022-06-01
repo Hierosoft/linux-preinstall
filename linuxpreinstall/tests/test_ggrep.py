@@ -60,6 +60,15 @@ class TestGrepStringMethods(unittest.TestCase):
         self.assertEqual(is_like("/home/foo/bar", "**/foo/bar"), True)
         self.assertEqual(is_like("/home/example/foo/bar", "**/foo/bar"), True)
         self.assertEqual(is_like("/home/example/foo/bar", "**/f*o/bar"), True)
+        self.assertEqual(is_like("/home/example/foo/bar", "/home/**/foo/bar"), True)
+        self.assertEqual(is_like("/home/examplefoo/bar", "/home/**/foo/bar"), False)
+        # self.assertEqual(is_like("/home/examplefoo/bar", "/home/**foo/bar"), False)
+        self.assertEqual(is_like("/home/example/foobar", "/home/**/foo/bar"), False)
+        # set_verbose(2)
+        self.assertEqual(is_like("/home/example/foo/bar", "/home/example/foo/**"), True)
+        # set_verbose(1)
+        self.assertEqual(is_like("/home/example/foo/bar", "**/bar"), True)
+        self.assertEqual(is_like("/home/example/foo/bar", "**/bar/bar"), False)
 
         # As per python gitignore such as in
         # python-lsp-server/.gitignore such as in spyder/external-deps/:
