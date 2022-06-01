@@ -199,14 +199,21 @@ def is_like(haystack, needle, allow_blank=False, quiet=False,
         needle_start = 0
     haystack = haystack[haystack_start:]
     needle = needle[needle_start:]
-    if (needle_start == 0) and needle.startswith("**/"):
-        needle = needle[1:]
-        # It is effectively the same, and is only different when
-        # a subfolder is specified (See
-        # <https://git-scm.com/docs/gitignore#:~:
-        # text=Two%20consecutive%20asterisks%20(%22%20**%20%22,
-        # means%20match%20in%20all%20directories.>.
-        # That circumstance is tested in test_ggrep.py.
+    if (needle_start == 0):
+        if needle.startswith("**/"):
+            needle = needle[1:]
+            # It is effectively the same, and is only different when
+            # a subfolder is specified (See
+            # <https://git-scm.com/docs/gitignore#:~:
+            # text=Two%20consecutive%20asterisks%20(%22%20**%20%22,
+            # means%20match%20in%20all%20directories.>.
+            # That circumstance is tested in test_ggrep.py.
+        elif needle.startswith("!"):
+            raise ValueError(
+                "The value should not start with '!'."
+                " The higher-level logic should check for inverse"
+                " results and handle them differently."
+            )
     req_count = 0
     prev_c = None
     for i in range(0, len(needle)):
@@ -368,10 +375,27 @@ def ggrep(pattern, path, more_args=None, include=None, recursive=True,
             return results
 
     if ignore is not None:
+        before_ignore = []
+        other_ignore = []
+        for rawIgnore in ignore:
+            if rawIgnore.startswith("!"):
+                before_ignore.append(rawIgnore)
+            else:
+                other_ignore.append(rawIgnore)
+        ignore = before_ignore + other_ignore
+        # ^ Inverse operations must happen *first* so that lookahead
+        #   is done, otherwise a loose ignore may match first and
+        #   result in an early return (which means ignore)!
         for rawIgnore in ignore:
             ignore_s = rawIgnore
             checkPath = path
             absolute = False
+            verb = "ignored"
+            if ignore_s.startswith("!"):
+                verb = "kept"
+                # For this to work, inverse strings must be processed
+                # first!
+                ignore_s = ignore_s[1:]
             if ignore_s.startswith("/"):
                 absolute = True
                 # ignore_s = [1:]
@@ -386,24 +410,48 @@ def ggrep(pattern, path, more_args=None, include=None, recursive=True,
                     ignore_s = ignore_s[:-1]
                     if absolute:
                         if (os.path.isdir(path) and is_like(checkPath, ignore_s)):
-                            echo0("* ignored {} due to {}".format(
+                            echo0("* {} {} due to {}".format(
+                                verb,
                                 path,
                                 os.path.join(ignore_root, ".gitignore"),
                             ))
-                            return results
+                            if verb == "ignored":
+                                return results
+                            else:
+                                # If inverse and matches, keep it. Stop
+                                # checking it against ignore strings.
+                                break
                     else:
                         if os.path.isdir(path) and is_like(sub, ignore_s):
-                            echo0("* ignored {} due to .gitignore".format(path))
-                            return results
+                            echo0("* {} {} due to .gitignore"
+                                  "".format(verb, path))
+                            if verb == "ignored":
+                                return results
+                            else:
+                                # If inverse and matches, keep it. Stop
+                                # checking it against ignore strings.
+                                break
                 else:
                     if absolute:
                         if os.path.isfile(path) and is_like(checkPath, ignore_s):
-                            echo0("* ignored {} due to .gitignore".format(path))
-                            return results
+                            echo0("* {} {} due to .gitignore"
+                                  "".format(verb, path))
+                            if verb == "ignored":
+                                return results
+                            else:
+                                # If inverse and matches, keep it. Stop
+                                # checking it against ignore strings.
+                                break
                     else:
                         if os.path.isfile(path) and is_like(sub, ignore_s):
-                            echo0("* ignored {} due to .gitignore".format(path))
-                            return results
+                            echo0("* {} {} due to .gitignore"
+                                  "".format(verb, path))
+                            if verb == "ignored":
+                                return results
+                            else:
+                                # If inverse and matches, keep it. Stop
+                                # checking it against ignore strings.
+                                break
             except ValueError as ex:
                 igs = ignore_s
                 rig = rawIgnore
@@ -414,8 +462,8 @@ def ggrep(pattern, path, more_args=None, include=None, recursive=True,
                               json.dumps(igs))
                 )
                 raise ex
-            echo2("- {} ({}) doesn't match {}"
-                  "".format(checkPath, path, ignore_s))
+            echo2("- {} ({}) not {} due to filter: {}"
+                  "".format(checkPath, path, verb, ignore_s))
     if os.path.isfile(path):
         # echo1('* checking "{}"'.format(path))
         if not is_like_any(sub, include):
