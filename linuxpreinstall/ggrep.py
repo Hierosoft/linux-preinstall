@@ -3,15 +3,21 @@
 ggrep
 by Jake Gustafson
 
-This program allows you to search using grep then get a geany command to go to a specific line.
-- It automatically is recursive, but you can prevent that by specifying a file (that exists) as any parameter.
-- It automatically includes only certain files as shown in the output, but you can change the file type using exactly one --include parameter.
-- Though it has more output than grep, only results go to standard output (other output goes to stderr).
+This program allows you to search using grep then get a geany command
+to go to a specific line.
+- It automatically is recursive, but you can prevent that by specifying
+  a file (that exists) as any parameter.
+- It automatically includes only certain files as shown in the output,
+  but you can change the file type using exactly one --include
+  parameter.
+- Though it has more output than grep, only results go to standard
+  output (other output goes to stderr).
 
 Differences from grep:
 - The output is a geany command for each match rather than bare output.
 - Binary files are ignored.
-- Basically no special grep options are implemented (-n/--line-number is automatic, -r/--recursive is automatic)
+- Basically no special grep options are implemented (-n/--line-number is
+  automatic, -r/--recursive is automatic)
 - stderr output differs significantly.
 
 You can install it such as via:
@@ -22,7 +28,8 @@ Then you can use it any time.
 For example, if you run:
     ggrep contains_vec3
 
-You can exclude the content and get the line number commands cleanly such as via:
+You can exclude the content and get the line number commands cleanly
+    such as via:
     ggrep contains_vec3 | cut -f1 -d\#
 
 
@@ -32,8 +39,11 @@ The output (if you don't use "| cut -f1 -d\#") is:
 grep -r contains_vec3 -n
 results:
 
-geany pyglops.py -l 606 # < pyglops.py:606:def hitbox_contains_vec3(o, pos):
-geany kivyglops.py -l 1848 # < kivyglops.py:1848:                                               self.glops[bumper_index].properties['hitbox'].contains_vec3(get_vec3_from_point(self.glops[bumpable_index]._t_ins)):
+geany pyglops.py -l 606 # < pyglops.py:606:def hitbox_contains_vec3(o,\
+ pos):
+geany kivyglops.py -l 1848 # < kivyglops.py:1848:\
+self.glops[bumper_index].properties['hitbox']\
+.contains_vec3(get_vec3_from_point(self.glops[bumpable_index]._t_ins)):
 # END of output
 
 
@@ -49,8 +59,13 @@ Options
 -------
 --verbose            Show verbose output.
 --extra              Show extra verbose output.
---no-ignore          Do not read .gitignore (If not specified, ggrep will not only ignore .git directories but also read .gitignore files recursively and ignore files and directories specified in the files).
---include-all        Include all file types (For the default grep behavior, you must specify this and --no-ignore but binary files are still ignored).
+--no-ignore          Do not read .gitignore (If not specified, ggrep
+                     will not only ignore .git directories but also
+                     read .gitignore files recursively and ignore files
+                     and directories specified in the files).
+--include-all        Include all file types (For the default grep
+                     behavior, you must specify this and --no-ignore
+                     but binary files are still ignored).
 '''
 from __future__ import print_function
 import sys
@@ -104,23 +119,25 @@ def _wild_increment(haystack_c, needle_c):
 
 def contains(haystack, needle, allow_blank=False, quiet=False):
     '''
-    Check if the substring "needle" is in haystack. The behavior differs from
-    the Python "in" command according to the arguments described below.
+    Check if the substring "needle" is in haystack. The behavior differs
+    from the Python "in" command according to the arguments described
+    below.
 
     Sequential arguments:
     haystack -- a string to look in
     needle -- a string for which to look
-    allow_blank -- Instead of raising an exception on a blank needle, return
-        False and show a warning (unless quiet).
+    allow_blank -- Instead of raising an exception on a blank needle,
+        return False and show a warning (unless quiet).
     quiet -- Do not report errors to stderr.
 
     Raises:
-    ValueError -- If allow_blank is not True, a blank needle will raise a
-        ValueError, otherwise there will simply be a False return.
+    ValueError -- If allow_blank is not True, a blank needle will raise
+        a ValueError, otherwise there will simply be a False return.
     TypeError -- If no other error occurs, the "in" command will raise
-        "TypeError: argument of type 'NoneType' is not iterable" if haystack is
-        None (or haystack and needle are None), or "TypeError: 'in <string>'
-        requires string as left operand, not NoneType" it needle is None.
+        "TypeError: argument of type 'NoneType' is not iterable" if
+        haystack is None (or haystack and needle are None), or
+        "TypeError: 'in <string>' requires string as left operand, not
+        NoneType" it needle is None.
     '''
     if len(needle) == 0:
         if not allow_blank:
@@ -266,8 +283,8 @@ def is_like(haystack, needle, allow_blank=False, quiet=False,
             if prev_c == "*":
                 raise ValueError(
                     "More than one '*' in a row in needle isn't allowed"
-                    "(needle={})"
-                    "".format(needle)
+                    " (needle={})."
+                    "".format(json.dumps(needle))
                 )
             prev_c = c
             continue
@@ -354,29 +371,33 @@ def ggrep(pattern, path, more_args=None, include=None, recursive=True,
           show_args_warnings=True, allow_non_regex_pattern=True,
           trace_ignore_files={}):
     '''
-    Find a pattern within files in a given path (or one file if path is a file)
+    Find a pattern within files in a given path (or one file if path is
+    a file)
 
     Sequential arguments:
     pattern -- a regular expression or plain text substring
-    path -- Search this file or directory (limited by arguments described
-        below).
+    path -- Search this file or directory (limited by arguments
+        described below).
 
     Keyword arguments:
-    include -- Specify a single string or a list of strings that filter which
-        files to include. It is a filename pattern not regex (See is_like
-        documentation for details).
-    recursive -- Recursively search subdirectories (ignored if path is a file).
+    include -- Specify a single string or a list of strings that filter
+        which files to include. It is a filename pattern not regex (See
+        is_like documentation for details).
+    recursive -- Recursively search subdirectories (ignored if path is a
+        file).
     quiet -- Only return lines, do not print them.
-    ignore -- Ignore a list of files (automatically changed to content of
-        .gitignore if present and path is a directory and gitignore is True).
-    ignore_base -- This is required when using ignore since .gitignore may have
-        paths starting with "/" and they must be a path relative to the
-        gitignore file.
-    gitignore -- Set to True to read .gitignore files recursively and to ignore
-        files and directories specified in those files.
-    show_args_warnings -- Show a warning for each command switch in more_args
-        that is not implemented. The value is True for only one call. It will
-        be automatically be changed to False before another call.
+    ignore -- Ignore a list of files (automatically changed to content
+        of .gitignore if present and path is a directory and gitignore
+        is True).
+    ignore_base -- This is required when using ignore since .gitignore
+        may have paths starting with "/" and they must be a path
+        relative to the gitignore file.
+    gitignore -- Set to True to read .gitignore files recursively and to
+        ignore files and directories specified in those files.
+    show_args_warnings -- Show a warning for each command switch in
+        more_args that is not implemented. The value is True for only
+        one call. It will be automatically be changed to False before
+        another call.
     allow_non_regex_pattern -- Allow the pattern to be in string even if
         pattern is a substring rather than regex.
     trace_ignore_files -- Like ignore, this is generated automatically.
@@ -451,7 +472,8 @@ def ggrep(pattern, path, more_args=None, include=None, recursive=True,
                 if ignore_s.endswith("/"):
                     ignore_s = ignore_s[:-1]
                     if absolute:
-                        if (os.path.isdir(path) and is_like(checkPath, ignore_s)):
+                        if (os.path.isdir(path)
+                                and is_like(checkPath, ignore_s)):
                             echo0("* {} {} due to {}".format(
                                 verb,
                                 path,
@@ -464,7 +486,7 @@ def ggrep(pattern, path, more_args=None, include=None, recursive=True,
                                 # checking it against ignore strings.
                                 break
                     else:
-                        if os.path.isdir(path) and is_like(sub, ignore_s):
+                        if (os.path.isdir(path) and is_like(sub, ignore_s)):
                             echo0("* {} {} due to .gitignore"
                                   "".format(verb, path))
                             if verb == "ignored":
@@ -475,7 +497,8 @@ def ggrep(pattern, path, more_args=None, include=None, recursive=True,
                                 break
                 else:
                     if absolute:
-                        if os.path.isfile(path) and is_like(checkPath, ignore_s):
+                        if (os.path.isfile(path)
+                                and is_like(checkPath, ignore_s)):
                             echo0("* {} {} due to .gitignore"
                                   "".format(verb, path))
                             if verb == "ignored":
@@ -485,7 +508,8 @@ def ggrep(pattern, path, more_args=None, include=None, recursive=True,
                                 # checking it against ignore strings.
                                 break
                     else:
-                        if os.path.isfile(path) and is_like(sub, ignore_s):
+                        if (os.path.isfile(path)
+                                and is_like(sub, ignore_s)):
                             echo0("* {} {} due to .gitignore"
                                   "".format(verb, path))
                             if verb == "ignored":
@@ -533,8 +557,10 @@ def ggrep(pattern, path, more_args=None, include=None, recursive=True,
                             echo2('  * pattern {} is not in "{}"'
                                   ''.format(pattern, line))
                 except UnicodeDecodeError as ex:
-                    # 'utf-8' codec can't decode byte 0x89 in position 0: invalid start byte
-                    echo0('* ignored binary file "{}" due to: {}'.format(path, str(ex)))
+                    # 'utf-8' codec can't decode byte 0x89 in position
+                    #  0: invalid start byte
+                    echo0('* ignored binary file "{}" due to: {}'
+                          ''.format(path, str(ex)))
                     return results
 
             return results
@@ -746,7 +772,8 @@ def main():
             )
         _line_n = line[colon1+1:colon2]
         _file = line[:colon1]
-        print("geany {} -l {}  # < {}".format(quoted(_file), _line_n, line[colon2+1:]))
+        print("geany {} -l {}  # < {}"
+              "".format(quoted(_file), _line_n, line[colon2+1:]))
 
     echo0()
     echo0("({} match(es))".format(len(results)))
