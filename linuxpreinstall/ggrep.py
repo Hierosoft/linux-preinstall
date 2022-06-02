@@ -58,7 +58,7 @@ When you enter the command, Geany would go to the exact line.
 Options
 -------
 --verbose            Show verbose output.
---extra              Show extra verbose output.
+--debug              Show extra verbose output.
 --no-ignore          Do not read .gitignore (If not specified, ggrep
                      will not only ignore .git directories but also
                      read .gitignore files recursively and ignore files
@@ -193,7 +193,7 @@ def contains_any(haystack, needles, allow_blank=False, quiet=False,
 
 
 def is_like(haystack, needle, allow_blank=False, quiet=False,
-            haystack_start=None, needle_start=None):
+            haystack_start=None, needle_start=None, indent=2):
     '''
     Check if haystack is like needle (See needle and other arguments for
     details).
@@ -209,14 +209,21 @@ def is_like(haystack, needle, allow_blank=False, quiet=False,
     quiet -- Do not report errors to stderr.
     haystack_start -- Start at this character index in haystack.
     needle_start -- Start at this character index in needle.
+    indent -- Set the visual indent level for debug output, expressed as
+        a number of spaces. The default is 2 since some higher level
+        debugging will normally be taking place and calling this
+        method.
     '''
+    tab = " " * indent
     if haystack_start is None:
         haystack_start = 0
     if needle_start is None:
         needle_start = 0
     haystack = haystack[haystack_start:]
     needle = needle[needle_start:]
-    if (needle_start == 0):
+    echo2(tab+"in is_like({}, {})"
+          "".format(json.dumps(haystack), json.dumps(needle)))
+    if needle_start == 0:
         double_star_i = needle.find("**")
         if "***" in needle:
             raise ValueError("*** is an invalid .gitignore wildcard.")
@@ -225,14 +232,15 @@ def is_like(haystack, needle, allow_blank=False, quiet=False,
         if (double_star_i > 0):
             # and (double_star_i < len(needle) - 2):
             # It is allowed to be at the end.
-            echo2("* splitting needle {} at **"
+            echo2(tab+"* splitting needle {} at **"
                   "".format(json.dumps(needle)))
             left_needle = needle[:double_star_i] + "*"
             right_needle = needle[double_star_i+2:]
-            echo2("* testing left_needle={}"
+            echo2(tab+"* testing left_needle={}"
                   "".format(json.dumps(left_needle)))
             if is_like(haystack, left_needle,
-                       allow_blank=allow_blank, quiet=quiet):
+                       allow_blank=allow_blank, quiet=quiet,
+                       indent=indent+2):
                 right_haystack = haystack[len(left_needle)-1:]
                 # ^ -1 to skip '*'
                 # ^ -2 to skip '*/' but that's not all that needs to be
@@ -242,6 +250,8 @@ def is_like(haystack, needle, allow_blank=False, quiet=False,
                 if next_slash_i > -1:
                     right_haystack = right_haystack[next_slash_i:]
                 elif right_needle == "":
+                    echo2(tab+"  * there is no right side,"
+                          " so it matches")
                     # ** can match any folder, so the return is True
                     # since:
                     # - There is nothing to match after **, so any
@@ -249,16 +259,22 @@ def is_like(haystack, needle, allow_blank=False, quiet=False,
                     # - The remainder of haystack has no slash, so it is
                     #   a leaf.
                     return True
-                echo2("* testing right_haystack={}, right_needle={}"
+                echo2(tab+"* testing right_haystack={}, right_needle={}"
                       "".format(json.dumps(right_haystack),
                                 json.dumps(right_needle)))
                 if (right_needle == ""):
                     if (right_haystack == ""):
                         return True
                     else:
-                        echo2("* WARNING: right_haystack")
+                        echo2(tab+"* WARNING: right_haystack")
                 return is_like(right_haystack, right_needle,
-                               allow_blank=True, quiet=quiet)
+                               allow_blank=True, quiet=quiet,
+                               indent=indent+2)
+            else:
+                echo2(tab+"  * False")
+                # It is already false, so return
+                # (prevent issue 22: "More than one '*' in a row").
+                return False
         if needle.startswith("**/"):
             needle = needle[1:]
             # It is effectively the same, and is only different when
@@ -276,14 +292,14 @@ def is_like(haystack, needle, allow_blank=False, quiet=False,
     req_count = 0
     prev_c = None
     for i in range(0, len(needle)):
-        # ^ Start at 0 not needle_start, since needle is set to a
-        #   substring further up.
+        # ^ 0 since needle = needle[needle_start:]
         c = needle[i]
         if c == "*":
             if prev_c == "*":
                 raise ValueError(
                     "More than one '*' in a row in needle isn't allowed"
-                    " (needle={})."
+                    " (needle={}). Outer logic should handle special"
+                    " syntax if that is allowed."
                     "".format(json.dumps(needle))
                 )
             prev_c = c
@@ -298,13 +314,16 @@ def is_like(haystack, needle, allow_blank=False, quiet=False,
             )
         else:
             if not quiet:
-                echo0("The needle is blank so the match will be False.")
+                echo0(
+                    tab
+                    + "The needle is blank so the match will be False."
+                )
         return False
     if req_count == 0:
         # req_count may be 0 even if has one character: "*"
         return True
-    hI = 0
-    nI = 0
+    hI = 0  # 0 since haystack = haystack[haystack_start:]
+    nI = 0  # 0 since needle = needle[needle_start:]
     matches = 0
     while hI < len(haystack):
         if nI >= len(needle):
@@ -319,15 +338,23 @@ def is_like(haystack, needle, allow_blank=False, quiet=False,
                 return True
             match_indices = []
             next_needle_c = needle[nI+1]
+            echo2(tab+"* checking for each possible continuation of"
+                  " needle[needle.find('*')+1]"
+                  " in haystack {}[{}:] -> {}"
+                  .format(haystack, hI, haystack[hI:]))
             for try_h_i in range(hI, len(haystack)):
                 if haystack[try_h_i] == next_needle_c:
-                    echo2("  * is_like({}, {})"
-                          "".format(haystack[try_h_i:], needle[nI+1:]))
+                    echo2(tab+"  * is_like({}[{}:] -> {}, {}[{}+1:]"
+                          " -> {})"
+                          "".format(haystack, try_h_i,
+                                    haystack[try_h_i:],
+                                    needle, nI, needle[nI+1:]))
                     if is_like(haystack, needle,
                                allow_blank=allow_blank,
                                quiet=quiet, haystack_start=try_h_i,
-                               needle_start=nI+1):
-                        echo2("    * True")
+                               needle_start=nI+1,
+                               indent=indent+2):
+                        echo2(tab+"    * True")
                         # The rest may match from ANY starting point of
                         # the character after *, such as:
                         # abababc is like *ababc (should be True)
@@ -342,7 +369,7 @@ def is_like(haystack, needle, allow_blank=False, quiet=False,
                         #     - (ababc, a*c) -> True
                         return True
                     else:
-                        echo2("    * False")
+                        echo2(tab+"    * False")
 
             if next_needle_c == haystack[hI]:
                 nI += 2
@@ -354,7 +381,8 @@ def is_like(haystack, needle, allow_blank=False, quiet=False,
             matches += 1
         elif inc == -1:
             return False
-    echo2("is_like matches={} req_count={}".format(matches, req_count))
+    echo2(tab+"is_like matches={} req_count={}"
+          "".format(matches, req_count))
     return matches == req_count
 
 
@@ -428,9 +456,12 @@ def ggrep(pattern, path, more_args=None, include=None, recursive=True,
         include = [include]
     if isinstance(ignore, str):
         ignore = [ignore]
+    ig_path = ".gitignore"
     if ignore is not None:
         if not isinstance(ignore_root, str):
             raise ValueError("ignore requires ignore_root")
+        else:
+            ig_path = os.path.join(ignore_root, ".gitignore")
     sub = os.path.split(path)[1]
     if os.path.isdir(path):
         if sub == ".git":
@@ -477,7 +508,7 @@ def ggrep(pattern, path, more_args=None, include=None, recursive=True,
                             echo0("* {} {} due to {}".format(
                                 verb,
                                 path,
-                                os.path.join(ignore_root, ".gitignore"),
+                                ig_path,
                             ))
                             if verb == "ignored":
                                 return results
@@ -487,8 +518,8 @@ def ggrep(pattern, path, more_args=None, include=None, recursive=True,
                                 break
                     else:
                         if (os.path.isdir(path) and is_like(sub, ignore_s)):
-                            echo0("* {} {} due to .gitignore"
-                                  "".format(verb, path))
+                            echo0("* {} {} due to {}"
+                                  "".format(verb, path, ig_path))
                             if verb == "ignored":
                                 return results
                             else:
@@ -499,8 +530,8 @@ def ggrep(pattern, path, more_args=None, include=None, recursive=True,
                     if absolute:
                         if (os.path.isfile(path)
                                 and is_like(checkPath, ignore_s)):
-                            echo0("* {} {} due to .gitignore"
-                                  "".format(verb, path))
+                            echo0("* {} {} due to {}"
+                                  "".format(verb, path, ig_path))
                             if verb == "ignored":
                                 return results
                             else:
@@ -510,8 +541,8 @@ def ggrep(pattern, path, more_args=None, include=None, recursive=True,
                     else:
                         if (os.path.isfile(path)
                                 and is_like(sub, ignore_s)):
-                            echo0("* {} {} due to .gitignore"
-                                  "".format(verb, path))
+                            echo0("* {} {} due to {}"
+                                  "".format(verb, path, ig_path))
                             if verb == "ignored":
                                 return results
                             else:
@@ -528,7 +559,7 @@ def ggrep(pattern, path, more_args=None, include=None, recursive=True,
                               json.dumps(igs))
                 )
                 raise ex
-            echo2("- {} ({}) not {} due to filter: {}"
+            echo2("- {} ({}) not {} by filter: {}"
                   "".format(checkPath, path, verb, ignore_s))
     if os.path.isfile(path):
         # echo1('* checking "{}"'.format(path))
@@ -569,6 +600,10 @@ def ggrep(pattern, path, more_args=None, include=None, recursive=True,
         # "FileNotFoundError: [Errno 2] No such file or directory: "
         # return results
         pass
+    # Even though tryIgnore occurs last, it will happen before any file
+    # in the directory, since path that is dir is in the *same* depth
+    # as the file at that depth and therefore such a .gitignore should
+    # *not* affect any file at that level.
     tryIgnore = os.path.join(path, ".gitignore")
     if gitignore and os.path.isfile(tryIgnore):
         echo1('* reading "{}"'.format(tryIgnore))
@@ -677,8 +712,8 @@ def main():
                 _found_include = True
                 _include_all = True
             elif arg == "--verbose":
-                set_verbose(True)
-            elif arg == "--extra":
+                set_verbose(1)
+            elif arg == "--debug":
                 set_verbose(2)
             elif prev_var == "--include":
                 if _include_all:

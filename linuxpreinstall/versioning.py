@@ -1,6 +1,9 @@
+#!/usr/bin/env python
+from __future__ import print_function
 import os
 import sys
 import select
+import json
 
 from linuxpreinstall import (
     write0,
@@ -132,18 +135,23 @@ def splitNestedVersion(s, verbose=False):
       a dot) such as "b".
 
     '''
-    write1('  * running splitVersion("{}")...'.format(s))
+    write1('  * running splitVersion({})...'
+           ''.format(json.dumps(s)))
     parts, version = splitVersion(s)
-    write1('got ("{}", "{}")\n'.format(parts, version))
-    write1('  * running splitVersion("{}", {})...'
-           ''.format(version, True))
+    write1('got ({}, {})\n'
+           ''.format(json.dumps(parts), json.dumps(version)))
+    write1('  * running splitVersion({}, {})...'
+           ''.format(json.dumps(version), True))
     if version is None:
         version = ""
         number = None
         suffix = None
     else:
         number, suffix = splitVersion(version, onlyNumeric=True)
-    write1('got ({}, "{}")\n'.format(number, suffix))
+    write1('got ({}, {})\n'.format(
+        json.dumps(number),
+        json.dumps(suffix),
+    ))
 
     if number is not None:
         number = float(number)

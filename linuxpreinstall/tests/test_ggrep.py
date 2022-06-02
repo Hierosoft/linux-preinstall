@@ -47,9 +47,7 @@ class TestGrepStringMethods(unittest.TestCase):
         self.assertEqual(is_like("abcdef", "bcdef"), False)
         self.assertEqual(is_like("ababab", "ab"), False)
         self.assertEqual(is_like("/workspace.xml", "/workspace.xml"), True)
-        set_verbose(2)
         self.assertEqual(is_like("abcdecde", "*cde"), True)
-        set_verbose(1)
         self.assertEqual(is_like("abcabcde", "abc*"), True)
         self.assertEqual(is_like("/home/foo", "*/foo"), True)
         # As per <https://git-scm.com/docs/gitignore#:~:
@@ -73,6 +71,16 @@ class TestGrepStringMethods(unittest.TestCase):
         # As per python gitignore such as in
         # python-lsp-server/.gitignore such as in spyder/external-deps/:
         self.assertEqual(is_like("/home/foo.vscode/", "**/*.vscode/"), True)
+        self.assertEqual(is_like("Examples/d/foo/example.d", "Examples/d/**/example.d"), True)
+        set_verbose(2)
+        self.assertEqual(is_like(".gitattributes", "Examples/d/**/example.d"), False)
+        # ^ Test for regression regarding issue #22:
+        '''
+        ValueError: More than one '*' in a row in needle isn't allowed
+        (needle="Examples/d/**/example.d"). Outer logic should handle
+        special syntax if that is allowed.
+        '''
+        set_verbose(1)
 
         got_the_right_error = False
         try:
