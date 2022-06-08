@@ -787,8 +787,8 @@ def main():
         else:
             prev_var = arg
 
-    # if path is None:
-    #     path = ""
+    if len(paths) == 0:
+        paths.append("")  # Use the current directory but don't show it.
 
     if prev_var == "--include":
         raise ValueError(
