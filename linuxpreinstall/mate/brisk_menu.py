@@ -134,7 +134,7 @@ def main():
     # print("favs: {}".format(favs))
     fav_names = [sc_fn_to_name(a) for a in favs]
     print("fav_names: {}".format(fav_names))
-    print("Restarting mate-panel to completet the process...")
+    print("Restarting mate-panel to complete the process...")
     p = Popen(['mate-panel', '--replace']) # something long running
 
 

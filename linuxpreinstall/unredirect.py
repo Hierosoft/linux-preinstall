@@ -30,23 +30,24 @@ Example:
 from __future__ import print_function
 import sys
 import os
+python_mr = sys.version_info.major
 '''
 import json
 import platform
 import copy
 from datetime import datetime, timedelta
 
-try:
+if python_mr > 2:  # try:
     import urllib.request
     request = urllib.request
-except ImportError:
+else:  # except ImportError:
     # Python 2
     print("* detected Python " + str(python_mr))
     import urllib2 as urllib
     request = urllib
 '''
 
-python_mr = sys.version_info.major
+
 
 if python_mr > 2:
     from urllib.parse import urlparse

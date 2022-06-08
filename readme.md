@@ -85,6 +85,8 @@ There are some parts of linux-preinstall that are in current use for computer cl
 ## Scripts
 Beyond tutorials and examples, linux-preinstall includes many usable (See disclaimer in [license](license.txt)) scripts.
 
+The following subsections describe each category of scripts.
+
 ### Software and Software Group Installation
 The most frequent type of script included is one that installs a program that is hard to install or installs a list of programs related to a specific type of user or workflow. This is more effective than `tasksel` (for Debian/Ubuntu) or `groupinstall` (for RedHat/Fedora) because the programs and groups here are recommendations not merely a full list that may leave you unsure of what will work well, or a list that is only for a fixed role of a computer rather than a circumstantially elected or self-selected role of a person. In the case of the server folder here, that is a computer role, but that is mostly an exception and applies to webmasters. It is also more fine-grained than an "x server" group in group systems (where "x" is LAMP [Linux-Apache-MySQL-PHP] or something like that) in that each of this repo's scripts handles installation for a specific workflow and not more.
 
@@ -146,6 +148,58 @@ The linux-preinstall project includes various useful tools for developers in the
 
 ##### Server Scripts
 - See [System commands][#system-commands].
+
+#### Configuration Tools
+##### MATE
+The linuxpreinstall.mate module manages the MATE desktop environment.
+
+For managing panels, the list of IDs is a list of strings, but each
+object definition is a different path. Use the id to construct the path.
+The structure is clear when browsing org/mate/panel/objects using
+dconf-editor:
+
+Each item has the following values (IDs/values in parens
+below are only examples). This list is a list of values for one item
+(the example item is org/mate/panel/objects/object-1/, which varies
+depending on your configuration (the actual ID folder would be in
+`gsettings get org.mate.panel object-id-list`.
+- enumeration action-type 'The action type this button represents.
+  Possible values are "lock", "logout", "run", "search" and
+  "screenshot". This key is only relevant if the object_type key is
+  "action-applet".'
+  - Default: 'none'
+  - Current value: Default value
+- string applet-iid:
+  - "WnckletFactory::ShowDesktopApplet" (object-1)
+- string attached-toplevel-id "Panel attached to drawer"
+  (default '', Current value: Default value)
+- string custom-icon
+- Boolean has-arrow (true)
+- string launcher-location
+  (default '', Current value: Default value)
+- Boolean locked
+- menu-string path 'The path from which the menu contents is
+  [constructed]. This key is only relevant if the use_menu_path key is true
+  and the object_type key is "menu-object".' [fixed spelling]
+  - Default: 'applications:/'
+  - Current value: Default value
+- enumeration object-type
+  - Default: 'launcher'
+  - Current value: 'applet'
+- Boolean panel-right-stick 'Interpret position relative to the
+  bottom/right edge'
+- i (Signed 32-bit integer) position: "...number of pixels from the
+  left (or top if vertical) panel edge." -- See also
+  `panel-right-stick`.
+- string tooltip
+- string toplevel-id: "Toplevel panel containing object"
+  - Default: ''
+  - Current value: 'top'
+- Boolean use-custom-con
+- Boolean use-menu-path: "Use custom path for menu contents"
+  - Default: false
+  - Current value: Default value
+
 
 ### Script Naming Conventions
 Pick which folders and scripts to run based on whatever you want to do
@@ -247,6 +301,8 @@ via pip (See the "[Install](#install)" section).
   (searching within file(s)). Recursively search directories by default.
 - `sort-brisk-menu-favs`: can sort the favorites ("Favourites"
   (en_GB)) menu.
+- `remove-bad-mate-items`: Remove bad mate items (if no param is
+  specified, remove items with a blank `applet-iid`).
 
 #### System commands for servers
 - [backup-nginx-symlinks](linuxpreinstall/server/backup_nginx_symlinks.py)
