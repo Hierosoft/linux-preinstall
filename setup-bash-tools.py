@@ -134,6 +134,12 @@ def appendFileLine(path, line):
         outs.write(line + "\n")
 
 
+myConfDir = os.path.join(profile, ".config", "linux-preinstall")
+if not os.path.isdir(myConfDir):
+    os.makedirs(myConfDir)
+
+globalsPath = os.path.join(myConfDir, "globals.rc")
+
 def appendConfLine(line):
     appendFileLine(globalsPath, line)
 
@@ -173,11 +179,6 @@ def main():
             " (tried in {})".format(rcPath)
         )
 
-    myConfDir = os.path.join(profile, ".config", "linux-preinstall")
-    if not os.path.isdir(myConfDir):
-        os.makedirs(myConfDir)
-
-    globalsPath = os.path.join(myConfDir, "globals.rc")
     indent = ""
     confLine = 'LINUX_PREINSTALL="{}"'.format(LINUX_PREINSTALL)
     if not os.path.isfile(globalsPath):
