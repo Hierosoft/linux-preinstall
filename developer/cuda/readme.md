@@ -19,11 +19,11 @@ The lists of tools in the subsections below are limited to ones I know about tha
   - The training data download & training instructions are included in the readme.
 
 ### Mixed Use
-#### AI Gigapixel, 2D to 3D, NeRF, and Neural Volume
-"[ACM Transactions on Graphics (SIGGRAPH 2022)](https://nvlabs.github.io/instant-ngp/)" has code regarding all 4 topics. Neural Volumes converts cloud/other photos to volumetric data.
+#### AI upscaling and 2D to 3D
+Specifically, the techniques in "[ACM Transactions on Graphics (SIGGRAPH 2022)](https://nvlabs.github.io/instant-ngp/)" (2022) are "Neural gigapixel images", "Neural SDF" (non-textured 2D to 3D), NeRF (textured 2D to 3D), and "Neural volumes" (converts cloud/other photos to volumetric data).
 
 The code is at [instant-ngp](https://github.com/NVlabs/instant-ngp) (Instant NeRFs) by NVLabs. The subsections below describe the status.
 
 ##### NeRF
-Until how to train is made clear, it seems difficult to get started. The fox example seems to be the only example that works (only tested successfully on Windows, but may work on Linux--See the [Install](#install) section above), and it has metadata regarding camera positions already. Trying to run commands in the readme results in missing file errors.
+Until how to train is made clear, it seems difficult to get started. The fox example seems to be the only example that works (only tested successfully on Windows, but may work on Linux--It failed on a GeForce Titan Black on Windows. See the [Install](#install) section above). The fox example has metadata regarding camera positions already, so whether reproducing the result without that data is possible is unclear. Trying to run commands in the readme results in missing file errors.
 - It is still maintained as of June 2022, so it may work now or in a future commit.
