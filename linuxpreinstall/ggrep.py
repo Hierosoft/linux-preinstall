@@ -866,7 +866,6 @@ def main():
         echo0("({} match(es))".format(len(results)))
         total_count += len(results)
 
-    del path
     if len(paths) > 0:
         echo0()
         echo0("({} match(es) total)".format(total_count))
