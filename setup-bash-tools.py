@@ -302,7 +302,7 @@ def main():
         if len(got_chm_lines) == 0:
             appendFileLine(sh_rc_path, cmd_history_multisession_sh)
             echo0("* wrote multi-session bash history saving to {}"
-                  "".format(got_sh_line))
+                  "".format(sh_rc_path))
         elif len(got_chm_lines) == 3:
             echo0("* {} already has multi-session bash history saving."
                   "".format(sh_rc_path))
