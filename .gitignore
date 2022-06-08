@@ -167,3 +167,5 @@ generated.md
 # only should exist in root of repo:
 /PostInstallInstructions.md
 /developer/testdisk.log
+cuda-repo-ubuntu2004-11-3-local_11.3.1-465.19.01-1_amd64.deb
+cuda-repo-ubuntu2204-11-7-local_11.7.0-515.43.04-1_amd64.deb
