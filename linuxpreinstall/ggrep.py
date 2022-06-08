@@ -102,6 +102,7 @@ default_includes = [
     "*.twig",
     "*.ini",
     "*.txt",
+    "*.desktop",
 ]
 
 def usage():
@@ -418,7 +419,8 @@ def ggrep(pattern, path, more_args=None, include=None, recursive=True,
     Sequential arguments:
     pattern -- a regular expression or plain text substring
     path -- Search this file or directory (limited by arguments
-        described below).
+        described below). If "", the current directory will be searched
+        but excluded from the beginning of each result.
 
     Keyword arguments:
     include -- Specify a single string or a list of strings that filter
@@ -479,6 +481,7 @@ def ggrep(pattern, path, more_args=None, include=None, recursive=True,
         else:
             ig_path = os.path.join(ignore_root, ".gitignore")
     sub = os.path.split(path)[1]
+    # Do not ignore if "" even if .git, so let sub  ""--isdir("")==False
     if os.path.isdir(path):
         if sub == ".git":
             echo0('* ignored "{}"'.format(path))
@@ -650,6 +653,8 @@ def ggrep(pattern, path, more_args=None, include=None, recursive=True,
               ' (neither a file nor a directory): "{}" ({})'
               ''.format(listPath, ex))
         return results
+    echo1("* searching {} sub(s) in {}"
+          "".format(len(subs), json.dumps(path)))
     for sub in subs:
         # The path is guaranteed *not* to be a file by now.
         subPath = os.path.join(path, sub)
