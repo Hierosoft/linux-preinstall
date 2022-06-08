@@ -1,6 +1,11 @@
 # CUDA
 Until a PyTorch release for CUDA 11.7, CUDA 11.3 and therefore Ubuntu 20.04 Focal Fossa or Fedora 33 is necessary¸ or any other OS listed after choosing version 11.3 ([11.3.1](https://developer.nvidia.com/cuda-11-3-1-download-archive?target_os=Linux) should work) at the [CUDA Toolkit Archive](https://developer.nvidia.com/cuda-toolkit-archive). See setup scripts for details on the arduous apt problems that occur.
 
+Here are the official documents used for reference and why they didn't solve the issue:
+- [CUDA Compatibility](https://docs.nvidia.com/deploy/cuda-compatibility/index.html) "describes the use of new CUDA toolkit components on systems with older base installations" but doesn't describe Python component compatibility.
+- [NVIDIA CUDA Toolkit Release Notes](https://docs.nvidia.com/cuda/cuda-toolkit-release-notes/index.html): This page lists the minimum driver version for each CUDA version.
+  - However, instead of using this list, as noted in [step1-11.3.sh][ubuntu-20.04/step1-11.3.sh] the version you should get is in the name of the package you chose such as nvidia-driver-465 where 465 is the version in the package filename "cuda-repo-ubuntu2004-11-3-local_11.3.1-465.19.01-1_amd64.deb".
+
 
 ## Install
 Installing CUDA will have to be done using the steps at the site above, but will only work for CUDA toolkit versions that also have a corresponding pytorch and minicuda on pypi. See subfolder(s) in this folder for install scripts related to your distro and version.
