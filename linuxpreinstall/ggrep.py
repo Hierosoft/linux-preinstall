@@ -79,11 +79,14 @@ from linuxpreinstall import (
     set_verbose,
 )
 
-_include_args = [
+default_includes = [
     "*.py",
     "*.lua",
+    "*.c",
+    "*.cxx",
     "*.cpp",
     "*.h",
+    "*.hpp",
     "*.js",
     "*.sh",
     "*.yml",
@@ -103,7 +106,7 @@ _include_args = [
 
 def usage():
     print(__doc__)
-    print("Default types included: {}".format(_include_args))
+    print("Default types included: {}".format(default_includes))
     print("")
 
 
@@ -453,7 +456,10 @@ def ggrep(pattern, path, more_args=None, include=None, recursive=True,
     if more_args is not None:
         for arg in more_args:
             if arg == "--include-all":
-                raise ValueError("--include-all should set include to None")
+                raise ValueError(
+                    "--include-all should set include to None, not be"
+                    " sent to ggrep."
+                )
             else:
                 if show_args_warnings:
                     show_args_warnings = False
@@ -639,6 +645,11 @@ def ggrep(pattern, path, more_args=None, include=None, recursive=True,
         echo0('* missing or inaccessible: "{}" ({})'
               ''.format(listPath, ex))
         return results
+    except NotADirectoryError as ex:
+        echo0('* missing or inaccessible'
+              ' (neither a file nor a directory): "{}" ({})'
+              ''.format(listPath, ex))
+        return results
     for sub in subs:
         # The path is guaranteed *not* to be a file by now.
         subPath = os.path.join(path, sub)
@@ -674,7 +685,7 @@ def quoted(path):
 
 # TODO: Ignore the .git directory.
 def main():
-    global _include_args
+    include_args = default_includes.copy()
     me = "ggrep"
     prev_var = ""
     _found_include = False
@@ -685,7 +696,8 @@ def main():
     _include_all = False
     gitignore = True
     pattern = None
-    path = None
+    # path = None
+    paths = []
 
     for argI in range(1, len(sys.argv)):
         arg = sys.argv[argI]
@@ -694,6 +706,7 @@ def main():
             return 0
         elif arg == "--include":
             pass
+            # prev_var will be checked, so there is nothing to do yet.
         elif arg == "-r":
             echo0("* -r (recursive) is already the default.")
         elif arg == "-n":
@@ -707,9 +720,22 @@ def main():
             pattern = arg
         else:
             if os.path.isfile(arg):
-                _recursive_arg = False
-                echo0('* turning off recursive mode (default in ggrep)'
-                      ' since "{}" is a file'.format(arg))
+                # _recursive_arg = False
+                # echo0('* turning off recursive mode'
+                #       ' (default in ggrep) since "{}" is a file'
+                #       ''.format(arg))
+                # ^ -r is never used anyway (ggrep is always recursive
+                #   unless a file is detected in paths)
+                paths.append(arg)
+                '''
+                if path is not None:
+                    raise ValueError(
+                        'Having more than one file parameter is not'
+                        ' implemented. "{}" was already before "{}"'
+                        ''.format(path, arg)
+                    )
+                path = arg
+                '''
             elif arg == "--include-all":
                 if _found_include:
                     raise ValueError(
@@ -718,7 +744,7 @@ def main():
                     )
 
                 echo0("* removing the default '--include' option so all are included.")
-                _include_args = None
+                include_args = None
                 _found_include = True
                 _include_all = True
             elif arg == "--verbose":
@@ -733,14 +759,16 @@ def main():
                     )
 
                 if not _found_include:
-                    _include_args = []
+                    include_args = []
 
                 _found_include = True
                 # grep can accept more than one --include, so force the
                 # old one and the new one:
-                _include_args.append("--include")
-                _include_args.append(arg)
-            elif path is None:
+                include_args.append("--include")
+                include_args.append(arg)
+            elif os.path.isdir(arg):  # elif path is None:
+                paths.append(arg)
+                '''
                 if arg.startswith("-"):
                     if not os.path.exists(arg):
                         raise ValueError(
@@ -748,6 +776,7 @@ def main():
                             " nor a file.".format(arg, me)
                         )
                 path = arg
+                '''
             else:
                 _more_args.append(arg)
 
@@ -758,8 +787,8 @@ def main():
         else:
             prev_var = arg
 
-    if path is None:
-        path = ""
+    # if path is None:
+    #     path = ""
 
     if prev_var == "--include":
         raise ValueError(
@@ -770,11 +799,11 @@ def main():
 
     count = len(_more_args)
     echo0("* _more_args count: {}".format(count))
-    if _include_args is not None:
-        includeCount = len(_include_args)
-        echo0("* _include_args count: {}".format(includeCount))
+    if include_args is not None:
+        includeCount = len(include_args)
+        echo0("* include_args count: {}".format(includeCount))
     else:
-        echo0("* _include_args: {}".format(_include_args))
+        echo0("* include_args: {}".format(include_args))
 
     if _n_arg is None:
         _n_arg = "-n"
@@ -785,7 +814,7 @@ def main():
         _recursive_arg = True
 
     echo0("* _more_args: {}".format(_more_args))
-    echo0("* _include_args: {}".format(_include_args))
+    echo0("* include_args: {}".format(include_args))
     _new_args = _more_args
 
     if not _found_include:
@@ -800,28 +829,47 @@ def main():
         else:
             sys.stderr.write(" {}".format(value))
         sys.stderr.flush()
-    echo0()
-    echo0()
-    echo0('results (looking for "{}" in "{}"):'.format(pattern, path))
-    echo0()
-    results = ggrep(pattern, path, more_args=_new_args,
-                    include=_include_args, gitignore=gitignore)
-    for line in results:
-        colon1 = line.find(":")
-        colon2 = line.find(":", colon1+1)
-        if colon2 <= colon1:
-            raise RuntimeError(
-                "The grep result must have the line for {}"
-                " to work but doesn't have 2 colons: {}"
-                "".format(me, line)
-            )
-        _line_n = line[colon1+1:colon2]
-        _file = line[:colon1]
-        print("geany {} -l {}  # < {}"
-              "".format(quoted(_file), _line_n, line[colon2+1:]))
+    num = 0
+    total_count = 0
+    for path in paths:
+        num += 1
+        echo0()
+        echo0()
+        if len(paths) > 1:
+            echo0('results set {} of {} (looking for "{}" in "{}"):'
+                  ''.format(num, len(paths), pattern, path))
+        else:
+            echo0('results (looking for "{}" in "{}"):'
+                  ''.format(pattern, path))
+        echo0()
+        current_inc = include_args
+        if os.path.isfile(path):
+            current_inc = None
+            # ^ don't filter an explicitly-set file!
+        results = ggrep(pattern, path, more_args=_new_args,
+                        include=current_inc, gitignore=gitignore)
+        for line in results:
+            colon1 = line.find(":")
+            colon2 = line.find(":", colon1+1)
+            if colon2 <= colon1:
+                raise RuntimeError(
+                    "The grep result must have the line for {}"
+                    " to work but doesn't have 2 colons: {}"
+                    "".format(me, line)
+                )
+            _line_n = line[colon1+1:colon2]
+            _file = line[:colon1]
+            print("geany {} -l {}  # < {}"
+                  "".format(quoted(_file), _line_n, line[colon2+1:]))
 
-    echo0()
-    echo0("({} match(es))".format(len(results)))
+        echo0()
+        echo0("({} match(es))".format(len(results)))
+        total_count += len(results)
+
+    del path
+    if len(paths) > 0:
+        echo0()
+        echo0("({} match(es) total)".format(total_count))
     echo0()
     echo0("* to reduce output horizontally, hide line content via:")
     space = ""
