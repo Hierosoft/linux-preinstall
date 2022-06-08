@@ -13,7 +13,7 @@ The lists of tools in the subsections below are limited to ones I know about tha
 - [nvdiffrec](https://github.com/NVlabs/nvdiffrec) (2022) by NVLabs: a 2D to 3D converter that understands light and therefore works with fewer images.
   - The training data download & training instructions are included in the readme.
 
-### Multi-use Projects
+### Mixed Use
 #### AI Gigapixel, 2D to 3D, NeRF, and Neural Volume
 "[ACM Transactions on Graphics (SIGGRAPH 2022)](https://nvlabs.github.io/instant-ngp/)" has code regarding all 4 topics. Neural Volumes converts cloud/other photos to volumetric data.
 
