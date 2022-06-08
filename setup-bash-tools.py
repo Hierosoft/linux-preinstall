@@ -100,6 +100,8 @@ def get_line(path, needle, comment_mark="#", indent="  "):
     comment_mark -- Ignore any line that starts with this (whitespace
         is excluded).
     '''
+    if not os.path.isfile(path):
+        return None
     with open(path, 'r') as ins:
         for rawL in ins:
             line = rawL.rstrip("\r\n")
@@ -114,6 +116,8 @@ def get_line(path, needle, comment_mark="#", indent="  "):
 
 
 def get_line_startswith(path, needle, strip_line=True):
+    if not os.path.isfile(path):
+        return None
     with open(path, 'r') as ins:
         for rawL in ins:
             line = rawL.rstrip("\r\n")
