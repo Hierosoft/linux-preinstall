@@ -411,7 +411,8 @@ def is_like_any(haystack, needles, allow_blank=False, quiet=False):
 def ggrep(pattern, path, more_args=None, include=None, recursive=True,
           quiet=True, ignore=None, ignore_root=None, gitignore=True,
           show_args_warnings=True, allow_non_regex_pattern=True,
-          trace_ignore_files={}):
+          trace_ignore_files={}, follow_symlinks=True,
+          followed_symlink_targets=[]):
     '''
     Find a pattern within files in a given path (or one file if path is
     a file)
@@ -450,6 +451,10 @@ def ggrep(pattern, path, more_args=None, include=None, recursive=True,
         documentation). Set the key to the ignore and the value to the
         file so that an invalid pattern can be traced back to a file
         for error reporting purposes.
+    follow_symlinks -- Follow symlinked directories.
+    followed_symlink_targets -- This is automatically generated. Any
+        symlink target that was followed already won't be followed
+        again, even if relative and recursive.
 
     Returns:
     list: A list of matching file paths.
@@ -656,11 +661,23 @@ def ggrep(pattern, path, more_args=None, include=None, recursive=True,
     echo1("* searching {} sub(s) in {}"
           "".format(len(subs), json.dumps(path)))
     for sub in subs:
-        # The path is guaranteed *not* to be a file by now.
+        # The parent path is guaranteed *not* to be a file by now.
         subPath = os.path.join(path, sub)
         if path == "":
             subPath = sub
-        if recursive or not os.path.isdir():
+        if recursive or not os.path.isdir(subPath):
+            # Always avoid recursive symlinks:
+            if os.path.islink(subPath):
+                if not follow_symlinks:
+                    echo0("* follow_symlinks=False, skipping {} -> {}"
+                          "".format(subPath, target))
+                    continue
+                target = os.readlink(subPath)
+                if target in followed_symlink_targets:
+                    echo0("* already followed {} -> {}"
+                          "".format(subPath, target))
+                    continue
+                followed_symlink_targets.append(target)
             results += ggrep(
                 pattern,
                 subPath,
@@ -672,6 +689,8 @@ def ggrep(pattern, path, more_args=None, include=None, recursive=True,
                 ignore_root=ignore_root,
                 show_args_warnings=show_args_warnings,
                 trace_ignore_files=trace_ignore_files,
+                follow_symlinks=follow_symlinks,
+                followed_symlink_targets=followed_symlink_targets,
             )
 
     return results
