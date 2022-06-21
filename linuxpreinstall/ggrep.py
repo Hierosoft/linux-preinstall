@@ -668,11 +668,11 @@ def ggrep(pattern, path, more_args=None, include=None, recursive=True,
         if recursive or not os.path.isdir(subPath):
             # Always avoid recursive symlinks:
             if os.path.islink(subPath):
+                target = os.readlink(subPath)
                 if not follow_symlinks:
                     echo0("* follow_symlinks=False, skipping {} -> {}"
                           "".format(subPath, target))
                     continue
-                target = os.readlink(subPath)
                 if target in followed_symlink_targets:
                     echo0("* already followed {} -> {}"
                           "".format(subPath, target))
