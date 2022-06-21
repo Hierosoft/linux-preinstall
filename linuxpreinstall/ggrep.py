@@ -72,6 +72,8 @@ import sys
 import os
 import re
 import json
+import platform
+
 from linuxpreinstall import (
     echo0,  # formerly prerr as error
     echo1,  # formerly debug
@@ -205,6 +207,16 @@ def contains_any(haystack, needles, allow_blank=False, quiet=False,
 
 # endregion same as nopackage
 
+def is_abs_path(path):
+    if platform.system() == "Windows":
+        if (len(path) > 1) and str.isalpha(path[0]) and (path[2]==":"):
+            return True
+        if path.startswith("//"):
+            return True
+    else:
+        if path.startswith("/"):
+            return True
+    return False
 
 def is_like(haystack, needle, allow_blank=False, quiet=False,
             haystack_start=None, needle_start=None, indent=2):
@@ -673,6 +685,33 @@ def ggrep(pattern, path, more_args=None, include=None, recursive=True,
                     echo0("* follow_symlinks=False, skipping {} -> {}"
                           "".format(subPath, target))
                     continue
+                # if os.path.abspath(target) != target:
+                if not is_abs_path(target):
+                    # The path must be constructed manually because:
+                    '''
+                    cd ~/Videos
+                    cd without-intro
+                    ln -s .. Videos
+                    cd ..
+                    python3
+                    os.path.abspath(os.readlink("without-intro/Videos"))
+                    # The result is ~ but should be Videos, so:
+                    '''
+                    targetPath = os.path.join(path, target)
+                    targetPath = os.path.abspath(targetPath)
+                    absPath = os.path.abspath(path)
+                    if absPath == targetPath:
+                        continue
+                    targetPathSlash = targetPath
+                    if not targetPathSlash.endswith(os.path.sep):
+                        targetPathSlash += os.path.sep
+                    if absPath.startswith(targetPathSlash):
+                        echo0("* not following recursive (out-of-scope)"
+                              " link {} -> {}"
+                              "".format(subPath, targetPath))
+                        # Don't go backwards to expand the search such
+                        # as: "/opt/something" startswith "/opt/"
+                        continue
                 if target in followed_symlink_targets:
                     echo0("* already followed {} -> {}"
                           "".format(subPath, target))
@@ -767,7 +806,8 @@ def main():
                         " '--include'."
                     )
 
-                echo0("* removing the default '--include' option so all are included.")
+                echo0("* removing the default '--include'"
+                      " option so all are included.")
                 include_args = None
                 _found_include = True
                 _include_all = True
@@ -905,7 +945,7 @@ def main():
             sys.stderr.write(space+quoted(arg))
         i += 1
         space = " "
-    echo0(" | cut -f1 -d\#")
+    echo0(" | cut -f1 -d\\#")
 
     if not _include_all:
         echo0("* to show all file types"
