@@ -30,10 +30,10 @@ For example, if you run:
 
 You can exclude the content and get the line number commands cleanly
     such as via:
-    ggrep contains_vec3 | cut -f1 -d\#
+    ggrep contains_vec3 | cut -f1 -d\\#
 
 
-The output (if you don't use "| cut -f1 -d\#") is:
+The output (if you don't use "| cut -f1 -d\\#") is:
 
 * ggrep is passing along extra arguments to grep:  contains_vec3
 grep -r contains_vec3 -n
@@ -107,6 +107,7 @@ default_includes = [
     "*.desktop",
 ]
 
+
 def usage():
     print(__doc__)
     print("Default types included: {}".format(default_includes))
@@ -123,6 +124,7 @@ def _wild_increment(haystack_c, needle_c):
     return -1
 
 # region same as nopackage
+
 
 def contains(haystack, needle, allow_blank=False, quiet=False):
     '''
@@ -209,14 +211,16 @@ def contains_any(haystack, needles, allow_blank=False, quiet=False,
 
 def is_abs_path(path):
     if platform.system() == "Windows":
-        if (len(path) > 1) and str.isalpha(path[0]) and (path[2]==":"):
-            return True
+        if (len(path) > 1):
+            if str.isalpha(path[0]) and (path[1] == ":"):
+                return True
         if path.startswith("//"):
             return True
     else:
         if path.startswith("/"):
             return True
     return False
+
 
 def is_like(haystack, needle, allow_blank=False, quiet=False,
             haystack_start=None, needle_start=None, indent=2):
@@ -945,7 +949,7 @@ def main():
             sys.stderr.write(space+quoted(arg))
         i += 1
         space = " "
-    echo0(" | cut -f1 -d\\#")
+    echo0(" | cut -f1 -d\\#")  # The actual command requires 1 backslash
 
     if not _include_all:
         echo0("* to show all file types"
