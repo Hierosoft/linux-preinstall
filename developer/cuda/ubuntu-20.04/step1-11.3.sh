@@ -167,8 +167,21 @@ sudo apt update
 sudo apt install -y build-essential
 # sudo apt -y install gcc-8 g++-8 gcc-9 g++-9 gcc-10 g++-10
 sudo apt -y install gcc-10 g++-10
+sudo apt -y install gcc-9 g++-9
 # sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-10 10
 # ^ not done yet--only for cuda 11.3 and that won't install due to long xorg dependency error further up
+# tiny-cuda requires 10.0.0 or earlier, but 10.0.0 doesn't seem to be installable (g++-10.0 installs 10.3 :() so
+# as per <https://askubuntu.com/a/26518>
+# ("bigger number is a higher priority"):
+sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-10 10
+sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-9 20
+sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 10
+sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 20
+sudo update-alternatives --install /usr/bin/cc cc /usr/bin/gcc 30
+sudo update-alternatives --set cc /usr/bin/gcc
+sudo update-alternatives --install /usr/bin/c++ c++ /usr/bin/g++ 30
+sudo update-alternatives --set c++ /usr/bin/g++
+
 echo "gcc --version"
 gcc --version
 echo "g++ --version"
