@@ -45,7 +45,7 @@ from linuxpreinstall import (
     echo0,
     echo1,
     echo2,
-    set_verbose,
+    set_verbosity,
 )
 
 echo1("")
@@ -304,9 +304,9 @@ def main():
         arg = sys.argv[i]
         if arg.startswith("-"):
             if arg == "--verbose":
-                set_verbose(1)
+                set_verbosity(1)
             elif arg == "--debug":
-                set_verbose(2)
+                set_verbosity(2)
             else:
                 raise ValueError("Unknown argument: {}".format(arg))
         elif bad_item is None:

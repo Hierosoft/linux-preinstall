@@ -7,18 +7,18 @@ import subprocess
 import platform
 from csv import reader
 
-verbose = 0
+verbosity = 0
 for argI in range(1, len(sys.argv)):
     arg = sys.argv[argI]
     if arg.startswith("--"):
-        if arg == "--verbose":
-            verbose = 1
+        if arg == "--verbosity":
+            verbosity = 1
         elif arg == "--debug":
-            verbose = 2
+            verbosity = 2
 
 
-def is_verbose():
-    return verbose > 0
+def get_verbosity():
+    return verbosity > 0
 
 
 def write0(arg):
@@ -27,14 +27,14 @@ def write0(arg):
 
 
 def write1(arg):
-    if verbose < 1:
+    if verbosity < 1:
         return
     sys.stderr.write(arg)
     sys.stderr.flush()
 
 
 def write2(arg):
-    if verbose < 2:
+    if verbosity < 2:
         return
     sys.stderr.write(arg)
     sys.stderr.flush()
@@ -45,13 +45,13 @@ def echo0(*args, **kwargs):  # formerly prerr
 
 
 def echo1(*args, **kwargs):  # formerly debug
-    if verbose < 1:
+    if verbosity < 1:
         return
     print(*args, file=sys.stderr, **kwargs)
 
 
 def echo2(*args, **kwargs):  # formerly extra
-    if verbose < 2:
+    if verbosity < 2:
         return
     print(*args, file=sys.stderr, **kwargs)
 
@@ -139,12 +139,12 @@ install_bin = None
 packageInfos = None
 
 
-def set_verbose(v):
-    global verbose
+def set_verbosity(v):
+    global verbosity
     # NOTE: True in [0, 1] is also True!
     verbosity_levels = [True, False, 0, 1, 2]
     if v in verbosity_levels:
-        verbose = v
+        verbosity = v
     else:
         raise ValueError("Verbose must be any of {} but the value was"
                          " {}.".format(verbosity_levels, v))

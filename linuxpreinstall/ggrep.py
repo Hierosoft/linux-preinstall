@@ -78,7 +78,7 @@ from linuxpreinstall import (
     echo0,  # formerly prerr as error
     echo1,  # formerly debug
     echo2,  # formerly extra
-    set_verbose,
+    set_verbosity,
 )
 
 default_includes = [
@@ -816,9 +816,9 @@ def main():
                 _found_include = True
                 _include_all = True
             elif arg == "--verbose":
-                set_verbose(1)
+                set_verbosity(1)
             elif arg == "--debug":
-                set_verbose(2)
+                set_verbosity(2)
             elif prev_var == "--include":
                 if _include_all:
                     raise ValueError(

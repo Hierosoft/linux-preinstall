@@ -2,7 +2,7 @@ import unittest
 import sys
 
 from linuxpreinstall import (
-    set_verbose,
+    set_verbosity,
 )
 
 from linuxpreinstall.ggrep import (
@@ -13,7 +13,7 @@ from linuxpreinstall.ggrep import (
 class TestGrepStringMethods(unittest.TestCase):
 
     def test_is_like(self):
-        set_verbose(True)
+        set_verbosity(True)
         self.assertEqual(is_like("abc", "abc"), True)
         self.assertEqual(is_like("abc", "?bc"), True)
         self.assertEqual(is_like("abc", "a?c"), True)
@@ -62,9 +62,9 @@ class TestGrepStringMethods(unittest.TestCase):
         self.assertEqual(is_like("/home/examplefoo/bar", "/home/**/foo/bar"), False)
         # self.assertEqual(is_like("/home/examplefoo/bar", "/home/**foo/bar"), False)
         self.assertEqual(is_like("/home/example/foobar", "/home/**/foo/bar"), False)
-        # set_verbose(2)
+        # set_verbosity(2)
         self.assertEqual(is_like("/home/example/foo/bar", "/home/example/foo/**"), True)
-        # set_verbose(1)
+        # set_verbosity(1)
         self.assertEqual(is_like("/home/example/foo/bar", "**/bar"), True)
         self.assertEqual(is_like("/home/example/foo/bar", "**/bar/bar"), False)
 
@@ -72,7 +72,7 @@ class TestGrepStringMethods(unittest.TestCase):
         # python-lsp-server/.gitignore such as in spyder/external-deps/:
         self.assertEqual(is_like("/home/foo.vscode/", "**/*.vscode/"), True)
         self.assertEqual(is_like("Examples/d/foo/example.d", "Examples/d/**/example.d"), True)
-        set_verbose(2)
+        set_verbosity(2)
         self.assertEqual(is_like(".gitattributes", "Examples/d/**/example.d"), False)
         # ^ Test for regression regarding issue #22:
         '''
@@ -80,7 +80,7 @@ class TestGrepStringMethods(unittest.TestCase):
         (needle="Examples/d/**/example.d"). Outer logic should handle
         special syntax if that is allowed.
         '''
-        set_verbose(1)
+        set_verbosity(1)
 
         got_the_right_error = False
         try:
@@ -107,7 +107,7 @@ class TestGrepStringMethods(unittest.TestCase):
 
 
     def test_is_like_any(self):
-        set_verbose(True)
+        set_verbosity(True)
 
         got_the_right_error = False
         try:

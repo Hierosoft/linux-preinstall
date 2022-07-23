@@ -10,7 +10,7 @@ from linuxpreinstall import (
     write1,
     echo0,  # formerly prerr
     echo1,
-    is_verbose,
+    get_verbosity,
 )
 
 digits = "1234567890"
@@ -183,7 +183,7 @@ def main():
             rawL = str(rawBytes)
             line = rawL.rstrip()
             lines.append(line)
-            infos.append(splitNestedVersion(line, verbose=is_verbose()))
+            infos.append(splitNestedVersion(line, verbose=get_verbosity()))
 
         infos = sorted(infos, key=lambda line: line['version'])
         for info in infos:

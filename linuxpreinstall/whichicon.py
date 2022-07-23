@@ -25,19 +25,19 @@ import platform
 import json
 
 
-verbose = 0
+verbosity = 0
 for argI in range(1, len(sys.argv)):
     arg = sys.argv[argI]
     if arg.startswith("--"):
-        if arg == "--verbose":
-            verbose = 1
+        if arg == "--verbosity":
+            verbosity = 1
         elif arg == "--debug":
-            verbose = 2
+            verbosity = 2
 
 if __name__ == "__main__":
     myDir = os.path.dirname(os.path.abspath(__file__))
     repoDir = os.path.dirname(myDir)
-    if verbose > 1:
+    if verbosity > 1:
         print("looking for module in repoDir last: {}".format(repoDir),
               file=sys.stderr)
     sys.path.append(repoDir)
@@ -49,7 +49,7 @@ from linuxpreinstall import (
     AppData,
     which,
     endsWithAny,
-    is_verbose,
+    get_verbosity,
     echo0,  # formerly prerr as error
     write0,  # formerly errorf
     echo1,  # formerly debug

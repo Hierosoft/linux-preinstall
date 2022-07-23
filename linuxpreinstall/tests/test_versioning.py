@@ -3,7 +3,7 @@ import sys
 
 from linuxpreinstall import (
     echo0,  # formerly prerr
-    set_verbose,
+    set_verbosity,
 )
 
 from linuxpreinstall.versioning import (
@@ -13,7 +13,7 @@ from linuxpreinstall.versioning import (
 
 # TODO: Require nopackage and use the version feature from it instead?
 
-set_verbose(True)
+set_verbosity(True)
 
 class TestStringMethods(unittest.TestCase):
 
