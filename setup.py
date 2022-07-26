@@ -8,11 +8,13 @@ import sys
 #   https://github.com/poikilos/pypicolcd/blob/master/setup.py
 # - For nose, see https://github.com/poikilos/mgep/blob/master/setup.py
 
-# python_mr = sys.version_info.major
-# versionedModule = {}
-# versionedModule['urllib'] = 'urllib'
-# if python_mr == 2:
-#     versionedModule['urllib'] = 'urllib2'
+'''
+python_mr = sys.version_info.major
+versionedModule = {}
+versionedModule['urllib'] = 'urllib'
+if python_mr == 2:
+    versionedModule['urllib'] = 'urllib2'
+'''
 
 install_requires = []
 
@@ -67,7 +69,6 @@ setuptools.setup(
             'unredirect_md=linuxpreinstall.unredirect:main',
             'selectoutput=linuxpreinstall.selectoutput:main',
             'whichicon=linuxpreinstall.whichicon:main',
-            'ggrep=linuxpreinstall.ggrep:main',
             # 'cb-install-theme=linuxpreinstall.codeblocks.theme:main',  # WIP
             'backup-nginx-symlinks=linuxpreinstall.server.backup_nginx_symlinks:main',
             'sort-brisk-menu-favs=linuxpreinstall.mate.brisk_menu:main',

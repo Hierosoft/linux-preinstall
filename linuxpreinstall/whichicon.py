@@ -55,7 +55,13 @@ from linuxpreinstall import (
     echo1,  # formerly debug
 )
 
-from linuxpreinstall.ggrep import (
+tryRepo = os.path.join(profile, "git", "pycodetool")
+tryModule = os.path.join(tryRepo, "pycodetool")
+
+if os.path.isdir(tryModule):
+    sys.path.insert(0, tryRepo)
+
+from pycodetool.ggrep import (
     is_like_any,
     any_contains,
 )
