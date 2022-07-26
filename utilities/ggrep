@@ -12,8 +12,18 @@ if platform.system() == "Windows":
 tryRepo = os.path.join(profile, "git", "linux-preinstall")
 tryModule = os.path.join(tryRepo, "linuxpreinstall")
 
-if os.path.isdir(tryModule):
+thisRepo = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+if os.path.isdir(os.path.join(thisRepo, "linuxpreinstall")):
+    sys.path.insert(0, thisRepo)
+    print("[ggrep] using own {}".format(thisRepo))
+elif os.path.isdir(tryModule):
     sys.path.insert(0, tryRepo)
+    print("[ggrep] using git {}".format(tryRepo))
+else:
+    pass
+    # use the one in the python path (or fail)
+    # print("There is no {}".format(os.path.join(thisRepo, "linuxpreinstall")))
 
 try:
     from linuxpreinstall.ggrep import main
