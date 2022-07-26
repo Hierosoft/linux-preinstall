@@ -78,6 +78,7 @@ from linuxpreinstall import (
     echo0,  # formerly prerr as error
     echo1,  # formerly debug
     echo2,  # formerly extra
+    echo3,
     set_verbosity,
 )
 
@@ -107,6 +108,130 @@ default_includes = [
     "*.desktop",
 ]
 
+GREP_DOC = '''
+Usage: grep [OPTION]... PATTERNS [FILE]...
+Search for PATTERNS in each FILE.
+Example: grep -i 'hello world' menu.h main.c
+PATTERNS can contain multiple patterns separated by newlines.
+
+Pattern selection and interpretation:
+  -E, --extended-regexp     PATTERNS are extended regular expressions
+  -F, --fixed-strings       PATTERNS are strings
+  -G, --basic-regexp        PATTERNS are basic regular expressions
+  -P, --perl-regexp         PATTERNS are Perl regular expressions
+  -e, --regexp=PATTERNS     use PATTERNS for matching
+  -f, --file=FILE           take PATTERNS from FILE
+  -i, --ignore-case         ignore case distinctions in patterns and data
+      --no-ignore-case      do not ignore case distinctions (default)
+  -w, --word-regexp         match only whole words
+  -x, --line-regexp         match only whole lines
+  -z, --null-data           a data line ends in 0 byte, not newline
+
+Miscellaneous:
+  -s, --no-messages         suppress error messages
+  -v, --invert-match        select non-matching lines
+  -V, --version             display version information and exit
+      --help                display this help text and exit
+
+Output control:
+  -m, --max-count=NUM       stop after NUM selected lines
+  -b, --byte-offset         print the byte offset with output lines
+  -n, --line-number         print line number with output lines
+      --line-buffered       flush output on every line
+  -H, --with-filename       print file name with output lines
+  -h, --no-filename         suppress the file name prefix on output
+      --label=LABEL         use LABEL as the standard input file name prefix
+  -o, --only-matching       show only nonempty parts of lines that match
+  -q, --quiet, --silent     suppress all normal output
+      --binary-files=TYPE   assume that binary files are TYPE;
+                            TYPE is 'binary', 'text', or 'without-match'
+  -a, --text                equivalent to --binary-files=text
+  -I                        equivalent to --binary-files=without-match
+  -d, --directories=ACTION  how to handle directories;
+                            ACTION is 'read', 'recurse', or 'skip'
+  -D, --devices=ACTION      how to handle devices, FIFOs and sockets;
+                            ACTION is 'read' or 'skip'
+  -r, --recursive           like --directories=recurse
+  -R, --dereference-recursive
+                            likewise, but follow all symlinks
+      --include=GLOB        search only files that match GLOB (a file pattern)
+      --exclude=GLOB        skip files that match GLOB
+      --exclude-from=FILE   skip files that match any file pattern from FILE
+      --exclude-dir=GLOB    skip directories that match GLOB
+  -L, --files-without-match print only names of FILEs with no selected lines
+  -l, --files-with-matches  print only names of FILEs with selected lines
+  -c, --count               print only a count of selected lines per FILE
+  -T, --initial-tab         make tabs line up (if needed)
+  -Z, --null                print 0 byte after FILE name
+
+Context control:
+  -B, --before-context=NUM  print NUM lines of leading context
+  -A, --after-context=NUM   print NUM lines of trailing context
+  -C, --context=NUM         print NUM lines of output context
+  -NUM                      same as --context=NUM
+      --group-separator=SEP use SEP as a group separator
+      --no-group-separator  use empty string as a group separator
+      --color[=WHEN],
+      --colour[=WHEN]       use markers to highlight the matching strings;
+                            WHEN is 'always', 'never', or 'auto'
+  -U, --binary              do not strip CR characters at EOL (MSDOS/Windows)
+
+When FILE is '-', read standard input.  With no FILE, read '.' if
+recursive, '-' otherwise.  With fewer than two FILEs, assume -h.
+Exit status is 0 if any line is selected, 1 otherwise;
+if any error occurs and -q is not given, the exit status is 2.
+
+Report bugs to: bug-grep@gnu.org
+GNU grep home page: <http://www.gnu.org/software/grep/>
+General help using GNU software: <https://www.gnu.org/gethelp/>
+'''
+GREP_ARGS = []
+GREP_WHENS = ["always", "never", "auto"]
+GREP_TYPES = ['binary', 'text', 'without-match']
+GREP_DIR_ACTIONS = ['read', 'recurse', 'skip']
+GREP_DEV_ACTIONS = ['read', 'skip']
+for word in GREP_DOC.split():
+    if word.startswith("-"):
+        if word.endswith(","):
+            word = word[:-1]
+        signI = word.find("=")
+        if word.endswith("[=WHEN]"):
+            signI -= 1
+            for grep_when in GREP_WHENS:
+                GREP_ARGS.append(word[:signI]+"="+grep_when)
+        elif signI > -1:
+            if word[signI+1:] == "TYPE":
+                for grep_type in GREP_TYPES:
+                    GREP_ARGS.append(word[:signI]+"="+grep_type)
+            elif word[:signI] == "--directories":
+                for grep_dir_action in GREP_DIR_ACTIONS:
+                    GREP_ARGS.append(word[:signI]+"="+grep_dir_action)
+            elif word[:signI] == "--devices":
+                for grep_dev_action in GREP_DEV_ACTIONS:
+                    GREP_ARGS.append(word[:signI]+"="+grep_dev_action)
+            else:
+                GREP_ARGS.append(word[:signI+1])
+                # ^ include the sign so it can be used as a startswith param
+        else:
+            GREP_ARGS.append(word)
+
+class DontStopIteration(Exception):
+    '''
+    End the recursive generator early without return (which is the
+    same as StopIteration) but allow iteration to continue.
+    '''
+    pass
+
+
+def is_grep_arg(arg):
+    for word in GREP_ARGS:
+        if word.endswith("="):
+            if arg.startswith(word):
+                return True
+        else:
+            if arg == word:
+                return True
+    return False
 
 def usage():
     print(__doc__)
@@ -202,7 +327,7 @@ def contains_any(haystack, needles, allow_blank=False, quiet=False,
         # Passing case_sensitive isn't necessary since lower()
         # is already one in that case above:
         if contains(haystack, needle, allow_blank=allow_blank, quiet=quiet):
-            echo1("is_in_any: {} is in {}".format(needle, haystack))
+            echo3("is_in_any: {} is in {}".format(needle, haystack))
             return True
     return False
 
@@ -251,7 +376,7 @@ def is_like(haystack, needle, allow_blank=False, quiet=False,
         needle_start = 0
     haystack = haystack[haystack_start:]
     needle = needle[needle_start:]
-    echo2(tab+"in is_like({}, {})"
+    echo3(tab+"in is_like({}, {})"
           "".format(json.dumps(haystack), json.dumps(needle)))
     if needle_start == 0:
         double_star_i = needle.find("**")
@@ -262,11 +387,11 @@ def is_like(haystack, needle, allow_blank=False, quiet=False,
         if (double_star_i > 0):
             # and (double_star_i < len(needle) - 2):
             # It is allowed to be at the end.
-            echo2(tab+"* splitting needle {} at **"
+            echo3(tab+"* splitting needle {} at **"
                   "".format(json.dumps(needle)))
             left_needle = needle[:double_star_i] + "*"
             right_needle = needle[double_star_i+2:]
-            echo2(tab+"* testing left_needle={}"
+            echo3(tab+"* testing left_needle={}"
                   "".format(json.dumps(left_needle)))
             if is_like(haystack, left_needle,
                        allow_blank=allow_blank, quiet=quiet,
@@ -280,7 +405,7 @@ def is_like(haystack, needle, allow_blank=False, quiet=False,
                 if next_slash_i > -1:
                     right_haystack = right_haystack[next_slash_i:]
                 elif right_needle == "":
-                    echo2(tab+"  * there is no right side,"
+                    echo3(tab+"  * there is no right side,"
                           " so it matches")
                     # ** can match any folder, so the return is True
                     # since:
@@ -289,19 +414,19 @@ def is_like(haystack, needle, allow_blank=False, quiet=False,
                     # - The remainder of haystack has no slash, so it is
                     #   a leaf.
                     return True
-                echo2(tab+"* testing right_haystack={}, right_needle={}"
+                echo3(tab+"* testing right_haystack={}, right_needle={}"
                       "".format(json.dumps(right_haystack),
                                 json.dumps(right_needle)))
                 if (right_needle == ""):
                     if (right_haystack == ""):
                         return True
                     else:
-                        echo2(tab+"* WARNING: right_haystack")
+                        echo3(tab+"* WARNING: right_haystack")
                 return is_like(right_haystack, right_needle,
                                allow_blank=True, quiet=quiet,
                                indent=indent+2)
             else:
-                echo2(tab+"  * False")
+                echo3(tab+"  * False")
                 # It is already false, so return
                 # (prevent issue 22: "More than one '*' in a row").
                 return False
@@ -368,13 +493,13 @@ def is_like(haystack, needle, allow_blank=False, quiet=False,
                 return True
             match_indices = []
             next_needle_c = needle[nI+1]
-            echo2(tab+"* checking for each possible continuation of"
+            echo3(tab+"* checking for each possible continuation of"
                   " needle[needle.find('*')+1]"
                   " in haystack {}[{}:] -> {}"
                   .format(haystack, hI, haystack[hI:]))
             for try_h_i in range(hI, len(haystack)):
                 if haystack[try_h_i] == next_needle_c:
-                    echo2(tab+"  * is_like({}[{}:] -> {}, {}[{}+1:]"
+                    echo3(tab+"  * is_like({}[{}:] -> {}, {}[{}+1:]"
                           " -> {})"
                           "".format(haystack, try_h_i,
                                     haystack[try_h_i:],
@@ -384,7 +509,7 @@ def is_like(haystack, needle, allow_blank=False, quiet=False,
                                quiet=quiet, haystack_start=try_h_i,
                                needle_start=nI+1,
                                indent=indent+2):
-                        echo2(tab+"    * True")
+                        echo3(tab+"    * True")
                         # The rest may match from ANY starting point of
                         # the character after *, such as:
                         # abababc is like *ababc (should be True)
@@ -399,7 +524,7 @@ def is_like(haystack, needle, allow_blank=False, quiet=False,
                         #     - (ababc, a*c) -> True
                         return True
                     else:
-                        echo2(tab+"    * False")
+                        echo3(tab+"    * False")
 
             if next_needle_c == haystack[hI]:
                 nI += 2
@@ -411,7 +536,7 @@ def is_like(haystack, needle, allow_blank=False, quiet=False,
             matches += 1
         elif inc == -1:
             return False
-    echo2(tab+"is_like matches={} req_count={}"
+    echo3(tab+"is_like matches={} req_count={}"
           "".format(matches, req_count))
     return matches == req_count
 
@@ -431,10 +556,94 @@ def ggrep(pattern, path, more_args=None, include=None, recursive=True,
           followed_symlink_targets=[]):
     '''
     Find a pattern within files in a given path (or one file if path is
-    a file)
+    a file) and yield the next for each.
 
     Sequential arguments:
     pattern -- a regular expression or plain text substring
+
+    Keyword arguments:
+    allow_non_regex_pattern -- Allow the pattern to be in string even if
+        pattern is a substring rather than regex.
+    '''
+
+    results = []
+    try:
+        for sub in filter_tree(path, more_args=more_args,
+                               include=include, recursive=recursive,
+                               quiet=quiet, ignore=ignore,
+                               ignore_root=ignore_root,
+                               gitignore=gitignore,
+                               show_args_warnings=show_args_warnings,
+                               trace_ignore_files=trace_ignore_files,
+                               follow_symlinks=follow_symlinks,
+                               followed_symlink_targets=followed_symlink_targets):
+            # subPath = os.path.join(path, sub)
+            # if path == "":
+            #     subPath = sub
+            # if not os.path.isfile(subPath):
+            if not os.path.isfile(os.path.realpath(sub)):
+                # echo3('- not a file: "{}"'.format(sub))
+                continue
+            else:
+                pass
+                # echo3("- examining file: {}".format(sub))
+            with open(sub, 'r') as ins:
+                lineN = 0
+                try:
+                    echo3('* Checking "{}"'.format(sub))
+                    for rawL in ins:
+                        lineN += 1
+                        line = rawL.rstrip("\n\r")
+                        if (re.search(pattern, line)
+                                or (allow_non_regex_pattern
+                                    and (pattern in line))):
+                            result = "{}:{}:{}".format(
+                                sub,
+                                lineN,
+                                line,
+                            )
+                            results.append(result)
+                            if not quiet:
+                                print(result)
+                        else:
+                            pass
+                            # echo3('  * pattern "{}" is not in line'
+                            #       ' "{}"'.format(pattern, line))
+                except UnicodeDecodeError as ex:
+                    # 'utf-8' codec can't decode byte 0x89 in position
+                    #  0: invalid start byte
+                    echo0('* ignored binary file "{}" due to: {}'
+                          ''.format(sub, str(ex)))
+                    # return results
+                    continue
+    except DontStopIteration as ex:
+        raise RuntimeError(
+            "The specified path itself was filtered"
+            " (This should never happen): {}".format(str(ex))
+        )
+        pass
+        # results.append(sub)
+    # for result in results:
+    #     print(result)
+    return results
+
+TRIVIAL_EXCLUSION_INCLUDES = "is not in includes"
+TRIVIAL_INCLUSION_IN_INCLUDES = "is in includes"
+TRIVIAL_EXCEPTION_FLAGS = [
+    TRIVIAL_EXCLUSION_INCLUDES,
+    TRIVIAL_INCLUSION_IN_INCLUDES,
+]
+
+def filter_tree(path, more_args=None, include=None, recursive=True,
+                quiet=True, ignore=None, ignore_root=None, gitignore=True,
+                show_args_warnings=True,
+                trace_ignore_files={}, follow_symlinks=True,
+                followed_symlink_targets=[], root=None):
+    '''
+    Find the entire subtree of files and directories in a given path and
+    yield the next for each.
+
+    Sequential arguments:
     path -- Search this file or directory (limited by arguments
         described below). If "", the current directory will be searched
         but excluded from the beginning of each result.
@@ -442,14 +651,15 @@ def ggrep(pattern, path, more_args=None, include=None, recursive=True,
     Keyword arguments:
     include -- Specify a single string or a list of strings that filter
         which files to include. It is a filename pattern not regex (See
-        is_like documentation for details).
+        is_like documentation for details). It does not affect which
+        directories are yielded (only ignore does).
     recursive -- Recursively search subdirectories (ignored if path is a
         file).
     quiet -- Only return lines, do not print them.
     ignore -- Ignore a list of files (automatically changed to content
         of .gitignore if present and path is a directory and gitignore
         is True).
-    ignore_base -- This is required when using ignore since .gitignore
+    ignore_root -- This is required when using ignore since .gitignore
         may have paths starting with "/" and they must be a path
         relative to the gitignore file.
     gitignore -- Set to True to read .gitignore files recursively and to
@@ -458,8 +668,6 @@ def ggrep(pattern, path, more_args=None, include=None, recursive=True,
         more_args that is not implemented. The value is True for only
         one call. It will be automatically be changed to False before
         another call.
-    allow_non_regex_pattern -- Allow the pattern to be in string even if
-        pattern is a substring rather than regex.
     trace_ignore_files -- Like ignore, this is generated automatically.
         If you set ignore manually, you should also initialize
         trace_ignore_files manually, but it will be updated
@@ -471,11 +679,12 @@ def ggrep(pattern, path, more_args=None, include=None, recursive=True,
     followed_symlink_targets -- This is automatically generated. Any
         symlink target that was followed already won't be followed
         again, even if relative and recursive.
-
-    Returns:
-    list: A list of matching file paths.
+    root -- Set the root directory upon which to add sub (only used for
+        tracking, and automatically set).
     '''
-
+    # echo2('filter_tree("{}")'.format(path))
+    if root is None:
+        root = path
     if more_args is not None:
         for arg in more_args:
             if arg == "--include-all":
@@ -486,9 +695,8 @@ def ggrep(pattern, path, more_args=None, include=None, recursive=True,
             else:
                 if show_args_warnings:
                     show_args_warnings = False
-                    echo0("* Warning: {} is not implemented in ggrep."
+                    echo0("* Warning: {} is not implemented in filter_subs."
                           "".format(arg))
-    results = []
     if include is None:
         include = ["*"]
     elif isinstance(include, str):
@@ -505,8 +713,7 @@ def ggrep(pattern, path, more_args=None, include=None, recursive=True,
     # Do not ignore if "" even if .git, so let sub  ""--isdir("")==False
     if os.path.isdir(path):
         if sub == ".git":
-            echo0('* ignored "{}"'.format(path))
-            return results
+            raise DontStopIteration('* ignored "{}"'.format(path))
 
     if ignore is not None:
         before_ignore = []
@@ -545,47 +752,52 @@ def ggrep(pattern, path, more_args=None, include=None, recursive=True,
                     if absolute:
                         if (os.path.isdir(path)
                                 and is_like(checkPath, ignore_s)):
-                            echo0("* {} {} due to {}".format(
+                            msg = ("* {} {} due to {}".format(
                                 verb,
                                 path,
                                 ig_path,
                             ))
                             if verb == "ignored":
-                                return results
+                                raise DontStopIteration(msg)
                             else:
+                                echo0(msg)
                                 # If inverse and matches, keep it. Stop
                                 # checking it against ignore strings.
                                 break
                     else:
                         if (os.path.isdir(path) and is_like(sub, ignore_s)):
-                            echo0("* {} {} due to {}"
-                                  "".format(verb, path, ig_path))
+                            msg = ("* {} {} due to {}"
+                                   "".format(verb, path, ig_path))
                             if verb == "ignored":
-                                return results
+                                raise DontStopIteration(msg)
                             else:
+                                echo0(msg)
                                 # If inverse and matches, keep it. Stop
                                 # checking it against ignore strings.
                                 break
                 else:
                     if absolute:
-                        if (os.path.isfile(path)
+                        if (os.path.isfile(os.path.realpath(path))
                                 and is_like(checkPath, ignore_s)):
-                            echo0("* {} {} due to {}"
-                                  "".format(verb, path, ig_path))
+                            msg = ("* {} {} due to {}"
+                                   "".format(verb, path, ig_path))
                             if verb == "ignored":
-                                return results
+                                raise DontStopIteration(msg)
                             else:
+                                echo0(msg)
                                 # If inverse and matches, keep it. Stop
                                 # checking it against ignore strings.
                                 break
                     else:
-                        if (os.path.isfile(path)
+                        if (os.path.isfile(os.path.realpath(path))
                                 and is_like(sub, ignore_s)):
-                            echo0("* {} {} due to {}"
-                                  "".format(verb, path, ig_path))
+                            # ^ ALWAYS use realpath since could be ""
+                            msg = ("* {} {} due to {}"
+                                   "".format(verb, path, ig_path))
                             if verb == "ignored":
-                                return results
+                                raise DontStopIteration(msg)
                             else:
+                                echo0(msg)
                                 # If inverse and matches, keep it. Stop
                                 # checking it against ignore strings.
                                 break
@@ -599,46 +811,37 @@ def ggrep(pattern, path, more_args=None, include=None, recursive=True,
                               json.dumps(igs))
                 )
                 raise ex
-            echo2("- {} ({}) not {} by filter: {}"
-                  "".format(checkPath, path, verb, ignore_s))
-    if os.path.isfile(path):
+            if path != checkPath:
+                echo2("- {} ({}) not {} by filter: {}"
+                      "".format(checkPath, path, verb, ignore_s))
+            else:
+                echo2("- {} not {} by filter: {}"
+                      "".format(path, verb, ignore_s))
+    if os.path.isfile(os.path.realpath(path)):
+        # ^ ALWAYS do realpath since could be ""
         # echo1('* checking "{}"'.format(path))
         if not is_like_any(sub, include):
-            return results
+            # ^ default is ["*"]
+            raise DontStopIteration(
+                "* {} {}".format(sub, TRIVIAL_EXCLUSION_INCLUDES)
+            )
         else:
-            with open(path, 'r') as ins:
-                lineN = 0
-                try:
-                    echo2('* Checking "{}"'.format(path))
-                    for rawL in ins:
-                        lineN += 1
-                        line = rawL.rstrip("\n\r")
-                        if (re.search(pattern, line)
-                                or (allow_non_regex_pattern
-                                    and (pattern in line))):
-                            result = "{}:{}:{}".format(
-                                path,
-                                lineN,
-                                line,
-                            )
-                            results.append(result)
-                            if not quiet:
-                                print(result)
-                        else:
-                            echo2('  * pattern {} is not in "{}"'
-                                  ''.format(pattern, line))
-                except UnicodeDecodeError as ex:
-                    # 'utf-8' codec can't decode byte 0x89 in position
-                    #  0: invalid start byte
-                    echo0('* ignored binary file "{}" due to: {}'
-                          ''.format(path, str(ex)))
-                    return results
+            yield path
+            raise DontStopIteration(
+                "{} {}".format(path, TRIVIAL_INCLUSION_IN_INCLUDES)
+            )
+        # ^ Either way, do not continue below if it is a file.
+    else:
+        yield path
 
-            return results
     if (len(path) != 0) and (not os.path.isdir(path)):
+        # ^ If not checking len 0, use os.path.abspath(path)
+        #   to convert "" to a path.
         # Dangling symlink in this case probably, so return to avoid:
         # "FileNotFoundError: [Errno 2] No such file or directory: "
-        # return results
+        # raise DontStopIteration(
+        #     '* The directory "{}" could not be opened'.format(path)
+        # )  # return
         pass
     # Even though tryIgnore occurs last, it will happen before any file
     # in the directory, since path that is dir is in the *same* depth
@@ -666,22 +869,24 @@ def ggrep(pattern, path, more_args=None, include=None, recursive=True,
     try:
         subs = os.listdir(listPath)
     except FileNotFoundError as ex:
-        echo0('* missing or inaccessible: "{}" ({})'
-              ''.format(listPath, ex))
-        return results
+        msg = ('* missing or inaccessible: "{}" ({})'
+               ''.format(listPath, ex))
+        raise DontStopIteration(msg)
     except NotADirectoryError as ex:
-        echo0('* missing or inaccessible'
-              ' (neither a file nor a directory): "{}" ({})'
-              ''.format(listPath, ex))
-        return results
-    echo1("* searching {} sub(s) in {}"
-          "".format(len(subs), json.dumps(path)))
+        msg = ('* missing or inaccessible'
+               ' (neither a file nor a directory): "{}" ({})'
+               ''.format(listPath, ex))
+        raise DontStopIteration(msg)
+    # echo1("- searching {} sub(s) in {}"
+    #       "".format(len(subs), json.dumps(path)))
+
     for sub in subs:
         # The parent path is guaranteed *not* to be a file by now.
         subPath = os.path.join(path, sub)
         if path == "":
             subPath = sub
         if recursive or not os.path.isdir(subPath):
+            # echo2("  searching {}".format(subPath))
             # Always avoid recursive symlinks:
             if os.path.islink(subPath):
                 target = os.readlink(subPath)
@@ -721,23 +926,42 @@ def ggrep(pattern, path, more_args=None, include=None, recursive=True,
                           "".format(subPath, target))
                     continue
                 followed_symlink_targets.append(target)
-            results += ggrep(
-                pattern,
-                subPath,
-                more_args=more_args,
-                include=include,
-                recursive=recursive,
-                quiet=quiet,
-                ignore=ignore,
-                ignore_root=ignore_root,
-                show_args_warnings=show_args_warnings,
-                trace_ignore_files=trace_ignore_files,
-                follow_symlinks=follow_symlinks,
-                followed_symlink_targets=followed_symlink_targets,
-            )
+                echo2('* only following symlink to "{}" once'
+                      ''.format(target))
+            try:
+                # Without `yield from`, the call never really happens
+                # (since this is a generator)!
+                yield from filter_tree(
+                    subPath,
+                    more_args=more_args,
+                    include=include,
+                    recursive=recursive,
+                    quiet=quiet,
+                    ignore=ignore,
+                    ignore_root=ignore_root,
+                    show_args_warnings=show_args_warnings,
+                    trace_ignore_files=trace_ignore_files,
+                    follow_symlinks=follow_symlinks,
+                    followed_symlink_targets=followed_symlink_targets,
+                    root=root,
+                )
+                # ^ filter the files too
+                # ^ don't yield here, even if directory, since filtering
+                #   must occur (yield path before this loop instead)
+            except DontStopIteration as ex:
+                if not contains_any(str(ex), TRIVIAL_EXCEPTION_FLAGS):
+                    echo0("  "+str(ex))
+                    # ^ Show the message explaining why the file or
+                    #   directory was ignored, without interfering with
+                    #   stdout.
+                pass
+        else:
+            pass
+            # echo2('  - skipping {} since isdir (recursive={})'
+            #       ''.format(subPath, recursive))
 
-    return results
-
+    # Don't return: It is the Pythonic StopIteration and stops
+    # recursion within a generator!
 
 def quoted(path):
     '''
@@ -845,6 +1069,16 @@ def main():
                         )
                 path = arg
                 '''
+            elif not is_grep_arg(arg):
+                echo0(GREP_DOC)
+                raise ValueError(
+                    ("{} is not a valid argument."
+                     " See above (from `grep --help` of grep 3.6)"
+                     " for arguments that ggrep will either"
+                     " try to process like grep"
+                     " or ignore and show a warning"
+                     " if not implemented.".format(arg))
+                )
             else:
                 _more_args.append(arg)
 

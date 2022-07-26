@@ -56,6 +56,12 @@ def echo2(*args, **kwargs):  # formerly extra
     print(*args, file=sys.stderr, **kwargs)
 
 
+def echo3(*args, **kwargs):  # formerly extra
+    if verbosity < 3:
+        return
+    print(*args, file=sys.stderr, **kwargs)
+
+
 def endsWithAny(haystack, needles, CS=True):
     '''
     Haystack ends with any of the needles.
