@@ -211,9 +211,11 @@ for word in GREP_DOC.split():
                     GREP_ARGS.append(word[:signI]+"="+grep_dev_action)
             else:
                 GREP_ARGS.append(word[:signI+1])
-                # ^ include the sign so it can be used as a startswith param
+                # ^ include the sign so it can be used as a startswith
+                #   param
         else:
             GREP_ARGS.append(word)
+
 
 class DontStopIteration(Exception):
     '''
@@ -232,6 +234,7 @@ def is_grep_arg(arg):
             if arg == word:
                 return True
     return False
+
 
 def usage():
     print(__doc__)
@@ -553,7 +556,7 @@ def ggrep(pattern, path, more_args=None, include=None, recursive=True,
           quiet=True, ignore=None, ignore_root=None, gitignore=True,
           show_args_warnings=True, allow_non_regex_pattern=True,
           trace_ignore_files={}, follow_symlinks=True,
-          followed_symlink_targets=[]):
+          followed_targets=[]):
     '''
     Find a pattern within files in a given path (or one file if path is
     a file) and yield the next for each.
@@ -576,7 +579,7 @@ def ggrep(pattern, path, more_args=None, include=None, recursive=True,
                                show_args_warnings=show_args_warnings,
                                trace_ignore_files=trace_ignore_files,
                                follow_symlinks=follow_symlinks,
-                               followed_symlink_targets=followed_symlink_targets):
+                               followed_targets=followed_targets):
             # subPath = os.path.join(path, sub)
             # if path == "":
             #     subPath = sub
@@ -627,6 +630,7 @@ def ggrep(pattern, path, more_args=None, include=None, recursive=True,
     #     print(result)
     return results
 
+
 TRIVIAL_EXCLUSION_INCLUDES = "is not in includes"
 TRIVIAL_INCLUSION_IN_INCLUDES = "is in includes"
 TRIVIAL_EXCEPTION_FLAGS = [
@@ -634,11 +638,12 @@ TRIVIAL_EXCEPTION_FLAGS = [
     TRIVIAL_INCLUSION_IN_INCLUDES,
 ]
 
+
 def filter_tree(path, more_args=None, include=None, recursive=True,
                 quiet=True, ignore=None, ignore_root=None, gitignore=True,
                 show_args_warnings=True,
                 trace_ignore_files={}, follow_symlinks=True,
-                followed_symlink_targets=[], root=None):
+                followed_targets=[], root=None):
     '''
     Find the entire subtree of files and directories in a given path and
     yield the next for each.
@@ -676,7 +681,7 @@ def filter_tree(path, more_args=None, include=None, recursive=True,
         file so that an invalid pattern can be traced back to a file
         for error reporting purposes.
     follow_symlinks -- Follow symlinked directories.
-    followed_symlink_targets -- This is automatically generated. Any
+    followed_targets -- This is automatically generated. Any
         symlink target that was followed already won't be followed
         again, even if relative and recursive.
     root -- Set the root directory upon which to add sub (only used for
@@ -921,11 +926,11 @@ def filter_tree(path, more_args=None, include=None, recursive=True,
                         # Don't go backwards to expand the search such
                         # as: "/opt/something" startswith "/opt/"
                         continue
-                if target in followed_symlink_targets:
+                if target in followed_targets:
                     echo0("* already followed {} -> {}"
                           "".format(subPath, target))
                     continue
-                followed_symlink_targets.append(target)
+                followed_targets.append(target)
                 echo2('* only following symlink to "{}" once'
                       ''.format(target))
             try:
@@ -942,7 +947,7 @@ def filter_tree(path, more_args=None, include=None, recursive=True,
                     show_args_warnings=show_args_warnings,
                     trace_ignore_files=trace_ignore_files,
                     follow_symlinks=follow_symlinks,
-                    followed_symlink_targets=followed_symlink_targets,
+                    followed_targets=followed_targets,
                     root=root,
                 )
                 # ^ filter the files too
@@ -962,6 +967,7 @@ def filter_tree(path, more_args=None, include=None, recursive=True,
 
     # Don't return: It is the Pythonic StopIteration and stops
     # recursion within a generator!
+
 
 def quoted(path):
     '''
