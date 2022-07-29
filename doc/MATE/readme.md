@@ -7,11 +7,11 @@ nohang: I know nohang basically solved the issue with Xfce though it isn't very 
 
 ## Suggested Configuration
 (requires manual steps until scripting of the linuxpreinstall/mate submodule is complete)
-- Delete the bottom menu and put the top one on the bottom, so it is like other desktops.
-- Use [Brisk Menu](brisk-menu.md), a searchable menu where you can add favorites.
+- If you have the default mate-panel configuration, which uses two panels: Delete the bottom menu (the one with just an application switcher) and move the top menu on the bottom, so it is like other desktops (right-click, Properties, then change orientation to "Bottom").
 - Use Dock: MATE Dock is a "true dock," in the sense that a pinned icon automatically change to application switcher if that application is open, similarly to KDE, Windows and macOS.
-- Install and add "Indicator Applet Complete": See [../../everyone/MATE/brisk-menu-and-indicators.deb.sh](../../everyone/MATE/brisk-menu-and-indicators.deb.sh).
+- Install and add "Indicator Applet Complete": See [linux-preinstall/everyone/MATE/brisk-menu-and-indicators.deb.sh](../../everyone/MATE/brisk-menu-and-indicators.deb.sh).
   - After manually adding it and moving it to the far right of the bottom menu, you see and control GUI-based applets such as Nextcloud which follow the app indicator paradigm (similarly to Windows tray icons).
+- Use [Brisk Menu](brisk-menu.md), a searchable menu where you can add favorites (remove the Application menu and add Brisk Menu there at the bottom left).
 
 
 ## linuxpreinstall/mate submodule
