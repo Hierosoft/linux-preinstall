@@ -1,4 +1,15 @@
-# Trying to get WinTV-HVR 850 to work in linux (hybrid dtv stick with analog and digital tv)
+# TV Tuners
+
+## Analog
+
+### WinTV-HVR 850
+WinTV-HVR 850 is a hybrid DTV stick with analog and digital TV.
+
+The instructions below only work for developers or CLI (Command-Line
+Interface) users. Another reliable and lossless method wasn't found yet.
+The card has hardware MPEG encoding, so getting anything other than the
+raw data will recompress it (causing a 2nd-generation of loss), MPEG or
+not.
 
 ```
 #lsusb shows:
@@ -22,7 +33,7 @@ ivtv-tune --freqtable=us-bcast --channel=3
 #mencoder tv:// -tv channel=3:driver=v4l2:device=/dev/video0:input=0:chanlist=us-bcast:brightness=0:contrast=0:hue=0:saturation=0 -oac copy -ovc copy -quiet -o /home/owner/Video/capture_3_20170829_221733.avi
 #* faac+x264 as mp4:
 #mencoder tv:// -tv channel=3:driver=v4l2:device=/dev/video0:input=0:chanlist=us-bcast:brightness=0:contrast=0:hue=0:saturation=0 -oac faac -ovc x264 -quiet -x264encopts crf=23.0 -o /home/owner/Video/capture_3_20170829_222020.mp4
-#* 
+#*
 #
 #xawtv: acts glitchy (can't open many things from the right-click menu)--dont work: Channel Window, Channel Hopping, Launcher Window
 #most reliable method:

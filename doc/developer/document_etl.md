@@ -1,3 +1,10 @@
+# Document ETL
+
+ETL stands for "extract transform and load" and is the process of automating document processing for the purpose of putting specific information from documents into databases.
+
+
+## Word or Writer image extraction
+(via unzip and emf conversion)
 ```
 #!/bin/bash
 # Neither of the websites provide a pixel perfect method.

@@ -1,5 +1,4 @@
 ## Lubuntu tips
-(most essential tips)
 * To shut down or reboot, first click power button button (bottom right), then after the menu appears (may take a couple minutes to open if an application is hanging) then click shut down or reboot.
 * Office: Abiword can be used for documents and Gnumeric for spreadsheets. However, Abiword cannot open and save many Word doc files from Microsoft Office correctly, only Abiword's limited feature set Word docs. LibreOffice takes around 229 MB of RAM so it is not feasible for systems with 256MB or less. To edit docs for professional use, Google Drive or another cloud office should work even with low RAM. Otherwise save in RTF format which has fewer features by default and can be read on virtually all computers.
 * If you need microsoft fonts, see help.ubuntu.com/community/RestrictedFormats/Microsoft_Fonts
