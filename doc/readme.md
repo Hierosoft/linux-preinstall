@@ -4,9 +4,8 @@ The Linux Preinstall Documentation covers some more details
 such as information specific to your distro, software, or a certain
 script.
 
-- Read on (see other files in this directory) to find out how
-different scripts work together for a certain distro, or read about why
-the scripts are included in some cases.
+- Read on to learn more about a certain distro and how linux-preinstall
+  can help: See other files in this directory.
 
 or
 
