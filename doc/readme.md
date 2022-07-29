@@ -10,4 +10,5 @@ script.
 or
 
 - See an explanation and overview of the project in the main
-  [readme.md](../readme.md).
+  [readme.md](../readme.md), which also documents the linuxpreinstall
+  Python module.

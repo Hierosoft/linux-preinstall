@@ -1,3 +1,8 @@
+# List of Linux Games
+This file has become a compilation of multiple lists:
+- Native Linux Games That Go Beyond Casual Gaming
+- [Game stores and other listings](#game-stores-and-other-listings)
+- [Free Casual Games for Linux](#free-casual-games-for-linux)
 
 # Native Linux Games That Go Beyond Casual Gaming
 This list focuses primarily on games in linux repositories, which mostly includes free games and game stores but also includes a games that require a paid account.
@@ -60,3 +65,117 @@ $=may require a paid account
 * (may require SteamOS) http://store.steampowered.com/search/?category1=998&os=linux
 
 Please feel free to comment and mention games I missed if they meet all of the criteria in the first section. However, I excluded some popular native linux games intentionally because I believe they don’t.
+
+
+# Game stores and other listings
+Desura (game store):
+http://www.desura.com/
+
+PlayOnLinux (wine gaming frontend):
+http://www.playonlinux.com/en/
+
+GamingOnLinux (gaming site):
+http://www.gamingonlinux.com/
+
+SourceForge's list of games:
+http://sourceforge.net/p/forge/community-docs/SourceForge%20Games/
+
+
+# Free Casual Games for Linux
+(as found on AUR)
+
+## Descriptions
+
+(*) = From Mainstream Repos
+(such as arch, via Antergos graphical package manager search for "game" [more results than justing using the Game category])
+
+* (*) abuse
+* (*) digger
+* (*) dwarffortress
+* (*) dynablaster-revenge
+* (*) tomatoes "I Have No Tomatoes"
+* (*) barrage
+* (*) blobwars "Blob Wars: Metal Blob Solid"
+* (*) btanks
+* (*) clickety
+* (*) glhack
+* (*) gnujump
+* (*) instead-launcher
+* (*) kblocks
+* (*) kbreakout
+* (*) killbots
+* (*) KSpaceDuel
+* (*) megaglest
+* (*) naev
+* (*) performous
+* (*) pingus
+* (*) spring (and spring-1944 game for spring)
+* (*) supertux
+* (*) teeworlds
+* (*) wesnoth
+* (*) widelands
+* (*) xpacman
+* (*) xpacman2
+* (*) xbill
+* (*) xmoto
+* (*) zazz
+
+### Too low-fi
+* (*) lincity-ng
+* (*) slimevolley
+
+
+## Not looked over yet
+e and higher letters for search "game" in AUR
+
+## Wouldn't install
+* adanaxis-gpl "shooter game in four spacial dimentions"
+* adonthell-wastesedge
+* after-school "handpainted on paper, using pencil and watercolors"
+* bitfighter "team-based outer-space multi-player combat game"
+  tried to download a zip file from google code (Google Code is discontinued)
+* caveexpress (many SDL typedef redefinitions)
+* castles-in-the-sky "package filename is not valid"
+* droidquest "package filename is not valid"
+
+## Not tried
+bombermaaan (multiplayer bomberman clone)
+doukutsu (japanese version of Cave Story nonfree)
+dreamweb (dystopian city adventure game)
+
+## Descriptions
+* adom - plot-driven roguelike
+* atari-combat
+* avanor
+* balazarbrothers
+* ballerburg
+* blackvoxel
+
+## Commercial Games
+This is only a list of commercial games that aren't marked as such in AUR
+(packages ending in -hib aren't included in this list).
+(hib) = Requires installation via Steam? (hib protocol--Humble Indie Bundle)
+* albion-online*
+* (hib) dontstarve
+
+## I did not review games I consider special interest games
+* board games
+  * (*) KSirk is a world-domination strategy game
+  * (*) konquest
+  * (*) xmahjongg
+* (purely) puzzle games
+  * (*) fillets-ng
+  * (*) freedroid
+  * (*) gweled
+* card games
+  * (*) frtg "Race for the Galaxy"
+* sports games
+  * (*) golf
+* (purely) physics games
+  * (*) caph "Sandbox game based on physics"
+  * (*) kollision
+
+
+## details of errors:
+#### caveexpress
+See [caveexpress-errors.md](caveexpress-errors.md)
