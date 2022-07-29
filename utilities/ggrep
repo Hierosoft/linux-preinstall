@@ -9,28 +9,38 @@ profile = os.environ.get('HOME')
 if platform.system() == "Windows":
     profile = os.environ['USERPROFILE']
 
-tryRepo = os.path.join(profile, "git", "linux-preinstall")
-tryModule = os.path.join(tryRepo, "linuxpreinstall")
+tryRepo = os.path.join(profile, "git", "pycodetool")
+tryModule = os.path.join(tryRepo, "pycodetool")
 
-thisRepo = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+MY_MODULE = os.path.dirname(os.path.abspath(__file__))
+MY_REPO = os.path.dirname(MY_MODULE)
+MY_REPOS = os.path.dirname(MY_REPO)
 
-if os.path.isdir(os.path.join(thisRepo, "linuxpreinstall")):
-    sys.path.insert(0, thisRepo)
-    print("[ggrep] using own {}".format(thisRepo))
+nearbyRepo = os.path.join(MY_REPOS, "pycodetool")
+
+
+def echo0(*args, **kwargs):  # formerly prerr
+    print(*args, file=sys.stderr, **kwargs)
+
+if os.path.isfile(os.path.join(nearbyRepo, "pycodetool", "ggrep.py")):
+    sys.path.insert(0, nearbyRepo)
+    echo0("[ggrep] using nearby {}".format(nearbyRepo))
 elif os.path.isdir(tryModule):
     sys.path.insert(0, tryRepo)
-    print("[ggrep] using git {}".format(tryRepo))
+    echo0("[ggrep] using git {}".format(tryRepo))
 else:
     pass
     # use the one in the python path (or fail)
     # print("There is no {}".format(os.path.join(thisRepo, "linuxpreinstall")))
 
 try:
-    from linuxpreinstall.ggrep import main
+    from pycodetool.ggrep import main
 except ImportError as ex:
-    print("ggrep is a Python module now. You must install the repo:")
-    print("# Clone it then:")
-    print("python3 -m pip install linux-preinstall")
+    echo0("ggrep is a Python module in pycodetool now. You must install the repo:")
+    echo0("# Clone it then:")
+    echo0("python3 -m pip install pycodetool")
+    echo0("# or just:  git clone https://github.com/poikilos/pycodetool {}")
+    sys.exit(1)
 
 
 if __name__ == '__main__':
