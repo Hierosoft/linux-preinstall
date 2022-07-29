@@ -68,6 +68,11 @@ python3 -m pip install --user `pwd`
 ```
 
 ## Overview
+There are some things that are for everyone that Linux distros don't provide for various reasons such as:
+- The package isn't well-maintained but works fine.
+- There is no packaged version for the distro's package manager (There is no RPM or deb, or at least one not submitted to the distro nor upstream distro's repo if any). In other words, the maintainer of the project doesn't compile such a package and there is no separate package maintainer (That's where you can help if you learn how!).
+
+Linux Preinstall aims to solve that.
 
 In some cases, instructions for beginners are included. Scripts such as those listed below may be helpful for you if you are starting linux or starting someone else on linux:
 - [Lubuntu - most essential tips only.md](Lubuntu%20-%20most%20essential%20tips%20only.md)

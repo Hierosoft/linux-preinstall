@@ -1,8 +1,12 @@
 # MATE
 
-MATE is a low-resource desktop environment (DE) and seems to handle low-memory situations well (when other applications are taking up resources). I used to get a hard freeze every so often in Xfce (in all recent versions in the past few years). GNU OOM killer daemon doesn't seem to be enough for Xfce--The situation is fatal before the daemon can step in. There are ways to configure the OOM killer daemon further, but I haven't gone that far. I recommend nohang either way, since I haven't proven for sure MATE fixes all of the issues as I also upgraded my RAM around then.
+MATE is a relatively light desktop environment (DE) and is a continuation of GNOME 2. With a few tweaks, you can have modern and popular features and keep the advantages.
 
-nohang: I know nohang basically solved the issue with Xfce though it isn't very comforting since maybe if I don't click "yes" to terminate processes maybe it would hang. Something similar is built into Windows (a low memory warning with an option or eventual requirement to terminate large processes). I consider nohang or something like it a necessity for using a computer for any sort of work, or in general, anything you don't want to lose (the same rule of thumb that applies to backup frequency). The nohang package is available on several distros and more information is at the nohang repo.
+## Lightweight Desktop Environments
+MATE seems to handle low-memory situations well (when other applications are taking up resources). I used to get a hard freeze every so often in Xfce (in all recent versions in the past few years). GNU OOM killer daemon doesn't seem to be enough for Xfce--The situation is fatal before the daemon can step in. There are ways to configure the OOM killer daemon further, but I haven't gone that far. I recommend nohang either way, since I haven't proven for sure MATE fixes all of the issues as I also upgraded my RAM around then.
+
+## Prevent Freezing on Low Memory
+Mate is pretty good but [nohang](../nohang.md) is still advisable.
 
 
 ## Suggested Configuration
