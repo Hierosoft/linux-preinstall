@@ -11,10 +11,12 @@ nohang: I know nohang basically solved the issue with Xfce though it isn't very 
 - Use Dock `*`: MATE Dock is a "true dock," in the sense that a pinned icon automatically change to application switcher if that application is open, similarly to KDE, Windows and macOS.
 - Install and add "Indicator Applet Complete" `*`.
   - After manually adding it and moving it to the far right of the bottom menu, you see and control GUI-based applets such as Nextcloud which follow the app indicator paradigm (similarly to Windows tray icons).
-- Use [Brisk Menu](brisk-menu.md), a searchable menu where you can add favorites: Remove the Application menu and add Brisk Menu there at the bottom left.
+- Move the "Desktop" button to the bottom all and the way to the right, like other desktops (such as KDE and Windows).
+- Use [Brisk Menu](brisk-menu.md), a searchable menu where you can add favorites: Remove the Application menu ("Classic Menu") and add Brisk Menu there at the bottom left.
   - Install mozo `*`: This application makes the "Edit" feature of the Brisk Menu load the mozo GUI).
 
 `*` See [everyone/MATE/mate-panel-additions.deb.sh](../../everyone/MATE/mate-panel-additions.deb.sh)
+
 
 ## linuxpreinstall/mate submodule
 This submodule is for Python programmers (and this project) who want to script changes to the MATE menu.
