@@ -4,6 +4,7 @@ This file has become a compilation of multiple lists:
 - [Game stores and other listings](#game-stores-and-other-listings)
 - [Free Casual Games for Linux](#free-casual-games-for-linux)
 
+
 # Native Linux Games That Go Beyond Casual Gaming
 This list focuses primarily on games in linux repositories, which mostly includes free games and game stores but also includes a games that require a paid account.
 
@@ -43,7 +44,6 @@ https://aur.archlinux.org/packages/?O=50&K=game&do_Search=Git&PP=25&SB=v&SO=d
 * [3] solarus-quest-editor graphical tool to create and modify quests for solarus
 * [1] stuntrally (3D racing game with track editor and focus on physics and graphics)
 
-$=may require a paid account
 
 ## "Beyond Casual" games from mainstream linux repositories (package names are from arch):
 * 0ad ("0 A.D." -- real-time strategy game)
@@ -66,6 +66,8 @@ $=may require a paid account
 
 Please feel free to comment and mention games I missed if they meet all of the criteria in the first section. However, I excluded some popular native linux games intentionally because I believe they don’t.
 
+`$` may require a payment or paid account
+
 
 # Game stores and other listings
 Desura (game store):
@@ -82,12 +84,7 @@ http://sourceforge.net/p/forge/community-docs/SourceForge%20Games/
 
 
 # Free Casual Games for Linux
-(as found on AUR)
-
-## Descriptions
-
-(*) = From Mainstream Repos
-(such as arch, via Antergos graphical package manager search for "game" [more results than justing using the Game category])
+(as found on AUR, such as on Arch repos via Antergos [deprecated; or Manjaro] graphical package manager search for "game" [more results than just using the Game category for some reason :( ]; not sure if looked thoroughly after results starting with "e" yet)
 
 * (*) abuse
 * (*) digger
@@ -124,24 +121,22 @@ http://sourceforge.net/p/forge/community-docs/SourceForge%20Games/
 * (*) lincity-ng
 * (*) slimevolley
 
-
-## Not looked over yet
-e and higher letters for search "game" in AUR
-
-## Wouldn't install
-* adanaxis-gpl "shooter game in four spacial dimentions"
+## Compilation Failed
+* adanaxis-gpl "shooter game in four spacial dimentions" [sic]
 * adonthell-wastesedge
 * after-school "handpainted on paper, using pencil and watercolors"
 * bitfighter "team-based outer-space multi-player combat game"
   tried to download a zip file from google code (Google Code is discontinued)
-* caveexpress (many SDL typedef redefinitions)
+* caveexpress [many SDL typedef redefinitions](caveexpress-errors.md)
 * castles-in-the-sky "package filename is not valid"
 * droidquest "package filename is not valid"
+
 
 ## Not tried
 bombermaaan (multiplayer bomberman clone)
 doukutsu (japanese version of Cave Story nonfree)
 dreamweb (dystopian city adventure game)
+
 
 ## Descriptions
 * adom - plot-driven roguelike
@@ -151,12 +146,15 @@ dreamweb (dystopian city adventure game)
 * ballerburg
 * blackvoxel
 
+
 ## Commercial Games
 This is only a list of commercial games that aren't marked as such in AUR
 (packages ending in -hib aren't included in this list).
-(hib) = Requires installation via Steam? (hib protocol--Humble Indie Bundle)
 * albion-online*
 * (hib) dontstarve
+
+[Enable Steam Play](https://itsfoss.com/steam-play/) within the Linux version of Steam to be able to see and try to play Windows games on Steam for Linux using Proton, Valve's advanced fork of Wine with DirectX support (Proton contributes code back to the [wine project](https://www.winehq.org/) as well so many improvements have been made there too)! Likely, you can simply install Steam using the "steam" package on your distro's repository (such as via "Software" in your applications list).
+
 
 ## I did not review games I consider special interest games
 * board games
@@ -176,6 +174,7 @@ This is only a list of commercial games that aren't marked as such in AUR
   * (*) kollision
 
 
-## details of errors:
-#### caveexpress
-See [caveexpress-errors.md](caveexpress-errors.md)
+(*) From Mainstream Repos
+
+(hib) Requires installation via Steam? (hib protocol--Humble Indie Bundle)
+
