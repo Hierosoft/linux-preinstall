@@ -304,12 +304,17 @@ via pip (See the "[Install](#install)" section).
     utilities/reconnect-audio.sh which calls `selectoutput hdmi` if
     `selectoutput` is in the path.
 - `whichicon`: Find what icon (.desktop) file provides a given command.
-- `ggrep`: Get a geany command to go to the line in the file from grep
-  (searching within file(s)). Recursively search directories by default.
 - `sort-brisk-menu-favs`: can sort the favorites ("Favourites"
   (en_GB)) menu.
 - `remove-bad-mate-items`: Remove bad mate items (if no param is
   specified, remove items with a blank `applet-iid`).
+
+#### pycodetool commands
+The following scripts utilize <https://github.com/poikilos/pycodetool>:
+- `ggrep`: Get a geany command to go to the line in the file from grep
+  (searching within file(s)). Recursively search directories by default.
+- `changes`: Look for repos in the current directory and show what
+  changes are not yet committed (including untracked).
 
 #### System commands for servers
 - [backup-nginx-symlinks](linuxpreinstall/server/backup_nginx_symlinks.py)

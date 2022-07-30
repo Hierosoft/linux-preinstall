@@ -22,21 +22,23 @@ nearbyRepo = os.path.join(MY_REPOS, "pycodetool")
 def echo0(*args, **kwargs):  # formerly prerr
     print(*args, file=sys.stderr, **kwargs)
 
-if os.path.isfile(os.path.join(nearbyRepo, "pycodetool", "ggrep.py")):
+
+if os.path.isfile(os.path.join(nearbyRepo, "pycodetool", "changes.py")):
     sys.path.insert(0, nearbyRepo)
-    echo0("[ggrep] using nearby {}".format(nearbyRepo))
+    echo0("[changes] using nearby {}".format(nearbyRepo))
 elif os.path.isdir(tryModule):
     sys.path.insert(0, tryRepo)
-    echo0("[ggrep] using git {}".format(tryRepo))
+    echo0("[changes] using git {}".format(tryRepo))
 else:
     pass
     # use the one in the python path (or fail)
     # print("There is no {}".format(os.path.join(thisRepo, "linuxpreinstall")))
 
 try:
-    from pycodetool.ggrep import main
+    from pycodetool.changes import main
 except ImportError as ex:
-    echo0("ggrep is a Python module in pycodetool now. You must install the repo:")
+    echo0(str(ex))
+    echo0("changes is a Python module in pycodetool now. You must install the repo:")
     echo0("# Clone it then:")
     echo0("python3 -m pip install pycodetool")
     echo0('# or just put it in a directory near here such as via:')
