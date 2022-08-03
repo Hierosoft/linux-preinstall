@@ -20,6 +20,9 @@ import os
 # import Image
 from PIL import Image
 # Image requires Pillow such as via: python3 -m pip install --user Pillow
+from pycodetool.parsing import (
+    find_slice,
+)
 
 verbosity = 0
 
@@ -84,29 +87,8 @@ def has_transparency(img):
             return True
 
 
-def find_slice(haystack, starter, ender):
-    '''
-    Find a pair of strings and get the slice to get or remove the string
-    (index of starter, and index of ender + 1) or return -1, -1. The
-    starter and ender can be the same character, and it must occur
-    twice to count. Otherwise, ender must occur after starter to count.
-
-    Sequential arguments:
-    haystack -- The string to slice.
-    starter -- The first needle such as "(".
-    ender -- The second needle such as ")".
-    '''
-    startI = haystack.find(starter)
-    if startI < 0:
-        return -1, -1
-    endI = haystack.find(ender, startI + 1)
-    if endI < 0:
-        return -1, -1
-    return startI, endI+1
-
-
 def zc_make_sized_images(src_path, dst_zen_cart, force=False,
-                         im_format="JPEG"):
+                         im_format="JPEG", force_jpg_for_large=False):
     '''
     Make 3 images in the dst_zen_cart's images directory.
 
@@ -174,6 +156,7 @@ def zc_make_sized_images(src_path, dst_zen_cart, force=False,
             dst_name = dst_name[:-len(bad_end)] + good_end
             dst_path = os.path.join(dst_dir, dst_name)
 
+        '''
         if dst_name == "LT-50" + complete_end:
             if os.path.isfile(dst_path):
                 sys.stderr.write('removing "{}"...'.format(dst_path))
@@ -181,6 +164,7 @@ def zc_make_sized_images(src_path, dst_zen_cart, force=False,
             sys.stderr.write('appended _face to "{}"...'.format(dst_name))
             dst_name = "LT-50_face" + complete_end
             dst_path = os.path.join(dst_dir, dst_name)
+        '''
 
         size = sizes[size_idx]
         if os.path.isfile(old_path):
@@ -196,7 +180,7 @@ def zc_make_sized_images(src_path, dst_zen_cart, force=False,
         try:
             im = Image.open(src_path)
             im.thumbnail(size, Image.ANTIALIAS)
-            if size_idx == SIZE_IDX_LARGE:
+            if (size_idx == SIZE_IDX_LARGE) and force_jpg_for_large:
                 oldEnd = ".png"
                 # if has_transparency(im)
                 if dst_path.endswith(oldEnd):
