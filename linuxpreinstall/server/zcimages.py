@@ -60,6 +60,13 @@ sizes = [(120, 120), (400, 400), (1200, 1200)]
 # (narrow images are that wide).
 suffixes = ["", "_MED", "_LRG"]
 size_names = ['regular', 'medium', 'large']
+bad_ends = ["Final Product Image", "Final Production Image", "Final Image", "Product Image", "Production Image", "Render"]
+replacements = [
+    ("Final_Face", "face"),
+]
+SIZE_IDX_REGULAR = 0
+SIZE_IDX_MEDIUM = 1
+SIZE_IDX_LARGE = 2
 
 
 def has_transparency(img):
@@ -75,6 +82,27 @@ def has_transparency(img):
         extrema = img.getextrema()
         if extrema[3][0] < 255:
             return True
+
+
+def find_slice(haystack, starter, ender):
+    '''
+    Find a pair of strings and get the slice to get or remove the string
+    (index of starter, and index of ender + 1) or return -1, -1. The
+    starter and ender can be the same character, and it must occur
+    twice to count. Otherwise, ender must occur after starter to count.
+
+    Sequential arguments:
+    haystack -- The string to slice.
+    starter -- The first needle such as "(".
+    ender -- The second needle such as ")".
+    '''
+    startI = haystack.find(starter)
+    if startI < 0:
+        return -1, -1
+    endI = haystack.find(ender, startI + 1)
+    if endI < 0:
+        return -1, -1
+    return startI, endI+1
 
 
 def zc_make_sized_images(src_path, dst_zen_cart, force=False,
@@ -94,31 +122,111 @@ def zc_make_sized_images(src_path, dst_zen_cart, force=False,
         raise ValueError('"images" doesn\'t exist in the destination {}'
                          ''.format(dst_zen_cart))
     print('* input: "{}"'.format(src_path))
-    for SIZE_IDX in range(len(dst_dirs)):
-        dst_dir = os.path.join(dst_zen_cart, dst_dirs[SIZE_IDX])
+    for size_idx in range(len(dst_dirs)):
+        dst_dir = os.path.join(dst_zen_cart, dst_dirs[size_idx])
         name = os.path.split(src_path)[1]
         nameNoExt, dotExt = os.path.splitext(name)
-        dst_name = nameNoExt.replace(" ", "_") + suffixes[SIZE_IDX]
-        dst_name += "." + im_format.lower()
+        dst_name = nameNoExt
+        good_end = "." + im_format.lower()
+        complete_end = suffixes[size_idx] + good_end
+        old_name = nameNoExt + complete_end
+        parStartI, parEndI = find_slice(dst_name, "(", ")")
+        if parStartI > -1:
+            dst_name = dst_name[:parStartI] + dst_name[parEndI:]
+        for bad_end in bad_ends:
+            if dst_name.lower().endswith(bad_end.lower()):
+                bad_name = dst_name[:len(bad_end)].strip()
+                dst_name = dst_name[:-len(bad_end)].strip()
+                bad_name = bad_name.replace(" ", "_")
+                bad_name += complete_end
+                bad_path = os.path.join(dst_dir, bad_name)
+                if os.path.isfile(bad_path):
+                    sys.stderr.write('removing "{}"...'.format(bad_path))
+                    os.remove(bad_path)
+        while "  " in dst_name:
+            dst_name = dst_name.replace("  ", " ")
+        dst_name = dst_name.strip()
+        dst_name = dst_name.replace(" ", "_")
+        old_name = old_name.replace(" ", "_")
+        dst_name += complete_end
         dst_path = os.path.join(dst_dir, dst_name)
+        old_path = os.path.join(dst_dir, old_name)
         sys.stderr.write('  * {}: {}...'
-                         ''.format(size_names[SIZE_IDX], dst_path))
-        size = sizes[SIZE_IDX]
+                         ''.format(size_names[size_idx], dst_path))
+        for replacement in replacements:
+            old, new = replacement
+            long_name = dst_name
+            long_path = dst_path
+            dst_name = dst_name.replace(old, new)
+            while "__" in dst_name:
+                dst_name = dst_name.replace("__", "_")
+            if dst_name != long_name:
+                dst_path = os.path.join(dst_dir, dst_name)
+                if os.path.isfile(long_path):
+                    sys.stderr.write('removing "{}"...'.format(long_name))
+                    os.remove(long_path)
+        # sys.stderr.write('before _ end check, name is "{}"'.format(dst_name))
+        bad_end = "_" + good_end
+        while dst_name.endswith(bad_end):
+            if os.path.isfile(dst_path):
+                sys.stderr.write('removing "{}"...'.format(dst_path))
+                os.remove(dst_path)
+            dst_name = dst_name[:-len(bad_end)] + good_end
+            dst_path = os.path.join(dst_dir, dst_name)
+
+        if dst_name == "LT-50" + complete_end:
+            if os.path.isfile(dst_path):
+                sys.stderr.write('removing "{}"...'.format(dst_path))
+                os.remove(dst_path)
+            sys.stderr.write('appended _face to "{}"...'.format(dst_name))
+            dst_name = "LT-50_face" + complete_end
+            dst_path = os.path.join(dst_dir, dst_name)
+
+        size = sizes[size_idx]
+        if os.path.isfile(old_path):
+            sys.stderr.write('removing "{}"...'.format(old_name))
+            os.remove(old_path)
+        else:
+            pass
+            # sys.stderr.write('no "{}"...'.format(old_name))
         # See <https://stackoverflow.com/a/273962/4541104>
         ok_msg = "created"
-        if os.path.isfile(dst_path):
-            ok_msg = "already exists (skipped)"
-            if force:
-                ok_msg = "already exists (overwritten)"
-                os.remove(dst_path)
-        if os.path.isfile(dst_path):
-            echo0(ok_msg)
-            continue
+
+
         try:
             im = Image.open(src_path)
             im.thumbnail(size, Image.ANTIALIAS)
+            if size_idx == SIZE_IDX_LARGE:
+                oldEnd = ".png"
+                # if has_transparency(im)
+                if dst_path.endswith(oldEnd):
+                    # Reduce the file size of large images dramatically
+                    #   by changing from png to jpg.
+                    # See <https://stackoverflow.com/a/9459208/4541104>
+                    rgbIm = Image.new("RGB", im.size, (255, 255, 255))
+                    if has_transparency(im):
+                        rgbIm.paste(im, mask=im.split()[3]) # 3: alpha channel
+                    else:
+                        rgbIm.paste(im)
+                    im.close()
+                    im = rgbIm
+                    if os.path.isfile(dst_path):
+                        sys.stderr.write('removing "{}"...'.format(dst_path))
+                        os.remove(dst_path)
+                    dst_path = dst_path[:-len(oldEnd)] + ".jpg"
+                    im_format = "JPEG"
+            if os.path.isfile(dst_path):
+                ok_msg = "already exists (skipped)"
+                if force:
+                    ok_msg = "already exists (overwritten)"
+                    os.remove(dst_path)
+            if os.path.isfile(dst_path):
+                echo0(ok_msg)
+                continue
+
             im.save(dst_path, im_format)
             echo0(ok_msg)
+            im.close()
         except IOError as ex:
             echo0("    "+str(ex))
             echo0("    cannot create thumbnail for '%s'" % src_path)
