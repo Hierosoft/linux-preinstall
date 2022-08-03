@@ -72,6 +72,7 @@ setuptools.setup(
             # 'cb-install-theme=linuxpreinstall.codeblocks.theme:main',  # WIP
             'backup-nginx-symlinks=linuxpreinstall.server.backup_nginx_symlinks:main',
             'sort-brisk-menu-favs=linuxpreinstall.mate.brisk_menu:main',
+            'zc-make-sized-images=linuxpreinstall.server.zc:main',
             # 'remove-blank-mate-items=linuxpreinstall.mate.panel:main',  # WIP
         ],
     },

@@ -1,0 +1,167 @@
+#!/usr/bin/env python3
+'''
+zcimages
+--------
+This script is part of <https://github.com/poikilos/linux-preinstall>.
+Run this script in an offline Zen Cart directory (or online one where
+the projects directory is hidden from the public) containing both the
+source projects/images and the destination images/ to convert images in
+projects/images (non-recursively, ignoring filenames starting with ".")
+into 3 sizes of images usable by Zen Cart. In other words, this module
+accomplishes a similar task as Image Handler's upload feature when the
+feature isn't working: The following 3 images will be generated:
+- images/$name.jpg
+- images/medium/$name_MED.jpg
+- images/large/$name_LRG.jpg
+
+'''
+import sys
+import os
+# import Image
+from PIL import Image
+# Image requires Pillow such as via: python3 -m pip install --user Pillow
+
+verbosity = 0
+
+
+def echo0(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
+    return True
+
+
+def echo1(*args, **kwargs):
+    if verbosity < 1:
+        return False
+    print(*args, file=sys.stderr, **kwargs)
+    return True
+
+
+def echo1(*args, **kwargs):
+    if verbosity < 1:
+        return False
+    print(*args, file=sys.stderr, **kwargs)
+    return True
+
+
+src_dirs = []
+src_dirs.append(os.path.join("projects", "images"))
+src_dirs.append(os.path.join(src_dirs[0], "medium"))
+src_dirs.append(os.path.join(src_dirs[0], "large"))
+
+dst_dirs = []
+dst_dirs.append("images")
+dst_dirs.append(os.path.join(dst_dirs[0], "medium"))
+dst_dirs.append(os.path.join(dst_dirs[0], "large"))
+
+sizes = [(120, 120), (400, 400), (1200, 1200)]
+# ^ Images on shop.tcsdcc.com predating this script are generally:
+# [300, 1600, 3843] or so. However, the width was used instead of the
+# max dimension, so the actual numbers used appear to be 120, 400, 1200
+# (narrow images are that wide).
+suffixes = ["", "_MED", "_LRG"]
+size_names = ['regular', 'medium', 'large']
+
+
+def has_transparency(img):
+    # From <https://stackoverflow.com/a/58567453/4541104>
+    if img.info.get("transparency", None) is not None:
+        return True
+    if img.mode == "P":
+        transparent = img.info.get("transparency", -1)
+        for _, index in img.getcolors():
+            if index == transparent:
+                return True
+    elif img.mode == "RGBA":
+        extrema = img.getextrema()
+        if extrema[3][0] < 255:
+            return True
+
+
+def zc_make_sized_images(src_path, dst_zen_cart, force=False,
+                         im_format="JPEG"):
+    '''
+    Make 3 images in the dst_zen_cart's images directory.
+
+    Sequential arguments:
+    src_path -- the image file to resize and convert to jpg.
+    dst_zen_cart -- the Zen Cart directory containing the "images"
+        directory.
+
+    Keyword arguments:
+    force -- Overwrite existing destination image(s).
+    '''
+    if not os.path.isdir(os.path.join(dst_zen_cart, "images")):
+        raise ValueError('"images" doesn\'t exist in the destination {}'
+                         ''.format(dst_zen_cart))
+    print('* input: "{}"'.format(src_path))
+    for SIZE_IDX in range(len(dst_dirs)):
+        dst_dir = os.path.join(dst_zen_cart, dst_dirs[SIZE_IDX])
+        name = os.path.split(src_path)[1]
+        nameNoExt, dotExt = os.path.splitext(name)
+        dst_name = nameNoExt.replace(" ", "_") + suffixes[SIZE_IDX]
+        dst_name += "." + im_format.lower()
+        dst_path = os.path.join(dst_dir, dst_name)
+        sys.stderr.write('  * {}: {}...'
+                         ''.format(size_names[SIZE_IDX], dst_path))
+        size = sizes[SIZE_IDX]
+        # See <https://stackoverflow.com/a/273962/4541104>
+        ok_msg = "created"
+        if os.path.isfile(dst_path):
+            ok_msg = "already exists (skipped)"
+            if force:
+                ok_msg = "already exists (overwritten)"
+                os.remove(dst_path)
+        if os.path.isfile(dst_path):
+            echo0(ok_msg)
+            continue
+        try:
+            im = Image.open(src_path)
+            im.thumbnail(size, Image.ANTIALIAS)
+            im.save(dst_path, im_format)
+            echo0(ok_msg)
+        except IOError as ex:
+            echo0("    "+str(ex))
+            echo0("    cannot create thumbnail for '%s'" % src_path)
+
+
+def main():
+    global verbosity
+    sys.stderr.write('Looking for "{}"...'.format(src_dirs[0]))
+    if not os.path.isdir(src_dirs[0]):
+        echo0('Error: You must run this script from an offline Zen Cart'
+              ' directory containing the source images directory.')
+        return 1
+    else:
+        echo0("OK")
+    sys.stderr.write('Looking for "{}"...'.format(src_dirs[0]))
+    if not os.path.isdir(src_dirs[0]):
+        echo0('Error: You must run this script from an offline Zen Cart'
+              ' directory containing the destination images directory.')
+        return 1
+    else:
+        echo0("OK")
+    force = False
+    for argI in range(1, len(sys.argv)):
+        arg = sys.argv[argI]
+        if arg == "--verbose":
+            verbosity = 1
+        elif arg == "--debug":
+            verbosity = 2
+        elif arg == "--force":
+            force = True
+        else:
+            echo0('Unknown argument: "{}"'.format(arg))
+            return 1
+    for sub in os.listdir(src_dirs[0]):
+        subPath = os.path.join(src_dirs[0], sub)
+        if sub.startswith("."):
+            continue
+        if os.path.isdir(subPath):
+            continue
+        zc_make_sized_images(subPath, ".", force=force,
+                             im_format="PNG")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
