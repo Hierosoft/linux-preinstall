@@ -63,7 +63,8 @@ sizes = [(120, 120), (400, 400), (1200, 1200)]
 # (narrow images are that wide).
 suffixes = ["", "_MED", "_LRG"]
 size_names = ['regular', 'medium', 'large']
-bad_ends = ["Final Product Image", "Final Production Image", "Final Image", "Product Image", "Production Image", "Render"]
+bad_ends = ["Final Product Image", "Final Production Image",
+            "Final Image", "Product Image", "Production Image", "Render"]
 replacements = [
     ("Final_Face", "face"),
 ]
@@ -176,7 +177,6 @@ def zc_make_sized_images(src_path, dst_zen_cart, force=False,
         # See <https://stackoverflow.com/a/273962/4541104>
         ok_msg = "created"
 
-
         try:
             im = Image.open(src_path)
             im.thumbnail(size, Image.ANTIALIAS)
@@ -189,7 +189,8 @@ def zc_make_sized_images(src_path, dst_zen_cart, force=False,
                     # See <https://stackoverflow.com/a/9459208/4541104>
                     rgbIm = Image.new("RGB", im.size, (255, 255, 255))
                     if has_transparency(im):
-                        rgbIm.paste(im, mask=im.split()[3]) # 3: alpha channel
+                        rgbIm.paste(im, mask=im.split()[3])
+                        # ^ 3: alpha channel
                     else:
                         rgbIm.paste(im)
                     im.close()

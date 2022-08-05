@@ -30,26 +30,24 @@ Example:
 from __future__ import print_function
 import sys
 import os
-python_mr = sys.version_info.major
 '''
 import json
 import platform
 import copy
 from datetime import datetime, timedelta
 
-if python_mr > 2:  # try:
+if sys.version_info.major >= 3:  # try:
     import urllib.request
     request = urllib.request
 else:  # except ImportError:
     # Python 2
-    print("* detected Python " + str(python_mr))
+    print("* detected Python " + str(sys.version_info.major))
     import urllib2 as urllib
     request = urllib
 '''
 
 
-
-if python_mr > 2:
+if sys.version_info.major >= 3:
     from urllib.parse import urlparse
     from urllib.parse import urlsplit
     # from urllib.parse import quote_plus
@@ -87,7 +85,7 @@ else:
     from urlparse import parse_qs
 
 
-import requests
+# import requests
 
 no_redirects = "-no_redirects"
 
@@ -178,7 +176,7 @@ def unredirect_file(path, dest):
                                 break
                             elif k == 'q':
                                 msg = ("{} doesn't start with any of {}"
-                                       "".format(v, encOpeners))
+                                       "".format(v, decOpeners))
                                 raise NotImplementedError(msg)
                     # if len(pr.query) > 0:
                     #     echo0(pr)
@@ -217,6 +215,7 @@ def main():
     if inFile is None:
         usage()
         echo0("Error: You must at least specify a Markdown file.")
+        return 1
     elif os.path.isfile(inFile):
         echo0('* reading "{}"'.format(inFile))
         fBase, fDotExt = os.path.splitext(inFile)
@@ -227,7 +226,9 @@ def main():
     else:
         usage()
         echo0('Error: "{}" does not exist'.format(inFile))
+        return 1
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

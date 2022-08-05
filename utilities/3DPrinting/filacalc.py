@@ -13,11 +13,13 @@ else:
     from Tkinter import *
     # from StringIO import StringIO
 
+
 def show_message(msg, console_enable=False):
     outputE.delete(0, END)
     outputE.insert(0, msg)
     if console_enable:
         print(msg)
+
 
 def get_float(s, name, unit):
     s = s.strip()
@@ -43,6 +45,7 @@ def get_float(s, name, unit):
         show_message(msg)
         return None
     return r
+
 
 def show_kg_click():
     show_message("")
@@ -70,6 +73,7 @@ def show_kg_click():
         )
     )
 
+
 def show_length_click():
     show_message("")
     weightS = kgE.get().strip()
@@ -84,6 +88,7 @@ def show_length_click():
         return
     lengthE.delete(0, END)
     lengthE.insert(0, "not yet implemented")
+
 
 master = Tk()
 master.title("FilaCalc by Poikilos")
@@ -130,6 +135,6 @@ lengthE.insert(0, "120")
 new_row_i += 1
 
 outputE = Entry(master)
-outputE.grid(row=new_row_i, column=0, columnspan=2, sticky = W+E)
+outputE.grid(row=new_row_i, column=0, columnspan=2, sticky=W+E)
 
-mainloop( )
+mainloop()

@@ -14,7 +14,7 @@ im_name = "install_any"
 
 if not os.path.isfile(im_path):
     print("'{}' is missing.".format(im_path))
-    exit(1)
+    sys.exit(1)
 
 
 # Did not work (no module named util):
@@ -24,24 +24,26 @@ if not os.path.isfile(im_path):
 # See Sebastian Rittau's answer https://stackoverflow.com/a/67692 to
 # <https://stackoverflow.com/questions/67631/\
 # how-to-import-a-module-given-the-full-path>
-# try:
-    # import importlib.util
-    # spec = importlib.util.spec_from_file_location(im_name, im_path)
-    # im = importlib.util.module_from_spec(spec)
-    # spec.loader.exec_module(im)
-    # im.MyClass()
-# except ImportError:  # no module named util
-    # try:
-        # # For Python 3.3 and 3.4 use:
-        # from importlib.machinery import SourceFileLoader
-        # im = SourceFileLoader(im_name, im_path).load_module()
-        # im.MyClass()
-        # # (Although this has been deprecated in Python 3.4.)
-    # except AttributeError:
-        # # For Python 2 use:
-        # import imp
-        # im = imp.load_source(im_name, im_path)
-        # im.MyClass()
+'''
+try:
+    import importlib.util
+    spec = importlib.util.spec_from_file_location(im_name, im_path)
+    im = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(im)
+    im.MyClass()
+except ImportError:  # no module named util
+    try:
+        # For Python 3.3 and 3.4 use:
+        from importlib.machinery import SourceFileLoader
+        im = SourceFileLoader(im_name, im_path).load_module()
+        im.MyClass()
+        # (Although this has been deprecated in Python 3.4.)
+    except AttributeError:
+        # For Python 2 use:
+        import imp
+        im = imp.load_source(im_name, im_path)
+        im.MyClass()
+'''
 # so instead:
 
 # See Jacob Vlijm's answer https://askubuntu.com/a/471168 at
@@ -64,13 +66,14 @@ extracted_path = os.path.join(downloads, extracted_name)
 
 if not os.path.isdir(extracted_path):
     if not os.path.isfile(dl_path):
-        # see https://stackoverflow.com/questions/15644964/python-progress-bar-and-downloads
+        # See <https://stackoverflow.com/questions/15644964/
+        #   python-progress-bar-and-downloads>
         with open(dl_path, "wb") as f:
             print "Downloading %s" % dl_path
             response = requests.get(url, stream=True)
             total_length = response.headers.get('content-length')
 
-            if total_length is None: # no content length header
+            if total_length is None:  # no content length header
                 f.write(response.content)
             else:
                 dl = 0
@@ -79,7 +82,7 @@ if not os.path.isdir(extracted_path):
                     dl += len(data)
                     f.write(data)
                     done = int(50 * dl / total_length)
-                    sys.stdout.write("\r[%s%s]" % ('=' * done, ' ' * (50-done)) )
+                    sys.stdout.write("\r[%s%s]" % ('=' * done, ' ' * (50-done)))
                     sys.stdout.flush()
     else:
         print("* using existing '{}'".format(dl_path))

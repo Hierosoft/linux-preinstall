@@ -227,9 +227,12 @@ def _init_commands():
         install_parts = [install_bin, "-Syyu", "--noconfirm"]
         remove_parts = [install_bin, "-R", "--noconfirm"]
         upgrade_parts = [install_bin, "-Syyu", "--noconfirm"]
-        #REFRESH_CMD = [install_bin, "-Scc"]
-        # refresh_parts = ["#nothing do refresh since using pacman (pacman -Scc clears cache but that's rather brutal)...  # "]
-        list_installed_parts = [install_bin, "-Q"]  # Qe lists packages explicitly installed (see pacman -Q --help)
+        # REFRESH_CMD = [install_bin, "-Scc"]
+        # refresh_parts = [("#nothing do refresh since using pacman "
+        #                   "(pacman -Scc clears cache but that's"
+        #                   " rather brutal)...  # ")]
+        list_installed_parts = [install_bin, "-Q"]
+        # ^ Qe lists packages explicitly installed (see pacman -Q --help)
         pkg_search_parts = [install_bin, "-Ss"]
         echo0("WARNING: GTK3_DEV_PKG is unknown for pacman")
 
@@ -243,28 +246,33 @@ def _init_commands():
     elif package_type == "rpm":
         install_parts = [install_bin, "install", "-y"]
 
-    #if bin_exists("apt"):
-    #    refresh_result = subprocess.run(["apt", "refresh"])
-    #elif bin_exists("apt-get"):
-    #    refresh_result = subprocess.run(["apt-get", "refresh"])
+    # if bin_exists("apt"):
+    #     refresh_result = subprocess.run(["apt", "refresh"])
+    # elif bin_exists("apt-get"):
+    #     refresh_result = subprocess.run(["apt-get", "refresh"])
     if refresh_parts is not None:
         if os.geteuid() == 0:
-            # refresh_result = subprocess.run(refresh_parts, stdout=sys.stderr.buffer)
+            # refresh_result = subprocess.run(refresh_parts,
+            #                                 stdout=sys.stderr.buffer)
             # returncode = refresh_result.returncode
             # "run" returns an object but "call" only returns the code:
-            # returncode = subprocess.call(refresh_parts, stdout=sys.stderr.buffer)
-            returncode = subprocess.call(refresh_parts, stdout=sys.stderr.fileno())
+            # returncode = subprocess.call(refresh_parts,
+            #                              stdout=sys.stderr.buffer)
+            returncode = subprocess.call(refresh_parts,
+                                         stdout=sys.stderr.fileno())
             # ^ fileno() is Python 2 compatible
             #   https://stackoverflow.com/a/11495784/4541104
             #   (redirect stderr so stdout isn't flooded such as when
             #   using the sortversion command (which uses main from
             #   linuxpreinstall.versioning).
-            result_msg = "FAILED ({} didn't succeed with your privileges)".format(refresh_parts)
+            result_msg = ("FAILED ({} didn't succeed with your privileges)"
+                          "".format(refresh_parts))
             if returncode == 0:
                 result_msg = "OK"
             echo1("* refreshing package list..." + result_msg)
         else:
-            echo1("* linuxpreinstall is not refreshing the package list since you are not a superuser.")
+            echo1("* linuxpreinstall is not refreshing the package list"
+                  " since you are not a superuser.")
     echo1("  * done _init_commands")
 
 
@@ -274,7 +282,8 @@ def run_and_get_lists(cmd_parts, collect_stderr=True):
     a tuple of (out, err) where each is a list of 0 or more lines.
     '''
     # See <https://stackabuse.com/executing-shell-commands-with-python>:
-    # called = subprocess.run(list_installed_parts, stdout=subprocess.PIPE, text=True)
+    # called = subprocess.run(list_installed_parts,
+    #                         stdout=subprocess.PIPE, text=True)
     # , input="Hello from the other side"
     # echo0(called.stdout)
     outs = []
@@ -284,7 +293,8 @@ def run_and_get_lists(cmd_parts, collect_stderr=True):
     # one to read through the output as the sub process produces it."
     # –Hoons Jul 21 '16 at 23:19
     if collect_stderr:
-        sp = subprocess.Popen(cmd_parts, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        sp = subprocess.Popen(cmd_parts, stdout=subprocess.PIPE,
+                              stderr=subprocess.PIPE)
     else:
         sp = subprocess.Popen(cmd_parts, stdout=subprocess.PIPE)
 
@@ -307,7 +317,10 @@ def run_and_get_lists(cmd_parts, collect_stderr=True):
                 # -1 to execute the backspace not just remove it
             errs.append(line.rstrip("\n\r"))
     # See <https://stackoverflow.com/a/7468725/4541104>:
-    # out, err = subprocess.Popen(['ls','-l'], stdout=subprocess.PIPE).communicate()
+    # out, err = subprocess.Popen(
+    #     ['ls','-l'],
+    #     stdout=subprocess.PIPE,
+    # ).communicate()
 
     # out, err = sp.communicate()
     # (See <https://stackoverflow.com/questions/10683184/

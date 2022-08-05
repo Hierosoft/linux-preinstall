@@ -56,8 +56,10 @@ subs['firefox'] = {}
 # profile-folder-on-windows-mac-and-linux/>:
 subs['firefox']['Linux'] = os.path.join(".mozilla", "firefox")
 # ^ There is no Profiles directory on Linux.
-subs['firefox']['Windows'] = os.path.join("AppData", "Roaming", "Mozilla", "Firefox", "Profiles")
-subs['firefox']['Darwin'] = os.path.join("Library", "Application Support", "Firefox", "Profiles")
+subs['firefox']['Windows'] = \
+    os.path.join("AppData", "Roaming", "Mozilla", "Firefox", "Profiles")
+subs['firefox']['Darwin'] = \
+    os.path.join("Library", "Application Support", "Firefox", "Profiles")
 
 subs['thunderbird'] = {}
 # See <https://www.lifewire.com/thunderbird-profile-directory-1173093>:
@@ -68,8 +70,10 @@ subs['thunderbird']['Linux'] = ".thunderbird"
 #   > those builds store your profile folder in
 #   > ~/.mozilla-thunderbird<Profile name>"
 #   -lifewire.com
-subs['thunderbird']['Windows'] = os.path.join("AppData", "Roaming", "Thunderbird", "Profiles")
-subs['thunderbird']['Darwin'] = os.path.join("Library", "Thunderbird", "Profiles")
+subs['thunderbird']['Windows'] = \
+    os.path.join("AppData", "Roaming", "Thunderbird", "Profiles")
+subs['thunderbird']['Darwin'] = \
+    os.path.join("Library", "Thunderbird", "Profiles")
 # ^ ~/Library/Thunderbird/Profiles/c49m8v3i.default from Help,
 #   Troubleshooting Information using macOS 10.13
 

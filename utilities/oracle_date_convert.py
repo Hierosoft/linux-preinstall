@@ -9,18 +9,22 @@ alphaLower = "abcdefghijklmnopqrstuvwxyz"
 alphaUpper = alphaLower.upper()
 to_date_flag = ".to_date.sql"
 
+
 def onlyNeedles(haystack, needles):
     for h in haystack:
         if h not in needles:
             return False
     return True
 
+
 def onlyLetters(haystack):
     return (onlyNeedles(haystack, alphaUpper)
             or onlyNeedles(haystack, alphaLower))
 
+
 def onlyNumbers(haystack):
     return onlyNeedles(haystack, digits)
+
 
 def getDateFmt(sqlVal, stripChars=None):
     if stripChars is not None:
@@ -36,13 +40,14 @@ def getDateFmt(sqlVal, stripChars=None):
                 fmt = "DD-MON-YY"
     return fmt
 
+
 # 08-JAN-19 (9 characters)
 # 012345678
-
 # 08-JAN-2019 (11 characters)
 # 0123456789
 filesReadCount = 0
 filesDifferentCount = 0
+
 
 def addDateConv(path):
     changedCount = 0
@@ -82,11 +87,13 @@ def addDateConv(path):
                     if line[i] == "'":
                         sqlVal = line[start:i+1]
                         fmt = getDateFmt(sqlVal, stripChars="'")
-                        # check for done_flag to avoid creating `to_date(to_date` recursion:
-                        if (fmt is None) or (line[-len(done_flag):].lower() == done_flag):
+                        # check for done_flag to avoid creating
+                        #   `to_date(to_date` recursion:
+                        tmpEnd = line[-len(done_flag):].lower()
+                        if (fmt is None) or (tmpEnd == done_flag):
                             line2 += sqlVal
                             # if (len(sqlVal) == 9) or (len(sqlVal) == 11):
-                                # print("  NotDate: " + sqlVal)
+                            #     print("  NotDate: " + sqlVal)
                         else:
                             line2 += "TO_DATE(%s,'%s')" % (sqlVal, fmt)
                         start = -1
@@ -108,6 +115,7 @@ def addDateConv(path):
             print("  - wrote '" + outPath + "'")
     return changedCount, lineCount
 
+
 def endsWithAny(haystack, needles, caseSensitive=True):
     for needle in needles:
         if caseSensitive:
@@ -118,10 +126,11 @@ def endsWithAny(haystack, needles, caseSensitive=True):
                 return True
     return False
 
+
 folder_path = "."
 for sub_name in os.listdir(folder_path):
     sub_path = os.path.join(folder_path, sub_name)
-    if ((sub_name[:1]!=".") and os.path.isfile(sub_path)
+    if ((sub_name[:1] != ".") and os.path.isfile(sub_path)
             and (sub_name[-len(to_date_flag):] != to_date_flag)
             and endsWithAny(sub_name, [".txt", ".sql"])):
         print(sub_path + ":")
@@ -131,5 +140,3 @@ for sub_name in os.listdir(folder_path):
         print("changedCount: " + str(changedCount))
 print("filesReadCount: " + str(filesReadCount))
 print("filesDifferentCount: " + str(filesDifferentCount))
-
-

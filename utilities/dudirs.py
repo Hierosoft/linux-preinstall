@@ -10,6 +10,7 @@ import sys
 units = ["bytes", "kb", "mb", "gb"]
 default_un = "mb"
 
+
 def bytes_to(size_bytes, unit):
     unit_upper = unit.upper()
     if unit_upper == "BYTES":
@@ -41,6 +42,7 @@ def get_size(start_path='.', unit="bytes"):
                 total_size += bytes_to(os.path.getsize(sub_path), unit)
     return total_size
 
+
 def usage():
     print(__doc__)
     print("USAGE")
@@ -53,12 +55,11 @@ def usage():
     print("")
     opt_fmt = "{:<14}     {}"
     print(opt_fmt.format("--help", "Show this screen."))
-    print(opt_fmt.format("--sort",
-                                 "Sort the results (ascending)."))
-    print(opt_fmt.format("--unit <unit>",
-                                 "Show sizes in: "+str(units)))
+    print(opt_fmt.format("--sort", "Sort the results (ascending)."))
+    print(opt_fmt.format("--unit <unit>", "Show sizes in: "+str(units)))
     print(opt_fmt.format("", "(default: {})".format(default_un)))
     print("")
+
 
 def main():
     root_path = "."
@@ -76,7 +77,7 @@ def main():
             enable_sort = True
         elif arg == "--help":
             usage()
-            exit(0)
+            return 0
         else:
             root_path = sys.argv[1]
     total_as_unit = 0.0
@@ -97,8 +98,9 @@ def main():
         sorted_stats = sorted(stats, key=lambda k: k['size'])
         for stat in sorted_stats:
             print("{}: {} {}".format(stat["path"], stat["size"], unit))
-    print("{}: {} {}".format("TOTAL",total_as_unit, unit))
+    print("{}: {} {}".format("TOTAL", total_as_unit, unit))
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

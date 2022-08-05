@@ -6,10 +6,11 @@ All output that isn't file content goes to stderr.
 from __future__ import print_function
 import sys
 
-# see <https://stackoverflow.com/questions/5574702/how-to-print-to-stderr-in-python>
+
 def echo0(*args, **kwargs):
     # PRint eRRoR
     print(*args, file=sys.stderr, **kwargs)
+
 
 if len(sys.argv) < 3:
     echo0("You must specify two files.")
@@ -21,7 +22,8 @@ docDict = {}
 count = 0
 with open(fName, 'r') as f:
     for lineOriginal in f:
-        if not lineOriginal: break
+        if not lineOriginal:
+            break
         line = lineOriginal.strip()
         docDict[line] = True
         count += 1
@@ -41,4 +43,3 @@ with open(f2Name, 'r') as f:
         count += 1
 echo0("- read " + str(count) + " line(s)")
 echo0("- " + str(newCount) + " new line(s).")
-

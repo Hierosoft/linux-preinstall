@@ -14,7 +14,7 @@ from linuxpreinstall import (
 )
 
 digits = "1234567890"
-versionStarters  = digits
+versionStarters = digits
 versionChars = versionStarters + "."
 versionEnders = "+-"
 
@@ -82,7 +82,8 @@ def splitVersion(s, onlyNumeric=False):
     for i in range(len(s)):
         c = s[i]
         if num:
-            if ((not onlyNumeric) and (isVersionEnder(s, i))) or (onlyNumeric and (not isVersionChar(s, i))):
+            if (((not onlyNumeric) and (isVersionEnder(s, i)))
+                    or (onlyNumeric and (not isVersionChar(s, i)))):
                 num = False
                 if version is None:
                     version = tmp
@@ -177,8 +178,9 @@ def main():
 
     lines = []
     infos = []
-    if select.select([sys.stdin,],[],[],0.0)[0]:
-        # NOTE: ^ https://stackoverflow.com/a/3763257/4541104 only works on non-Windows
+    if select.select([sys.stdin, ], [], [], 0.0)[0]:
+        # NOTE: ^ <https://stackoverflow.com/a/3763257/4541104>
+        #   only works on non-Windows
         for rawBytes in sys.stdin:
             rawL = str(rawBytes)
             line = rawL.rstrip()
@@ -192,7 +194,9 @@ def main():
         echo0("# [sortversion] Done sorting")
     else:
         echo0("# [sortversion] nothing to sort")
+        return 1
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

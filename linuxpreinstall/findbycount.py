@@ -25,8 +25,8 @@ from __future__ import print_function
 import sys
 import os
 __author__ = 'Jake "Poikilos" Gustafson'
-# See <https://stackoverflow.com/questions/5574702/how-to-print-to-
-# stderr-in-python>
+
+
 def echo0(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
 
@@ -52,6 +52,7 @@ def usage():
         echo0("  {}: {}".format(k, v))
     echo0("")
 
+
 def findByCount(options):
     '''
     Recursively count files in directories and display any full
@@ -62,11 +63,11 @@ def findByCount(options):
     options -- Can have the following keys:
         parent: The directory path
         counts (list): The counts to find
-        dotExts (list, optional): Limit the count to these file extensions
-            (case-insensitive).
-        ignores (list, optional): Do not recurse into a directory that is in this list of
-            directories. Each must be either a name only or a full path
-            (both are case-sensitive).
+        dotExts (list, optional): Limit the count to these file
+            extensions (case-insensitive).
+        ignores (list, optional): Do not recurse into a directory that
+            is in this list of directories. Each must be either a name
+            only or a full path (both are case-sensitive).
     '''
     # ^ Any more added must also be passed along for recursion!
     parent = options.get('parent')
@@ -143,7 +144,7 @@ def main():
         arg = sys.argv[argi]
         if arg in ["/?", "--help"]:
             usage()
-            exit(0)
+            return 0
         if thisKey is not None:
             if thisKey in integerOptions:
                 try:
@@ -171,13 +172,17 @@ def main():
                     thisKey = k
                     break
             if thisKey is None:
-                raise ValueError("{} is not an option (not a value in optionNames)".format(tmp))
+                raise ValueError(
+                    "{} is not an option (not a value in optionNames)"
+                    "".format(tmp)
+                )
     for k, v in defaults.items():
         if options.get(k) is None:
             options[k] = v
             optionName = optionNames[k]
             if isinstance(v, list):
-                print("* using defaults {}".format(expandOptions(optionName, v)))
+                print("* using defaults {}"
+                      "".format(expandOptions(optionName, v)))
             else:
                 print("* using default --{} {}".format(optionName, v))
     print("")
@@ -185,7 +190,8 @@ def main():
     for k, v in options.items():
         print("  {}: {}".format(k, v))
     findByCount(options)
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

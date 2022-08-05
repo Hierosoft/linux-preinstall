@@ -7,10 +7,10 @@ from __future__ import print_function
 import sys
 import os
 import json
-python_mr = sys.version_info.major
-# if python_mr >= 3:
+# if sys.version_info.major >= 3:
 #     import functools  # Python 3
 # import sys
+from subprocess import Popen
 import gi
 gi.require_version("Gtk", "3.0")
 # ^ MATE is now GTK 3
@@ -18,7 +18,6 @@ from gi.repository import (
     Gio,
     GLib,
 )
-from subprocess import Popen
 
 
 try:
@@ -139,7 +138,6 @@ class MatePanel(Gio.Settings):
         MatePanel.post_init(g_settings)
         return g_settings
 
-
     @staticmethod
     def get_default():
         if MatePanel.instance is None:
@@ -177,7 +175,7 @@ class MatePanel(Gio.Settings):
         self.set_value('object-id-list', var)
 
     def remove_items_where(self, bad_value, key="applet-iid",
-            all_ids=None, object_type="applet"):
+                           all_ids=None, object_type="applet"):
         '''
         Remove each ID string from object-id-list if key matches
         bad_value in the corresponding /org/mate/panel/objects/<ID>.
@@ -216,7 +214,12 @@ class MatePanel(Gio.Settings):
             ids_limited = False
         # all_ids = self.items + ('object-2', 'object-27', 'object-34')
         # ^ lost--stuck on menu but not in id list. Instead, reset via:
-        #   gsettings set org.mate.panel object-id-list "['notification-area', 'object-3', 'object-4', 'object-1', 'object-2', 'object-27', 'object-34', 'object-40', 'object-41', 'object-42', 'object-5', 'object-6', 'object-7']"
+        #   PREV_LIST="['notification-area', 'object-3', 'object-4',"
+        #   PREV_LIST="$PREV_LIST 'object-1', 'object-2', 'object-27',"
+        #   PREV_LIST="$PREV_LIST 'object-34', 'object-40', 'object-41',"
+        #   PREV_LIST="$PREV_LIST 'object-42', 'object-5', 'object-6',"
+        #   PREV_LIST="$PREV_LIST 'object-7']"
+        #   gsettings set org.mate.panel object-id-list $PREV_LIST
         #   nohup mate-panel --replace &
         #
         for iid in all_ids:
@@ -229,12 +232,12 @@ class MatePanel(Gio.Settings):
                 right_msg = " (right)"
             echo1("- pos: {}{}".format(pos, right_msg))
             echo1("  path: {}".format(path))
-            # echo1("  self.get_has_unapplied(): {}".format(self.get_has_unapplied()))
+            # echo1("  self.get_has_unapplied(): {}"
+            #       "".format(self.get_has_unapplied()))
             # For some reason, get_has_unapplied works on self but not
             #   on panel_obj_settings.
             # echo1("  self.panel_obj_settings.get_has_unnapplied(): {}"
             #       "".format(self.panel_obj_settings.get_has_unapplied()))
-
 
             p_s = self.panel_obj_settings
             for extra_k in ('object-type', 'applet-iid',):
@@ -296,6 +299,7 @@ class MatePanel(Gio.Settings):
         # self.items = sorted(self.items, key=sc_fn_to_name)
         return bad_ids
 
+
 def main():
     # settings = MatePanel.get_default()
     settings = MatePanel.new()
@@ -333,7 +337,8 @@ def main():
     if len(bad_ids) > 0:
         echo0("Restarting mate-panel to complete the process...")
         # TODO: p = Popen(['mate-panel', '--replace'])
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

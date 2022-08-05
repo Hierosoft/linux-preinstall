@@ -4,8 +4,9 @@ import sys
 import magic
 m = None
 
+
 def find_mime(mt, parent="", partial=True, show=True,
-        hide_root=None, hide_root_as=None, show_dot_hidden=True):
+              hide_root=None, hide_root_as=None, show_dot_hidden=True):
     '''
     Find files by MIME Type recursively.
 
@@ -60,6 +61,8 @@ def main():
                          'such as "jpeg" or "image".')
     mt = sys.argv[1]
     results = find_mime(mt)
+    return 0
+
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

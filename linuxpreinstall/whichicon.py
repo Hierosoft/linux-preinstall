@@ -16,7 +16,7 @@ Examples:
 whichicon openscad
 # The output could be something like: /usr/share/applications/openscad.desktop
 # To get a variable:
-OPENSCAD_PATH="\`whichicon openscad\`"
+OPENSCAD_PATH="`whichicon openscad`"
 '''
 from __future__ import print_function
 import os
@@ -118,7 +118,7 @@ def which_icon(BIN_PATH):
                   "".format(BIN_PATH, TRY_CMD))
             # exit 2
         else:
-            # concatenates onto errorf above:
+            # complete the line started by write0:
             echo0(" and command \"{}\" is not in the environment's PATH"
                   " either.".format(TRY_CMD))
             #       " (which {}: {})."
@@ -317,7 +317,9 @@ def main():
     else:
         # error "  * no result was found (got \"$result\")"
         echo0("  * no desktop file contained \"{}\"".format(BIN_PATH))
+        return 1
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

@@ -17,8 +17,7 @@ gsettings_set('com.canonical.Unity.Launcher', 'launcher-position',
 from __future__ import print_function
 import sys
 import os
-python_mr = sys.version_info.major
-# if python_mr >= 3:
+# if sys.version_info.major >= 3:
 #     import functools  # Python 3
 # import sys
 import gi
@@ -30,8 +29,10 @@ from gi.repository import (
 )
 # from subprocess import Popen
 
+
 def echo0(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
+
 
 class GSettings:
     def __init__(self, schema):

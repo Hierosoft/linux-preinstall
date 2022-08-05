@@ -4,7 +4,8 @@ geany_theme_to_spyder["comment"] = "Comment"
 geany_theme_to_spyder["string"] = "String"
 geany_theme_to_spyder["number"] = "Number"
 geany_theme_to_spyder["keyword"] = "Keyword"
-geany_theme_to_spyder["default[1]"] = "Background"  # 1 is the second value such as in `default=#b8d1d8;#000;false;false`
+geany_theme_to_spyder["default[1]"] = "Background"
+# ^ 1 is the second value such as in `default=#b8d1d8;#000;false;false`
 # geany_theme_to_spyder[""] = "Builtin"
 # ^ identifier=default  # in epsilon-dark (#b8d1d8)
 geany_theme_to_spyder["type"] = "Definition"
@@ -33,6 +34,3 @@ geany_theme_to_spyder_copy_italic["Instance"] = "Normal text"
 # Geany:
 # - function=default
 # - parameter=default
-
-
-

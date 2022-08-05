@@ -3,42 +3,21 @@ from __future__ import print_function
 from getpass import getpass
 # Not tried yet:
 # - pip install IpCamPy
-# - https://stackoverflow.com/questions/49978705/access-ip-camera-in-python-opencv
-
-# for other "magic url formats, see
-qualities = ["Motion", "Standard"]
-resolutions = ["640x480", "320x240"]
-quality = qualities[0]
-resolution = resolutions[0]
-ip = input("IP: ")
-username = input("Username: ")
-password = getpass()
-# NOTE: http://{u}:{p}@ format will not work with urlopen.
-#     See HTTPBasicAuth further down instead.
-url = "http://{ip}/SnapShotJPEG?Resolution={r}&Quality={q}".format(
-    ip = ip,
-    r = resolution,
-    q = quality
-)
-# See <https://www.daniweb.com/programming/software-development/code/
-#     493004/display-an-image-from-the-web-pygame>
+# - <https://stackoverflow.com/questions/49978705/
+#   access-ip-camera-in-python-opencv>
 
 import io
 import pygame as pg
+import requests
+from requests.auth import HTTPBasicAuth
 
-python_mr = sys.version_info.major
-if python_mr > 2:
-    # Python 3
+if sys.version_info.major >= 3:
     from urllib.request import urlopen
 else:
     # Python 2
     from urllib2 import urlopen
 # initialize pygame
-pg.init()
-pg.display.set_caption("PySecurityCam by Poikilos")
-
-image_url = url
-
+# image_url = url
 # import http
 # try:
     # image_str = urlopen(image_url).read()
@@ -50,8 +29,29 @@ image_url = url
 # - urlopen is only possible if no authentication (the url must have a
 #   port not a password after ":" if any ":")
 
-import requests
-from requests.auth import HTTPBasicAuth
+# for other "magic url formats, see
+qualities = ["Motion", "Standard"]
+resolutions = ["640x480", "320x240"]
+quality = qualities[0]
+resolution = resolutions[0]
+ip = input("IP: ")
+username = input("Username: ")
+password = getpass()
+
+# NOTE: http://{u}:{p}@ format will not work with urlopen.
+#     See HTTPBasicAuth further down instead.
+url = "http://{ip}/SnapShotJPEG?Resolution={r}&Quality={q}".format(
+    ip=ip,
+    r=resolution,
+    q=quality
+)
+# See <https://www.daniweb.com/programming/software-development/code/
+#     493004/display-an-image-from-the-web-pygame>
+
+
+pg.init()
+pg.display.set_caption("PySecurityCam by Poikilos")
+
 
 resolution_pair = resolution.split("x")
 resolution_pair = int(resolution_pair[0]), int(resolution_pair[1])
@@ -59,7 +59,8 @@ resolution_pair = int(resolution_pair[0]), int(resolution_pair[1])
 black = (0, 0, 0)
 white = (255, 255, 255)
 red = (255, 0, 0)
-screen = pg.display.set_mode(resolution_pair,  pg.RESIZABLE )
+screen = pg.display.set_mode(resolution_pair,  pg.RESIZABLE)
+
 
 def show_error(msg, color=red):
     # print(msg)
@@ -76,16 +77,20 @@ def show_error(msg, color=red):
             textRect = textRect.move((0, text.get_rect().height))
         screen.blit(text, textRect)
 
+
 image = None
 ok = None
+
+
 def show_next():
     global image
     # urlopen doesn't work since security cameras require http authentication.
-    # See https://stackoverflow.com/questions/24835100/getting-a-file-from-an-authenticated-site-with-python-urllib-urllib2
+    # See <https://stackoverflow.com/questions/24835100/
+    #   getting-a-file-from-an-authenticated-site-with-python-urllib-urllib2>
     r = None
     if image is None:
         if ok is None:
-            show_error("Loading {}...".format(ip), color=(255,255,255))
+            show_error("Loading {}...".format(ip), color=(255, 255, 255))
             pg.display.flip()
     try:
         r = requests.get(url, auth=HTTPBasicAuth(username, password))
@@ -93,7 +98,8 @@ def show_next():
         screen.fill(black)
         show_error("The URL is unreachable.")
         return False
-    # See https://stackoverflow.com/questions/31708519/request-returns-bytes-and-im-failing-to-decode-them
+    # See <https://stackoverflow.com/questions/31708519/
+    #   request-returns-bytes-and-im-failing-to-decode-them>
     if r.status_code == 200:
         image_str = r.content
 
@@ -105,8 +111,8 @@ def show_next():
         # load the image from a file or stream
         try:
             image = pg.image.load(image_file)
-        except:
-            msg = "Invalid URL or login"
+        except Exception as ex:
+            msg = str(ex)+":\n Invalid URL or login"
             screen.fill(black)
             show_error(msg)
             return False
@@ -117,10 +123,14 @@ def show_next():
         # the user clicks on the window corner x to exit
     else:
         screen.fill(black)
-        show_error("{}: Login is bad apparently otherwise get correct url from\nhttp://www.ispyconnect.com/man.aspx?n=panasonic&page=5#".format(r.status_code))
+        show_error('{}: Login is bad apparently'
+                   ' otherwise get correct url from\n'
+                   'http://www.ispyconnect.com/man.aspx?n=panasonic&page=5#'
+                   ''.format(r.status_code))
         # bad login, otherwise an error would have occured earlier
         return False
     return True
+
 
 while True:
     for event in pg.event.get():

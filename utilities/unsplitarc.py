@@ -14,6 +14,7 @@ source                This should be a directory containing zip files.
 destination         This can be any directory, but must exist already.
 """
 
+
 def usage():
     print("Usage:")
     print(__doc__)
@@ -24,7 +25,7 @@ def unsplit_arc(src, dst):
         sub_path = os.path.join(src, sub)
         try:
             with ZipFile(sub_path, 'r') as thisZip:
-               thisZip.extractall(dst)
+                thisZip.extractall(dst)
         except BadZipFile:
             print("* ERROR: {} is a BadZipFile".format(sub_path))
 

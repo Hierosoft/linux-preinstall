@@ -7,10 +7,15 @@ Instead of this file, you can manually enter a hostname into
 """
 from __future__ import print_function
 import socket
+import urllib
+import json
+# See <https://stackoverflow.com/questions/17822158/
+#      how-to-get-an-utc-date-string-in-python>
+# from datetime import datetime, timezone
+# datetime.now(timezone.utc).strftime("%Y%m%d")
+from datetime import datetime
 
-python_mr = sys.version_info.major
-
-if python_mr > 2:
+if sys.version_info.major >= 3:
     import urllib.request
     request = urllib.request
 else:
@@ -18,7 +23,7 @@ else:
     import urllib2 as urllib
     request = urllib
 
-if python_mr > 2:
+if sys.version_info.major >= 3:
     from urllib.parse import urlparse
     from urllib.parse import urlencode
     from urllib.parse import quote
@@ -29,14 +34,6 @@ else:
     from urllib import urlencode
     from urllib import quote
     from urllib import unquote
-
-import urllib
-import json
-
-# See <https://stackoverflow.com/questions/17822158/how-to-get-an-utc-date-string-in-python>
-# from datetime import datetime, timezone
-# datetime.now(timezone.utc).strftime("%Y%m%d")
-from datetime import datetime
 
 
 ping_url = "http://expertmultimedia.com/ping.php"
@@ -49,7 +46,9 @@ def decode_safe(b):
         s = b.decode('utf-8')
     return s
 
+
 dt_fmt = "%Y-%m-%d %H:%M:%S"  # INFO: %z does nothing for some reason.
+
 
 def main():
     params = {}
@@ -84,6 +83,8 @@ def main():
     except json.decoder.JSONDecodeError:
         print("The server sent invalid JSON:")
         print(response_s)
+    return 0
+
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

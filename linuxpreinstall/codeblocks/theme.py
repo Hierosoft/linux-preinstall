@@ -10,20 +10,16 @@ See
 manually).
 
 """
-import platform
 import os
 import sys
-
-myDir = os.path.dirname(os.path.abspath(__file__))
-
-cbConf = None
-
-from linuxpreinstall import(
+from linuxpreinstall import (
     profile,
     AppData,
     LocalAppData,
     myAppData,
 )
+
+myDir = os.path.dirname(os.path.abspath(__file__))
 
 cbConf = os.path.join(myAppData, "default.conf")
 
@@ -54,24 +50,23 @@ def main():
     destConf = cbConf
     if len(sys.argv) < 2:
         print("You must specify a source file.")
-        sys.exit(1)
+        return 1
     srcConf = sys.argv[1]
     if not os.path.isfile(srcConf):
         usage()
         print("Error: \"{}\" is not present.".format(srcConf))
-        sys.exit(1)
+        return 1
     srcConf = os.path.abspath(srcConf)
     print("* chose \"{}\"".format(srcConf))
     if len(sys.argv) > 2:
         destConf = sys.argv[2]
     if not os.path.isfile(destConf):
         usage()
-        print("Error: {} is not present.")
+        print("Error: {} is not present.".format(cbConf))
         if destConf == cbConf:
             print("Open and close Code::Blocks to"
-                  " generate an initial configuration."
-                  "".format(cbConf))
-        sys.exit(1)
+                  " generate an initial configuration.")
+        return 1
     else:
         destConf = os.path.abspath(destConf)
         print("* targeting {}"
@@ -82,7 +77,8 @@ def main():
         "Error: This script isn't implemented so you have to use"
         " the cb_share_config GUI."
     )
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

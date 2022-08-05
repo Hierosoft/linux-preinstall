@@ -20,10 +20,10 @@ source = os.path.join("/tmp", "blender_project.blend")
 bpy.ops.object.select_all(action='SELECT')
 
 
-if len(bpy.context.selected_objects) > 0:
 # if len(bpy.data.objects) > 0:
-    for obj in bpy.context.selected_objects:
+if len(bpy.context.selected_objects) > 0:
     # for obj in bpy.data.objects:
+    for obj in bpy.context.selected_objects:
         print(obj.name, obj, obj.type)
         if obj.name != 'Cube':
             try:

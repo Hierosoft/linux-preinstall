@@ -6,10 +6,13 @@ from linuxpreinstall import (
     echo1,
     echo2,
 )
-python_mr = sys.version_info.major
+import json
+import shlex
+import subprocess
+
 
 def get_bash_values(path, only_exported=False,
-        builtins=['PWD', 'SHLVL', '_', '']):
+                    builtins=['PWD', 'SHLVL', '_', '']):
     '''
     Process a script using bash then get all values from its
     environment as a dict.
@@ -85,7 +88,7 @@ def get_bash_values(path, only_exported=False,
         '''
     results = {}
     count = 0
-    if python_mr > 2:
+    if sys.version_info.major >= 3:
         # based on <https://docs.python.org/3/library/subprocess.html
         # #subprocess.Popen>
         from subprocess import PIPE, Popen

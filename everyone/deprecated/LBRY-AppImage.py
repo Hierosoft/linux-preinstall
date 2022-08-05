@@ -10,12 +10,13 @@ You must use LBRY-Flatpak.sh, because:
 '''
 from __future__ import print_function
 import sys
+import os
+import platform
 sys.stderr.write(__doc__)
 sys.stderr.flush()
 sys.exit(1)
 
-python_mr = sys.version_info.major
-if python_mr > 2:
+if sys.version_info.major >= 3:
     import urllib.request
     request = urllib.request
 else:
@@ -23,16 +24,12 @@ else:
     import urllib2 as urllib
     request = urllib
 
-if python_mr > 2:
+if sys.version_info.major >= 3:
     from html.parser import HTMLParser
 else:
     # Python 2
     from HTMLParser import HTMLParser
 
-import platform
-import os
-
-import sys
 profile_path = os.environ['HOME']
 if platform.system() == "Windows":
     profile_path = os.environ['USERPROFILE']
@@ -60,7 +57,7 @@ class LBRYDownloadPageParser(HTMLParser):
         #   On the next commented line, python2 would say:
         #       "argument 1 must be type, not classobj"
         #     super(LBRYDownloadPageParser, self).__init__()
-        if python_mr > 2:
+        if sys.version_info.major >= 3:
             super().__init__()
             # print("Used python3 super syntax")
         else:
@@ -91,8 +88,8 @@ class LBRYDownloadPageParser(HTMLParser):
         self.os_name = platform_system.lower()
         self.platform_flag = None
         self.release_arch = "linux64"
-        self.os_flags = {"Win64":"windows", "Win32":"windows",
-                         "linux":"linux", "OSX":"macos"}
+        self.os_flags = {"Win64": "windows", "Win32": "windows",
+                         "linux": "linux", "OSX": "macos"}
         if self.os_name == "darwin":
             self.os_name = "macos"  # change to Blender build naming
             # parent css class of section (above ul): "platform-macOS"
@@ -267,7 +264,7 @@ class LBRYLinkManager:
 
     def get_urls(self, verbose=False, must_contain=None):
         # self.parser.urls = []  # done automatically on BODY tag
-        if python_mr > 2:
+        if sys.version_info.major >= 3:
             try:
                 response = request.urlopen(self.html_url)
             except urllib.error.HTTPError as e:
@@ -313,6 +310,8 @@ class LBRYLinkManager:
 
 
 shown_progress = 0
+
+
 def d_progress(evt):
     global shown_progress
     # global pbar
@@ -370,7 +369,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
-
-
-
+    sys.exit(main())

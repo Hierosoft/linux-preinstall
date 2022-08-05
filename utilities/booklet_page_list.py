@@ -73,7 +73,7 @@ def booklet_order(n):
     or after the front).
     """
     n = int(n)
-    if (n%2 != 0):
+    if n % 2 != 0:
 
         raise ValueError("You must provide an even number of pages."
                          " Add a blank page if the document does not"
@@ -101,7 +101,7 @@ def booklet_order(n):
                         ret.append(n - (offset - 1))
                 p += 1
         offset += 2
-    if (n%4 != 0):
+    if n % 4 != 0:
         print()
         print("WARNING: You'll have to cut the page printed last in"
               " half, throw away the incorrect half, then flip it"

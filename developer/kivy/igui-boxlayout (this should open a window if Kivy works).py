@@ -2,8 +2,10 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.app import App
 from kivy.factory import Factory
 
+
 class MainForm(BoxLayout):
     pass
+
 
 class MyApp(App):
 
@@ -15,5 +17,11 @@ class MyApp(App):
         form.add_widget(form.okButton)
         return form
 
-if __name__ == '__main__':
+
+def main():
     MyApp().run()
+    return 0
+
+
+if __name__ == '__main__':
+    sys.exit(main())

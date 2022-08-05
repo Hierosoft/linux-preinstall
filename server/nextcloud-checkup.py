@@ -2,7 +2,7 @@
 import os
 import sys
 import subprocess
-#os.system("php -m > /tmp/php-m.txt")
+# os.system("php -m > /tmp/php-m.txt")
 requested_ver = None
 if len(sys.argv) < 2:
     requested_ver = os.environ.get("requested_ver")
@@ -38,6 +38,7 @@ for i in range(len(oc_requires)):
         oc_mods[v] = False  # oc_mods[v]
 
 print("Nextcloud requires: {}".format(oc_mods.keys()))
+
 
 def parse_modules(proc):
     ret = []
@@ -90,10 +91,13 @@ for r in (phpX_modules):
         print("{}: {}".format(r, requested_ver))
 
 print("")
-for r,v in goods.items():
+for r, v in goods.items():
     if v is False:
         print("{}: {}".format(r, v))
 
-print("Some things may say they are missing in Debian when they are not. This may be fixed in a future version of this script.")
-print("Running php-set-version... and nextcloud-deps-more.sh should install all dependencies. Follow instructions they output for more information.")
+print("Some things may say they are missing in Debian when they are not."
+      " This may be fixed in a future version of this script.")
+print("Running php-set-version... and nextcloud-deps-more.sh"
+      " should install all dependencies."
+      " Follow instructions they output for more information.")
 print("")

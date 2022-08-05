@@ -15,6 +15,7 @@ from linuxpreinstall.versioning import (
 
 set_verbosity(True)
 
+
 class TestStringMethods(unittest.TestCase):
 
     def test_version(self):

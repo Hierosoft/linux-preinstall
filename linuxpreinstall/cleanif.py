@@ -26,7 +26,7 @@ def usage():
     echo0(__doc__)
 
 
-def delIf(delPath, readPath, readRoot=None):
+def del_if(delPath, readPath, readRoot=None):
     """Delete files and directories in delPath if they are in readRoot
     recursively, but only delete directories that become empty."""
 
@@ -47,7 +47,7 @@ def delIf(delPath, readPath, readRoot=None):
         delSubPath = os.path.join(delPath, sub)
         if os.path.isdir(subPath):
             if os.path.isdir(delSubPath):
-                delIf(delSubPath, subPath, readRoot=readRoot)
+                del_if(delSubPath, subPath, readRoot=readRoot)
                 os.rmdir(delSubPath)
                 # print("rmdir " + delSubPath)
                 # print("")
@@ -61,14 +61,15 @@ def delIf(delPath, readPath, readRoot=None):
 
 
 def main():
-    # delIf(oops, good)
+    # del_if(oops, good)
     if len(sys.argv) != 3:
         usage()
         echo0("ERROR: You must specify one dir with extra files"
               " & one to be read for the original copies to keep.")
-        exit(1)
-    delif(sys.argv[1], sys.argv[2])
+        return 1
+    del_if(sys.argv[1], sys.argv[2])
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
