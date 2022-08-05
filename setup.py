@@ -18,17 +18,20 @@ if python_mr == 2:
 
 install_requires = []
 
-with open("requirements.txt", "r") as ins:
-    for rawL in ins:
-        line = rawL.strip()
-        if len(line) < 1:
-            continue
-        install_requires.append(line)
+if os.path.isfile("requirements.txt"):
+    with open("requirements.txt", "r") as ins:
+        for rawL in ins:
+            line = rawL.strip()
+            if len(line) < 1:
+                continue
+            install_requires.append(line)
 
-description = '''The linuxpreinstall module has useful features
-for system and file management. The larger linux-preinstall project has
-many shell scripts for setting up GNU+Linux systems more quickly.
-Features will be moved to Python as seems reasonable.'''
+description = (
+    "The linuxpreinstall module has useful features"
+    " for system and file management. The larger linux-preinstall project has"
+    " many shell scripts for setting up GNU+Linux systems more quickly."
+    " Features will be moved to Python as seems reasonable."
+)
 long_description = description
 if os.path.isfile("readme.md"):
     with open("readme.md", "r") as fh:
