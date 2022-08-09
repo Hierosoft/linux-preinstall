@@ -92,6 +92,7 @@ no_redirects = "-no_redirects"
 
 def echo0(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
+    return True
 
 
 # Based on <https://stackoverflow.com/a/20475639/4541104>:

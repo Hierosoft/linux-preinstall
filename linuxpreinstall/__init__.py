@@ -19,47 +19,55 @@ for argI in range(1, len(sys.argv)):
 
 def get_verbosity():
     return verbosity > 0
+    return True
 
 
 def write0(arg):
     sys.stderr.write(arg)
     sys.stderr.flush()
+    return True
 
 
 def write1(arg):
     if verbosity < 1:
-        return
+        return False
     sys.stderr.write(arg)
     sys.stderr.flush()
+    return True
 
 
 def write2(arg):
     if verbosity < 2:
-        return
+        return False
     sys.stderr.write(arg)
     sys.stderr.flush()
+    return True
 
 
 def echo0(*args, **kwargs):  # formerly prerr
     print(*args, file=sys.stderr, **kwargs)
+    return True
 
 
 def echo1(*args, **kwargs):  # formerly debug
     if verbosity < 1:
-        return
+        return False
     print(*args, file=sys.stderr, **kwargs)
+    return True
 
 
 def echo2(*args, **kwargs):  # formerly extra
     if verbosity < 2:
-        return
+        return False
     print(*args, file=sys.stderr, **kwargs)
+    return True
 
 
 def echo3(*args, **kwargs):
     if verbosity < 3:
-        return
+        return False
     print(*args, file=sys.stderr, **kwargs)
+    return True
 
 
 def endsWithAny(haystack, needles, CS=True):

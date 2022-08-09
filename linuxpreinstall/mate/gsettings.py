@@ -32,6 +32,7 @@ from gi.repository import (
 
 def echo0(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
+    return True
 
 
 class GSettings:

@@ -29,6 +29,7 @@ __author__ = 'Jake "Poikilos" Gustafson'
 
 def echo0(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
+    return True
 
 
 defaults = {}

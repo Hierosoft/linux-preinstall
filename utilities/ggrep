@@ -21,6 +21,7 @@ nearbyRepo = os.path.join(MY_REPOS, "pycodetool")
 
 def echo0(*args, **kwargs):  # formerly prerr
     print(*args, file=sys.stderr, **kwargs)
+    return True
 
 
 if os.path.isfile(os.path.join(nearbyRepo, "pycodetool", "ggrep.py")):

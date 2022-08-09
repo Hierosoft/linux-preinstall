@@ -10,6 +10,7 @@ import sys
 def echo0(*args, **kwargs):
     # PRint eRRoR
     print(*args, file=sys.stderr, **kwargs)
+    return True
 
 
 if len(sys.argv) < 3:
