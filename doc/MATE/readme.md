@@ -13,10 +13,14 @@ Mate is pretty good but [nohang](../nohang.md) is still advisable.
 (requires manual steps until scripting of the linuxpreinstall/mate submodule is complete)
 - If you have the default mate-panel configuration, which uses two panels: Delete the bottom menu (the one with just an application switcher) and move the top menu on the bottom, so it is like other desktops (right-click, Properties, then change orientation to "Bottom").
 - Use Dock `*`: MATE Dock is a "true dock," in the sense that a pinned icon automatically change to application switcher if that application is open, similarly to KDE, Windows and macOS.
+  - Right-click the panel, click "Add to Panel..." Then drag "Dock" to the panel.
+    - If it doesn't appear, see the [mate-dock-applet](../devuan/mate-dock-applet.md) article.
 - Install and add "Indicator Applet Complete" `*`.
-  - After manually adding it and moving it to the far right of the bottom menu, you see and control GUI-based applets such as Nextcloud which follow the app indicator paradigm (similarly to Windows tray icons).
+  - After manually adding it and moving it (right-click it, click "Move", then click there to drop it) to the far right of the bottom menu, you see and control GUI-based applets such as Nextcloud which follow the app indicator paradigm (similarly to Windows tray icons).
 - Move the "Desktop" button to the bottom all and the way to the right, like other desktops (such as KDE and Windows).
-- Use [Brisk Menu](brisk-menu.md), a searchable menu where you can add favorites: Remove the Application menu ("Classic Menu") and add Brisk Menu there at the bottom left.
+- Use [Brisk Menu](brisk-menu.md), a searchable menu where you can add favorites:
+  - Remove the Application menu ("Classic Menu"): Right-click the application menu at the bottom left, then click "Remove from Panel".
+  - Add Brisk Menu at the bottom left where the classic menu was: Right-click the panel, click "Add to Panel..." Then drag "Brisk Menu" to the panel.
   - Install mozo `*`: This application makes the "Edit" feature of the Brisk Menu load the mozo GUI).
 
 `*` See [everyone/MATE/mate-panel-additions.deb.sh](../../everyone/MATE/mate-panel-additions.deb.sh)
