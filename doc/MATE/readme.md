@@ -30,4 +30,6 @@ Mate is pretty good but [nohang](../nohang.md) is still advisable.
 This submodule is for Python programmers (and this project) who want to script changes to the MATE menu.
 The main problem with this module is that MATE configuration seems to be redundant in some way: entries in dconf refer to other things.
 For example, Dock doesn't work on Devuan 4 (chimaera) (based on Debian 11 (bullseye)), so the current test script tries to remove broken (empty) instances of Dock which the user can't remove via the GUI. However, despite reloading mate-panel, the entry can't be removed. Not tried yet:
-- [ ] Terminate mate-panel, remove the entries, then reload it.
+- [ ] Terminate mate-panel, remove the entries while it is not running, then reload it.
+
+For further info see the [mate-dock-applet](../devuan/mate-dock-applet.md) article.

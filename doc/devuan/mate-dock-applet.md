@@ -46,3 +46,8 @@ On Devuan 4 (chimaera) (based on Debian 11 (bullseye)) 2022-08-14:
     `pkill -f dock_app.py`
     - -f: look in full process name
 - After going through this a few times I tried dragging Dock instead of adding it, and it worked this time for some reason.
+
+Running the dock_app.py file shows:
+`Gtk-Message: 08:51:57.231: Failed to load module "colorreload-gtk-module"`
+so I did: `mv /home/owner/.config/gtk-3.0/settings.ini /home/owner/.config/gtk-3.0/settings.old` and the error no longer occurred.
+- Due to at least one bad line there: `gtk-modules=colorreload-gtk-module` as noted at <https://forum.endeavouros.com/t/getting-failed-to-load-module-colorreload-gtk-module-when-starting-gtk-apps-from-terminal/19102>
