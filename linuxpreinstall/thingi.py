@@ -1,23 +1,39 @@
 #!/usr/bin/env python3
+'''
+Gather and organize files from a zip file(s)
+
+Usage:
+  unthing <file1.zip [file2.zip ...]>
+
+Example:
+  unthing *.zip
+
+If this script runs directly (as main):
+
+Decompress specified zip file(s) as a single directory
+(Only create a subdirectory if there is more files/directories than 1 in the root
+of the zip).
+'''
 import os
 import sys
 from zipfile import ZipFile
 import tempfile
 import shutil
 
-
-def echo0(*args, **kwargs):  # formerly prerr
-    print(*args, file=sys.stderr, **kwargs)
-    return True
-
 verbosity = 0
 verbosities = [True, False, 0, 1, 2]
+
 
 def set_verbosity(level):
     global verbosity
     if level not in verbosities:
         raise ValueError("level must be one of {}".format(verbosities))
     verbosity = level
+
+
+def echo0(*args, **kwargs):  # formerly prerr
+    print(*args, file=sys.stderr, **kwargs)
+    return True
 
 
 def unzip_unmess(src_path, dst_path):
@@ -57,7 +73,6 @@ def unzip_unmess(src_path, dst_path):
         # ^ strip again in case of unusual/unicode whitespace characters
         if moveName != oldName:
             echo0('* changed "{}" to "{}"'.format(oldName, moveName))
-
 
         echo0("* got {}".format(subs))
 
@@ -115,6 +130,7 @@ def unzip_unmess(src_path, dst_path):
 
     return code
 
+
 def main():
     paths = []
     for argI in range(1, len(sys.argv)):
@@ -139,6 +155,7 @@ def main():
         code = unzip_unmess(path, os.getcwd())
         if code != 0:
             return code
+
 
 if __name__ == "__main__":
     sys.exit(main())

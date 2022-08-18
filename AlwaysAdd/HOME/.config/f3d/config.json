@@ -1,0 +1,17 @@
+{
+   ".*": {
+       "camera-position": "70,-70,70",
+       "camera-focal-point": "0,0,15",
+       "camera-view-up": "0,0,1",
+       "fxaa": true,
+       "ssao": true,
+       "tone-mapping": false,
+       "roughness": 0.75,
+   },
+   ".*vt.": {
+       "edges": true
+   },
+   ".*mhd": {
+       "volume": true
+   }
+}

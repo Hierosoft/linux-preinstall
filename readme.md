@@ -92,7 +92,7 @@ There are some parts of linux-preinstall that are in current use for computer cl
 ## Scripts
 Beyond tutorials and examples, linux-preinstall includes many usable (See disclaimer in [license](license.txt)) scripts.
 
-The following subsections describe each category of scripts.
+The following long subsections describe each category of scripts.
 
 ### Software and Software Group Installation
 The most frequent type of script included is one that installs a program that is hard to install or installs a list of programs related to a specific type of user or workflow. This is more effective than `tasksel` (for Debian/Ubuntu) or `groupinstall` (for RedHat/Fedora) because the programs and groups here are recommendations not merely a full list that may leave you unsure of what will work well, or a list that is only for a fixed role of a computer rather than a circumstantially elected or self-selected role of a person. In the case of the server folder here, that is a computer role, but that is mostly an exception and applies to webmasters. It is also more fine-grained than an "x server" group in group systems (where "x" is LAMP [Linux-Apache-MySQL-PHP] or something like that) in that each of this repo's scripts handles installation for a specific workflow and not more.
@@ -308,6 +308,13 @@ via pip (See the "[Install](#install)" section).
   (en_GB)) menu.
 - `remove-bad-mate-items`: Remove bad mate items (if no param is
   specified, remove items with a blank `applet-iid`).
+- `unthing`: See [linuxpreinstall/thingi.py](linuxpreinstall/thingi.py)
+  for documentation.
+- `thumbnails`: Clear thumbnail(s) for the specified file(s) so that the
+  OS will regenerate the thumbnail cache for the specified file(s) on
+  the next load/refresh of the folder in a File Explorer. See
+  [linuxpreinstall/thumbnails.py](linuxpreinstall/thumbnails.py) for
+  documentation.
 
 #### pycodetool commands
 The following scripts utilize <https://github.com/poikilos/pycodetool>:
