@@ -56,14 +56,16 @@ def set_verbosity(level):
         raise ValueError("level must be one of {}".format(verbosities))
     verbosity = level
 
-if sys.version_info.major >= 3:
-    def echo0(*args, **kwargs):  # formerly prerr
-        print(*args, file=sys.stderr, **kwargs)
-        return True
-else:
-    def echo0(msg):  # formerly prerr
-        print(msg, file=sys.stderr)
-        return True
+
+def echo0(*args, **kwargs):  # formerly prerr
+    print(*args, file=sys.stderr, **kwargs)
+    return True
+
+
+def usage():
+    echo0("thumbnails")
+    echo0("----------")
+    echo0(__doc__+"\n")
 
 
 def str_to_hexdigest(value):
@@ -148,6 +150,7 @@ def main():
             echo0('Error: "{}" is not a file.'.format(arg))
             return 3
     if len(paths) < 1:
+        usage()
         echo0('Error: You must specify at least one thumbnail-able file.')
         return 1
     for src_path in paths:

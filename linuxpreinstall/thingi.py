@@ -10,10 +10,11 @@ Example:
 
 If this script runs directly (as main):
 
-Decompress specified zip file(s) as a single directory
-(Only create a subdirectory if there is more files/directories than 1 in the root
-of the zip).
+Decompress specified zip file(s) as a single directory (Only create a
+subdirectory if there is more files/directories than 1 in the root of
+the zip).
 '''
+from __future__ import print_function
 import os
 import sys
 from zipfile import ZipFile
@@ -34,6 +35,12 @@ def set_verbosity(level):
 def echo0(*args, **kwargs):  # formerly prerr
     print(*args, file=sys.stderr, **kwargs)
     return True
+
+
+def usage():
+    echo0("unthing")
+    echo0("-------")
+    echo0(__doc__+"\n")
 
 
 def unzip_unmess(src_path, dst_path):
@@ -149,6 +156,7 @@ def main():
             echo0('Error: "{}" is not a file.'.format(arg))
             return 3
     if len(paths) < 1:
+        usage()
         echo0("Error: You must specify at least one zip file.")
         return 1
     for path in paths:
