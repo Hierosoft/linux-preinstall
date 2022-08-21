@@ -75,42 +75,46 @@ def unzip_unmess(src_path, dst_path):
             #   pwd: zip password if any
             code = 0
 
-        movePath = tmpPath
+        srcPath = tmpPath
         subs = list(os.listdir(tmpPath))
         if len(subs) < 1:
             raise IOError('There were no files nor directories in "{}"'
                           ''.format(src_path))
         elif len(subs) == 1:
-            moveName = subs[0]
-            movePath = os.path.join(tmpPath, moveName)
+            dstName = subs[0]
+            srcPath = os.path.join(tmpPath, subs[0])
+            echo1('* moving the sub "{}"'.format(srcPath))
         else:
             # Move the whole thing.
-            moveName = os.path.splitext(src_path)[0]
-        uI = moveName.find("_")
-        oldName = moveName
+            dstName = os.path.splitext(os.path.split(src_path)[1])[0]
+            echo1('* moving the whole "{}" as "{}"'
+                  ' (The name may be processed further--see mv below)'
+                  ''.format(srcPath, dstName))
+        uI = dstName.find("_")
+        oldName = dstName
         if uI > -1:
-            if moveName[:uI].isdigit():
-                echo1('keeping "{}" from "{}"'.format(moveName[:uI],  moveName))
-                moveName = moveName[uI+1:]
+            if dstName[:uI].isdigit():
+                echo1('removing "{}" from "{}"'.format(dstName[:uI],  dstName))
+                dstName = dstName[uI+1:]
             else:
-                echo1('isdigit({}): no'.format(shlex.join([moveName[:uI],])))
+                echo1('isdigit({}): no'.format(shlex.join([dstName[:uI],])))
         else:
-            echo1('"_" in {}: no'.format(shlex.join([moveName,])))
-        moveName = moveName.strip(" _").strip()
+            echo1('"_" in {}: no'.format(shlex.join([dstName,])))
+        dstName = dstName.strip(" _").strip()
         # ^ strip again in case of unusual/unicode whitespace characters
-        if moveName != oldName:
-            echo0('* changed "{}" to "{}"'.format(oldName, moveName))
+        if dstName != oldName:
+            echo0('* changed "{}" to "{}"'.format(oldName, dstName))
 
         echo0("* got {}".format(subs))
 
-        dstSubPath = os.path.join(dst_path, moveName)
+        dstSubPath = os.path.join(dst_path, dstName)
 
         if not os.path.exists(dstSubPath):
-            # os.rename(movePath, dstSubPath)
+            # os.rename(srcPath, dstSubPath)
             # ^ raises 'OSError: [Errno 18] Invalid cross-device link:'
-            shutil.move(movePath, dstSubPath)
-            print('mv "{}" "{}"'.format(movePath, dstSubPath))
-            echo0('* wrote "{}"'.format(dstSubPath))
+            shutil.move(srcPath, dstSubPath)
+            print('mv "{}" "{}"'.format(srcPath, dstSubPath))
+            # echo0('* extracted as "{}"'.format(dstSubPath))
         else:
             # shutil.move copies into it if it exists!
             echo0('Error: "{}" already exists,'
