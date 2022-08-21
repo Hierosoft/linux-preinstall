@@ -162,6 +162,10 @@ def which_icon(BIN_PATH):
             found = None
             exact = False
             with open(subPath, 'r') as ins:
+                # If there is an upgrade in progress (or some other
+                #   process changing files after listing them; or a bad
+                #   symlink maybe) The open command may raise:
+                #   "FileNotFoundError: [Errno 2] No such file or directory"
                 for rawL in ins:
                     line = rawL.strip()
                     name = ""
