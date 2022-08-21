@@ -20,6 +20,7 @@ import sys
 from zipfile import ZipFile
 import tempfile
 import shutil
+import shlex
 
 verbosity = 0
 verbosities = [True, False, 0, 1, 2]
@@ -32,7 +33,21 @@ def set_verbosity(level):
     verbosity = level
 
 
-def echo0(*args, **kwargs):  # formerly prerr
+def echo0(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
+    return True
+
+
+def echo1(*args, **kwargs):
+    if verbosity < 1:
+        return False
+    print(*args, file=sys.stderr, **kwargs)
+    return True
+
+
+def echo2(*args, **kwargs):
+    if verbosity < 2:
+        return False
     print(*args, file=sys.stderr, **kwargs)
     return True
 
@@ -75,7 +90,12 @@ def unzip_unmess(src_path, dst_path):
         oldName = moveName
         if uI > -1:
             if moveName[:uI].isdigit():
+                echo1('keeping "{}" from "{}"'.format(moveName[:uI],  moveName))
                 moveName = moveName[uI+1:]
+            else:
+                echo1('isdigit({}): no'.format(shlex.join([moveName[:uI],])))
+        else:
+            echo1('"_" in {}: no'.format(shlex.join([moveName,])))
         moveName = moveName.strip(" _").strip()
         # ^ strip again in case of unusual/unicode whitespace characters
         if moveName != oldName:
@@ -98,9 +118,17 @@ def unzip_unmess(src_path, dst_path):
                   ''.format(dstSubPath))
             code = 1
     srcName = os.path.split(src_path)[1]
-    tryReadme = os.path.splitext(srcName)[0] + ".md"
+    foundReadme = None
     dstReadme = "readme.md"
-    if os.path.isfile(tryReadme):
+    tryReadmeName = os.path.splitext(srcName)[0] + ".md"
+    tryReadmes = [
+        tryReadmeName,
+        os.path.join(os.path.dirname(src_path), tryReadmeName),
+    ]
+    for tryReadme in tryReadmes:
+        if os.path.isfile(tryReadme):
+            foundReadme = tryReadme
+    if foundReadme is not None:
         trySubs = [
             os.path.join("files", "Poikilos"),
             os.path.join("files", "poikilos"),
@@ -126,14 +154,14 @@ def unzip_unmess(src_path, dst_path):
             echo('* there is no "{}" in the destination "{}"'
                  ' so "{}" will be moved to the destination itself'
                  ' (as "{}").'
-                 ''.format(trySubs, dstSubPath, tryReadme, dstReadme))
+                 ''.format(trySubs, dstSubPath, foundReadme, dstReadme))
             dstDocsPath = dstSubPath
         '''
         dstReadmePath = os.path.join(dstDocsPath, dstReadme)
-        shutil.move(tryReadme, dstReadmePath)
-        print('mv "{}" "{}"'.format(tryReadme, dstReadmePath))
+        shutil.move(foundReadme, dstReadmePath)
+        print('mv "{}" "{}"'.format(foundReadme, dstReadmePath))
     else:
-        echo0('* there is no "{}" here to move.'.format(tryReadme))
+        echo0('* there is no "{}" here to move.'.format(tryReadmeName))
 
     return code
 
