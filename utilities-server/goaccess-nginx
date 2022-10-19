@@ -1,0 +1,218 @@
+#!/bin/bash
+if [ "x$SITE" = "x" ]; then
+    SITE=iosite
+fi
+GA_DATA=/opt/goaccess
+if [ -f "$GA_DATA/out.txt" ]; then rm -f "$GA_DATA/out.txt"; fi
+if [ -f "$GA_DATA/err.txt" ]; then rm -f "$GA_DATA/err.txt"; fi
+sudo mkdir -p "$GA_DATA"
+GA_CONF="$GA_DATA/goaccess.conf"
+
+conf_msg(){
+cat <<END
+
+If using NGINX, conf file requires, at minimum:
+1. The log-format line to be equivalent to the one in nginx.conf. For the default format, log-format COMBINED is supposed to work, but here is an example for comparison:
+   - nginx.conf:
+     log_format main
+        'FFA:$http_x_forwarded_for REA:$remote_addr REU:$remote_user [$time_local] '
+        '"$request" status BBS:$body_bytes_sent '
+        '"REF:$http_referer" "UA:$http_user_agent" '
+        '"GZ:$gzip_ratio"';
+   - $GA_CONF:
+     log-format FFA:%^ REA:%h REU:%^ [%d:%t %^] "%r" %^:%b "REF:%R" "UA:%u" "GZ:%^"
+2. time-format %T
+3. date-format %d/%b/%Y
+
+Regardless, a log-format must be specified there or with the --log-format argument to prevent the program from asking for a log format.
+
+END
+}
+
+customExit(){
+    code=$2
+    if [ -z $code ]; then
+        code=1
+    fi
+    >&2 echo "$1"
+    exit $code
+}
+
+src="/var/log/nginx/${SITE}_access.log"
+dst=/var/www/$SITE/stats.html
+# ^ These defaults are set now for the usage screen, but are changed after processing CLI arguments further down.
+
+if [ "x$WRITE_HTML" = "x" ]; then
+    WRITE_HTML=false
+fi
+
+usage(){
+    cat <<END
+
+
+goaccess-nginx.sh
+-----------------
+Read uncompressed (along with compressed if present) NGINX logs into goaccess to analyze traffic from the CLI (or output html).
+
+Options:
+--site <site>    Show a specific site (default is $SITE or the SITE environment variable). NGINX must be configured to save an access log of the site at a location such as $src (and if using the --html option, store the private html file as $dst; override the destination using the PUBLISH_DIR environment variable, otherwise it will be /var/www/ then the value of SITE).
+--html           Write an html file (for location, see the --site help entry above).
+--help           Show this screen and exit.
+
+END
+}
+
+prev_var=""
+for var in "$@"
+do
+    if [ "x$prev_var" = "xsite" ]; then
+        SITE="$var"
+        prev_var=""
+    elif [ "x$var" = "x--site" ]; then
+        prev_var="site"
+    elif [ "x$var" = "x--html" ]; then
+         WRITE_HTML=true
+    elif [ "x$var" = "x--help" ]; then
+         usage
+         exit 0
+    fi
+done
+
+if [ ! -z "$prev_var" ]; then
+    customExit "Error: You must specify a value after --$prev_var." 3
+fi
+
+if [ ! -f "`command -v goaccess`" ]; then
+    usage
+    echo "Error: goaccess is not installed or not in the system PATH."
+    echo
+    exit 4
+fi
+
+src=/var/log/nginx/${SITE}_access.log
+if [ "x$PUBLISH_DIR" = "x" ]; then
+    PUBLISH_DIR=/var/www/$SITE
+fi
+dst=$PUBLISH_DIR/stats.html
+if [ ! -d "$PUBLISH_DIR" ]; then
+    if [ "x$WRITE_HTML" = "true" ]; then
+        echo "Error: '$PUBLISH_DIR' (PUBLISH_DIR) doesn't exist, but the WRITE_HTML option (or --html argument) is true. There is nowhere to write the file, so nothing will be done."
+        exit 5
+    fi
+fi
+
+if [ ! -f "$src" ]; then
+    usage
+    echo "Error: The website access log named '$src' is not present."
+    echo
+    exit 6
+fi
+
+
+source /etc/os-release
+geo_option="--geoip-database=/opt/goaccess/GeoLiteCity.dat"
+dst_options="--anonymize-ip --anonymize-level=3"
+GA_VERSION="`goaccess --version | grep "GoAccess -" | cut -d" " -f3`"
+# ^ has a dot at the end, unfortunately, so:
+GA_VERSION="${GA_VERSION::-1}"
+echo "* detected goaccess version='$GA_VERSION'"
+#if [ "x$VERSION" = "x10 (buster)" ]; then
+NO_ANON=false
+if [ -f "`command -v bc`" ]; then
+    if (( $(echo "GA_VERSION <= 1.2" | bc -l) )); then
+        echo "  - therefore turning off --anonymize-ip"
+        NO_ANON=true
+    fi
+else
+    if [ "x$GA_VERSION" = "x1.2" ]; then
+        echo "  - therefore turning off --anonymize-ip"
+        NO_ANON=true
+    fi
+    echo "  - Run:"
+    echo "    apt-get install bc"
+    echo "    for float (version) comparison first to more accurately detect the presence of the --anonymize-ip option."
+fi
+if [ "x$NO_ANON" = "xtrue" ]; then
+    echo "--anonymize-ip isn't available in goaccess 1.2 (such as on Debian 10). Enhancement issue https://github.com/allinurl/goaccess/issues/1009 says the feature is due in releases starting November 23, 2018"
+    dst_options=""
+else
+    echo "  - therefore using --anonymize-ip"
+fi
+
+VERSION="10 (buster)"
+#options="$src $geo_option --log-format=COMBINED"
+# ^ COMBINED only works for the default nginx format
+options="$src $geo_option --config-file=$GA_CONF"
+
+
+logFormatExit(){
+    code=$2
+    if [ -z $code ]; then
+        code=1
+    fi
+
+    >&2 cat<<END
+
+[$0] There was a \"doesn't match specifier\" error, so
+ensure that the $GA_CONF
+is equivalent to the log_format pattern in nginx.conf
+(The formats differ, so enter:
+    man --pager='less -p ^CUSTOM\\ LOG/DATE\\ FORMAT' goaccess
+or <https://goaccess.io/man#custom-log> for details)
+        -Poikilos
+
+END
+
+    conf_msg
+
+    exit $code
+}
+
+checkLogIfNotZero(){
+    code=$1
+    if [ -z "$code" ]; then
+        echo "Error: checkLogIfNotZero requires an error code."
+        exit 2
+    fi
+    if [ $code -ne 0 ]; then
+        # cat $GA_DATA/out.txt
+        >&2 cat $GA_DATA/err.txt
+        if [ ! -z "`cat $GA_DATA/err.txt | grep 'match specifier'`" ]; then
+            logFormatExit $code
+        fi
+        exit $code
+    fi
+}
+
+if [ "x$WRITE_HTML" = "xtrue" ]; then
+    #goaccess $src $geo_option --config-file=$GA_CONF $dst_options
+    options="$options $dst_options -o $dst"
+    code=$?
+    echo "goaccess $options 2>$GA_DATA/err.txt"
+else
+    echo "goaccess $options 2>$GA_DATA/err.txt"
+    echo "[$0] Add the --html option to write $dst with: $dst_options"
+fi
+
+if [ -f "$src.1" ]; then
+    # Add another log file.
+    options="$src.1 $options"
+fi
+
+if [ -f "$src.2.gz" ]; then
+    # Add all gz log files
+    zcat $src.*.gz | goaccess $options - 2>$GA_DATA/err.txt
+else
+    goaccess $options 2>$GA_DATA/err.txt
+fi
+if [ "x$WRITE_HTML" = "xtrue" ]; then
+    if [ "x$NO_ANON" = "xtrue" ]; then
+        cat <<END
+
+WARNING: Remember to protect '$dst' from public view! It contains IP addresses since you do not have the --anonymize-ip option in your version of goaccess (GA_VERSION='$GA_VERSION'). Otherwise delete it immediately or move it to a safe location, and avoid using the html option:
+  rm "$dst"
+END
+    fi
+fi
+checkLogIfNotZero $?
+exit $code
