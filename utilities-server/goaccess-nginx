@@ -218,7 +218,7 @@ if [ "x$WRITE_HTML" = "xtrue" ]; then
         cat <<END
 
 WARNING: Remember to protect '$dst' from public view! It contains IP addresses since you do not have the --anonymize-ip option in your version of goaccess (GA_VERSION='$GA_VERSION'). Otherwise delete it immediately or move it to a safe location, and avoid using the html option:
-  rm "$dst"
+  rm -f "$dst"
 END
     fi
 fi
