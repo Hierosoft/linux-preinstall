@@ -179,6 +179,8 @@ checkLogIfNotZero(){
         >&2 cat $GA_DATA/err.txt
         if [ ! -z "`cat $GA_DATA/err.txt | grep 'match specifier'`" ]; then
             logFormatExit $code
+        else
+            echo "Error code $code occurred for an unknown reason (reason not detected in $GA_DATA/err.txt)"
         fi
         exit $code
     fi
@@ -206,8 +208,10 @@ fi
 if [ -f "$src.2.gz" ]; then
     # Add all gz log files
     zcat $src.*.gz | goaccess $options - 2>$GA_DATA/err.txt
+    checkLogIfNotZero $?
 else
     goaccess $options 2>$GA_DATA/err.txt
+    checkLogIfNotZero $?
 fi
 if [ "x$WRITE_HTML" = "xtrue" ]; then
     if [ "x$NO_ANON" = "xtrue" ]; then
@@ -218,5 +222,5 @@ WARNING: Remember to protect '$dst' from public view! It contains IP addresses s
 END
     fi
 fi
-checkLogIfNotZero $?
+
 exit $code
