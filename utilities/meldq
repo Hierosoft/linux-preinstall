@@ -1,13 +1,15 @@
 #!/bin/bash
 
 # This is a quiet meld launcher.
+COMMAND="meld"
+# COMMAND="diffuse"
 
 if [ ! -f "`command -v nohup`" ]; then
     echo "$0 requires nohup"
     exit 1
 fi
-if [ ! -f "`command -v meld`" ]; then
-    echo "$0 requires meld"
+if [ ! -f "`command -v $COMMAND`" ]; then
+    echo "$0 requires $COMMAND"
     exit 1
 fi
 
@@ -55,9 +57,9 @@ if [ ! -z "$3" ]; then
             exit 1
         fi
     fi
-    nohup meld "$1" "$2" "$3" >& /dev/null &
+    nohup $COMMAND "$1" "$2" "$3" >& /dev/null & disown
 else
-    nohup meld "$1" "$2" >& /dev/null &
+    nohup $COMMAND "$1" "$2" >& /dev/null & disown
 fi
 
 
