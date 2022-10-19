@@ -59,6 +59,11 @@ def usage():
 
 
 def unzip_unmess(src_path, dst_path):
+    '''
+    Unzip the file to dst_path, and only create a subdirectory under
+    dst_path if there is more than one file or directory in the zip
+    file.
+    '''
     # See also SpooledTemporaryFile for in-memory operations
     #   (uses storage only if necessary)
     # with open(tmp.name, 'w') as f:
@@ -172,6 +177,11 @@ def unzip_unmess(src_path, dst_path):
 
 def main():
     paths = []
+    in_place=True
+    # TODO: Keyword arguments:
+    '''
+    in_place -- Use the location of the file as the destination directory.
+    '''
     for argI in range(1, len(sys.argv)):
         arg = sys.argv[argI]
         if arg.startswith("--"):
@@ -192,7 +202,13 @@ def main():
         echo0("Error: You must specify at least one zip file.")
         return 1
     for path in paths:
-        code = unzip_unmess(path, os.getcwd())
+        dst_path = os.getcwd()
+        echo1('os.path.realpath(path): "{}"'.format(os.path.realpath(path)))
+        echo1('os.getcwd(): "{}"'.format(os.getcwd()))
+        echo1('os.path.join(os.getcwd(), path): "{}"'.format(os.path.join(os.getcwd(), path)))
+        if os.path.realpath(path) != os.path.join(os.getcwd(), path):
+            dst_path = os.path.dirname(path)
+        code = unzip_unmess(path, dst_path)
         if code != 0:
             return code
 
