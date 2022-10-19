@@ -191,7 +191,11 @@ if [ "x$WRITE_HTML" = "xtrue" ]; then
     echo "goaccess $options 2>$GA_DATA/err.txt"
 else
     echo "goaccess $options 2>$GA_DATA/err.txt"
-    echo "[$0] Add the --html option to write $dst with: $dst_options"
+    dst_options_msg="with the following options to be automatically added: $dst_options"
+    if [ -z "$dst_options" ]; then
+        dst_options_msg=" (with no additional options since your version has no --anonymize-ip option)."
+    fi
+    echo "[$0] Add the --html option to write $dst $dst_options_msg"
 fi
 
 if [ -f "$src.1" ]; then
