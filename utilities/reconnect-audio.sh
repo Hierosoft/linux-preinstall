@@ -10,8 +10,7 @@ do
 	# ^ dynamically named :( so parse output of `pacmd list-sinks | grep 'name: <'` :( :
 	# select_audio_script="$HOME/.local/select-audio-device.py"
 	if [ -f "`which selectoutput`" ]; then
-		# ^ Installing the linuxpreinstall package via pip provides
-		#   this command.
+		# ^ The linuxpreinstall package provides this command.
 		selectoutput hdmi
 		if [ $? -eq 0 ]; then
 			break
@@ -22,6 +21,9 @@ do
 		fi
 		echo "."
 		sleep 1
+	else
+		echo "Error: selectoutput is not available. Install linuxpreinstall (using 'pip install linux-preinstall' or setup.py)."
+		exit 1
 	fi
 done
 if [ "x$enable_restart" = "xfalse" ]; then

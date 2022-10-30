@@ -5,48 +5,9 @@ import sys
 import os
 import platform
 
-profile = os.environ.get('HOME')
-if platform.system() == "Windows":
-    profile = os.environ['USERPROFILE']
+from find_pycodetool import pycodetool
 
-tryRepo = os.path.join(profile, "git", "pycodetool")
-tryModule = os.path.join(tryRepo, "pycodetool")
-
-MY_MODULE = os.path.dirname(os.path.abspath(__file__))
-MY_REPO = os.path.dirname(MY_MODULE)
-MY_REPOS = os.path.dirname(MY_REPO)
-
-nearbyRepo = os.path.join(MY_REPOS, "pycodetool")
-
-
-def echo0(*args, **kwargs):  # formerly prerr
-    print(*args, file=sys.stderr, **kwargs)
-    return True
-
-
-if os.path.isfile(os.path.join(nearbyRepo, "pycodetool", "ggrep.py")):
-    sys.path.insert(0, nearbyRepo)
-    echo0("[ggrep] using nearby {}".format(nearbyRepo))
-elif os.path.isdir(tryModule):
-    sys.path.insert(0, tryRepo)
-    echo0("[ggrep] using git {}".format(tryRepo))
-else:
-    pass
-    # use the one in the python path (or fail)
-    # print("There is no {}".format(os.path.join(thisRepo, "linuxpreinstall")))
-
-try:
-    from pycodetool.ggrep import main
-except ImportError as ex:
-    echo0("ggrep is a Python module in pycodetool now."
-          " You must install the repo:")
-    echo0("# Clone it then:")
-    echo0("python3 -m pip install pycodetool")
-    echo0('# or just put it in a directory near here such as via:')
-    echo0('  git clone https://github.com/poikilos/pycodetool'
-          ' "{}"'.format(nearbyRepo))
-    sys.exit(1)
-
+from pycodetool.ggrep import main
 
 if __name__ == '__main__':
     sys.argv[0] = re.sub(r'(-script\.pyw|\.exe)?$', '', sys.argv[0])

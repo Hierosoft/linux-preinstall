@@ -20,6 +20,11 @@ import os
 # import Image
 from PIL import Image
 # Image requires Pillow such as via: python3 -m pip install --user Pillow
+
+from find_pycodetool import (
+    pycodetool
+)
+
 from pycodetool.parsing import (
     find_slice,
 )

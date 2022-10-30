@@ -4,22 +4,8 @@ import re
 import sys
 import platform
 import os
-profile = None
-if platform.system() == "Windows":
-    profile = os.environ['USERPROFILE']
-else:
-    profile = os.environ['HOME']
-reposDir = os.path.join(profile, "git")
-tryRepos = []
-MODULE_DIR = os.path.dirname(os.path.realpath(__file__))
-REPO_DIR = os.path.dirname(MODULE_DIR)
-tryRepos.append(REPO_DIR)
-tryRepos.append(os.path.join(reposDir, "linux-preinstall"))
 
-for tryRepo in tryRepos:
-    if os.path.isfile(os.path.join(tryRepo, "linuxpreinstall", "__init__.py")):
-        sys.path.insert(0, tryRepo)
-        break
+from find_linuxpreinstall import linuxpreinstall
 
 from linuxpreinstall.thumbnails import main
 
