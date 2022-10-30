@@ -1,0 +1,15 @@
+#!/bin/sh
+
+if [ "x$1" = "x" ]; then
+    echo "Specify the old and new extensions."
+    exit 1
+fi
+if [ "x$2" = "x" ]; then
+    echo "Specify the new extension after the old extension \"$1\"."
+    exit 1
+fi
+# find -name "*.stl" -exec sh -c 'mv "$1" "${1%.stl}.png"' _ {} \;
+# find -name "*.$1" -exec sh -c 'mv "$1" "${1%.$2}.$3"' _ {} \;
+
+find -name "*.$1" -exec sh -c 'echo "mv \"$1\" \"${1%.$2}.$3\"" && mv "$1" "${1%.$2}.$3"' _ {} $1 $2 \;
+exit $?
