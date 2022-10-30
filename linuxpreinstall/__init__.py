@@ -114,6 +114,10 @@ else:
     myAppData = os.path.join(AppData, "codeblocks")
 
 
+digits = "1234567890"  # or use s.isdigit()
+digit_or_dot = digits + "."
+
+
 # from https://github.com/poikilos/DigitalMusicMC
 # and https://github.com/poikilos/blnk
 def which(cmd):
@@ -151,6 +155,8 @@ upgrade_parts = None
 package_type = None
 install_bin = None
 packageInfos = None
+
+
 
 
 def set_verbosity(v):
@@ -287,7 +293,8 @@ def _init_commands():
 def run_and_get_lists(cmd_parts, collect_stderr=True):
     '''
     Returns:
-    a tuple of (out, err) where each is a list of 0 or more lines.
+    a tuple of (out, err, returncode) where out and err are each a list
+    of 0 or more lines.
     '''
     # See <https://stackabuse.com/executing-shell-commands-with-python>:
     # called = subprocess.run(list_installed_parts,
@@ -324,6 +331,14 @@ def run_and_get_lists(cmd_parts, collect_stderr=True):
                 line = line[:bI-1] + line[bI+1:]
                 # -1 to execute the backspace not just remove it
             errs.append(line.rstrip("\n\r"))
+    # MUST finish to get returncode
+    # (See <https://stackoverflow.com/a/16770371>):
+    more_out, more_err = sp.communicate()
+    if len(more_out.strip()) > 0:
+        echo0("[run_and_get_lists] got extra stdout: {}".format(more_out))
+    if len(more_err.strip()) > 0:
+        echo0("[run_and_get_lists] got extra stderr: {}".format(more_err))
+
     # See <https://stackoverflow.com/a/7468725/4541104>:
     # out, err = subprocess.Popen(
     #     ['ls','-l'],
@@ -342,21 +357,106 @@ def run_and_get_lists(cmd_parts, collect_stderr=True):
     #         line = rawL.decode()
     #         errs.append(line.rstrip("\n\r"))
 
-    return outs, errs
+    return outs, errs, sp.returncode
 
 
 def get_installed():
     out = None
-
     if list_installed_parts is not None:
-        out, err = run_and_get_lists(list_installed_parts)
+        out, err, code = run_and_get_lists(list_installed_parts)
+        msg_prefix = "[linuxpreinstall] Warning"
+        if code != 0:
+            msg_prefix = "[linuxpreinstall] Error"
         if len(err) > 0:
-            echo0("Error running {}:"
-                  "".format(" ".join(list_installed_parts)))
+            echo0("{} (code {}) running {}:"
+                  "".format(msg_prefix, code, " ".join(list_installed_parts)))
             for line in err:
                 echo0(line)
+        elif code != 0:
+            echo0("Error code {}".format(code))
+        if code != 0:
             return None
     return out
+
+
+def find_not_decimal(s, start=None, step=1):
+    if s is None:
+        raise ValueError("s is None.")
+    if len(s) == 0:
+        raise ValueError("s is blank.")
+    if step not in [-1, 1]:
+        raise ValueError("step must be 1 or -1 (rfind_not_decimal)")
+    if not isinstance(s, str):
+        raise ValueError("s must be a str but is {}".format(s))
+    if start is None:
+        if step < 0:
+            start = -1
+        else:
+            start = 0
+    if start < 0:
+        start = len(s) + start  # + since negative
+    if step < 0:
+        i = start + 1  # +1 since decremented before use
+    else:
+        i = start - 1  # -1 since incremented before use
+    while True:
+        i += step
+        if step < 0:
+            if i < 0:
+                break
+        else:
+            if i >= len(s):
+                break
+        if s[i] not in digit_or_dot:
+            return i
+    return -1
+
+
+def rfind_not_decimal(s, start=None):
+    return find_not_decimal(s, start=start, step=-1)
+
+
+def is_decimal(s):
+    if len(s) == 0:
+        raise ValueError("s is blank.")
+    return rfind_not_decimal(s) < 0
+
+
+def split_package_parts(s):
+    '''
+    Split a GNU/Linux-style package name into parts such as
+
+    '''
+    parts = s.split("-")
+    name_last_index = rfind_not_decimal(parts[0], -1)
+    group_prefixes = ['python', 'php', 'apt', 'ruby']
+    if name_last_index < len(parts[0])-1:
+        # If the first '-' is preceded by a number, split it further.
+        version_i = name_last_index + 1
+        new_part0 = parts[0][:version_i]  # The name
+        new_part1 = parts[0][version_i:]  # The version
+        # if new_part0 in group_prefixes:
+        if len(parts[1:]) > 0:
+            parts = [new_part0, new_part1, '-'.join(parts[1:])]
+            # ^ such as ["php", "8.0", "fpm"]
+        else:
+            parts = [new_part0, new_part1]
+            # ^ such as ["php", "8.0"]
+        # else:
+        #     parts = [new_part0, new_part1] + parts[1:]
+        #     such as ["php", "symphony", "service", "contracts"]
+    else:
+        if parts[0] in group_prefixes:
+            if len(parts) > 1:
+                parts = [parts[0], "-".join(parts[1:])]
+                # such as:
+                #   ["php", "symphony-service-contracts"] or
+                #   ["apt", "btrfs-snapshot"]
+            # else something like: "php"
+        else:
+            parts = [s]
+            # such as [""] (nothing to split)
+    return parts
 
 
 def find_unquoted(haystack, needle, quotes=['"']):

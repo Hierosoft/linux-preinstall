@@ -1,0 +1,26 @@
+#!/usr/bin/env python3
+'''
+This is a boilerplate script similar to one setuptools may generate
+except that pathing for run-in-place is provided.
+
+For further documentation, see
+linux-preinstall/linuxpreinstall/phpversion.ph
+'''
+from __future__ import print_function
+
+import re
+import sys
+import os
+
+# import linuxpreinstall
+from find_linuxpreinstall import linuxpreinstall
+
+from linuxpreinstall import (
+    echo0,
+)
+
+from linuxpreinstall.phpversion import main
+
+if __name__ == '__main__':
+    sys.argv[0] = re.sub(r'(-script\.pyw|\.exe)?$', '', sys.argv[0])
+    sys.exit(main())
