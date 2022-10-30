@@ -52,6 +52,7 @@ def get_php_package_groups():
     - 'unversioned_modules' such as php-cgi
     - 'versioned_modules' such as php7.4-cgi
     - 'versions' such as php7.4
+    - 'other_versioned' such as libapache2-mod-php7.4
     - 'other' such as 'php'
     '''
     packaged_mod_names = []
@@ -77,6 +78,7 @@ def get_php_package_groups():
     results['versioned_modules'] = []
     results['versions'] = []
     results['other'] = []
+    results['other_versioned'] = []
 
     # echo0("All php packages: ({})".format(len(packaged_mod_names)))
     for name in packaged_mod_names:
@@ -85,7 +87,9 @@ def get_php_package_groups():
         if len(parts) == 1:
             results['other'].append(name)
         elif len(parts) == 2:
-            if parts[0] == "php" and is_decimal(parts[1]):
+            if parts[0] == "libapache2-mod-php" and is_decimal(parts[1]):
+                results['other_versioned'].append(name)
+            elif parts[0] == "php" and is_decimal(parts[1]):
                 results['versions'].append(name)
             else:
                 results['unversioned_modules'].append(name)
@@ -120,7 +124,29 @@ def main():
         for mod in group:
             # echo0("- {}".format(split_package_parts(mod)))
             echo0("- {}".format(mod))
-
+    if len(sys.argv) < 2:
+        return 0
+    arg = sys.argv[1]
+    # parts = split_package_parts(arg)
+    version_parts = []
+    # if len(parts) == 2:
+    version_parts = arg.split(".") # parts[1].split('.')
+    if len(version_parts) == 2:
+        if len(version_parts[1].strip()) == 0:
+            version_parts = version_parts[:1]
+        if len(version_parts[0].strip()) == 0:
+            version_parts = version_parts[1:]
+    if len(version_parts) != 2:
+        echo0("The format of the param must be like: 8.0")
+        return 1
+    # echo0("version_parts: {}".format(version_parts))
+    echo0("You must run the following manually"
+          " (can be piped as standard output):")
+    services = []
+    if which(a2enmod) is not None:
+        services.append("apache2")
+    # ^ won't work since only for root (in /usr/sbin/)
+    print(apache_pre_commands)
     return 0
 
 

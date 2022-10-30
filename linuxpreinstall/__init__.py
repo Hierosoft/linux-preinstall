@@ -428,8 +428,15 @@ def split_package_parts(s):
 
     '''
     parts = s.split("-")
+
+    if parts[:2] == ['libapache2', 'mod']:
+        # versionize using the number after libapache2-mod-php
+        parts = ['-'.join(parts)]
+        # echo0("parts: {}".format(parts))
+
     name_last_index = rfind_not_decimal(parts[0], -1)
     group_prefixes = ['python', 'php', 'apt', 'ruby']
+
     if name_last_index < len(parts[0])-1:
         # If the first '-' is preceded by a number, split it further.
         version_i = name_last_index + 1

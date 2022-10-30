@@ -44,3 +44,7 @@ class TestPackageStringMethods(unittest.TestCase):
         self.assertEqual(split_package_parts("php7.4"), ["php", "7.4"])
 
         self.assertEqual(split_package_parts("php"), ["php"])
+
+        test_lib_name = "libapache2-mod-php7.3"
+        good_lib_parts = ["libapache2-mod-php", "7.3"]
+        self.assertEqual(split_package_parts(test_lib_name), good_lib_parts)
