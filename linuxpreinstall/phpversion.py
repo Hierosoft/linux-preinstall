@@ -204,15 +204,23 @@ def main():
     echo0()
     #
     # echo0("remove_parts={}".format(remove_parts))
-    print(" ".join(remove_parts)+" "+" ".join(groups['versioned_modules']))
-    new_versioned_modules = []
+    remove_modules = []
     for name in groups['versioned_modules']:
-        parts = split_package_parts(name)
         if len(parts) != 3:
             raise ValueError(
                 'len(parts) for versioned_modules must be 3'
                 ' such as ["php", "8.0", "fpm"]'
             )
+        parts = split_package_parts(name)
+        if parts[1] != new_version:
+            # Only uninstall packages not for new_version.
+            remove_modules.append(name)
+    del name
+    print(" ".join(remove_parts)+" "+" ".join(remove_modules))
+    new_versioned_modules = []
+
+    for name in groups['versioned_modules']:
+        parts = split_package_parts(name)
         new_name = parts[0] + new_version
         # if len(parts) > 2:
         new_name += "-" + parts[2]
@@ -225,6 +233,7 @@ def main():
             print('echo "Warning: You are installing the libxml module. Ensure libxml2 >=2.7.0 is installed as required by Nextcloud if you plan to use Nextcloud."')
         new_versioned_modules.append(new_name)
     install_cmd = " ".join(install_parts)
+    del name
 
     if install_cmd.startswith("apt"):
         print(sury_commands)
@@ -232,9 +241,16 @@ def main():
     print(install_cmd+" php"+new_version)
     print(install_cmd+" "+" ".join(new_versioned_modules))
     print(install_cmd+" "+" ".join(groups['unversioned_modules']))
+    remove_versions = []
+    for name in groups['versions']:
+        parts = split_package_parts(name)
+        if parts[1] != new_version:
+            # Only remove php versions other than new_version.
+            remove_versions.append(name)
+    del name
     if "apache2" in services:
         print(apache_pre_commands.format(
-            old_version_names=" ".join(groups['versions']),
+            old_version_names=" ".join(remove_versions),
             new_version=new_version,
             new_modules=" ".join(groups['versioned_modules'])
         ))

@@ -1,4 +1,7 @@
 #!/bin/bash
+
+#PHP_VERSION=`php --version | grep PHP | grep -v "PHP Group" | cut -d' ' -f2`
+PHP_VERSION=`php --version | head -n1 | cut -d' ' -f2`
 cat <<END
 You must manually type:
 
@@ -54,18 +57,18 @@ env[TEMP] = /tmp
 
 to the conf used by nextcloud
 such as via:
-sudo nano /etc/php/7.3/fpm/pool.d/www.conf
+sudo nano /etc/php/$PHP_VERSION/fpm/pool.d/www.conf
 - commented by default, so just uncomment the lines.
 Then:
-    sudo systemctl restart php7.3-fpm
+    sudo systemctl restart php$PHP_VERSION-fpm
 
 2. The PHP memory limit is below the recommended value of 512MB.
 
-sudo nano /etc/php/7.3/fpm/pool.d/www.conf
+sudo nano /etc/php/$PHP_VERSION/fpm/pool.d/www.conf
 Change the variable below to:
     php_admin_value[memory_limit] = 512M
 Then:
-    sudo systemctl restart php7.3-fpm
+    sudo systemctl restart php$PHP_VERSION-fpm
 
 
 3. The "Strict-Transport-Security" HTTP header is not set to at least "15552000" seconds. For enhanced security, it is recommended to enable HSTS as described in the security tips ↗.
@@ -85,6 +88,10 @@ add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" alway
 
 4. recommended packages are not installec
 apt --fix-broken install
-sudo apt install -y php7.3-bcmath php7.3-gmp
+sudo apt install -y php$PHP_VERSION-bcmath php$PHP_VERSION-gmp
 
+If the php version isn't set above, run the linux-preinstall phpversion script with the version you want as an argument to see how to run update-alternatives the right version. The version above is the second column of the first line of 'php --version':
+PHP_VERSION=$PHP_VERSION
+
+Running the Python version of this script in the same directory may provide further information.
 END
