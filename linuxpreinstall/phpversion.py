@@ -217,7 +217,10 @@ def main():
             # Only uninstall packages not for new_version.
             remove_modules.append(name)
     del name
-    print(" ".join(remove_parts)+" "+" ".join(remove_modules))
+    if len(remove_modules) > 0:
+        print(" ".join(remove_parts)+" "+" ".join(remove_modules))
+    else:
+        print("# There are no modules from other versions installed.")
     new_versioned_modules = []
 
     for name in groups['versioned_modules']:
