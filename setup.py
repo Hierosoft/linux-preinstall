@@ -70,6 +70,7 @@ setuptools.setup(
             'sort-brisk-menu-favs=linuxpreinstall.mate.brisk_menu:main',
             'zc-make-sized-images=linuxpreinstall.server.zc:main',
             # 'remove-blank-mate-items=linuxpreinstall.mate.panel:main',  # WIP
+            'linuxpreinstall.phpversion:main',
         ],
     },
     install_requires=install_requires,

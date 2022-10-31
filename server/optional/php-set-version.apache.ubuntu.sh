@@ -2,6 +2,25 @@
 
 # see also https://github.com/nextcloud/server/issues/11638#issuecomment-483868535
 
+cat <<END "
+Warning: This script is deprecated.
+For the most up-to-date version of this process, use the phpversion
+command provided by installing the linux-preinstall package
+(or in utilities-server if running linux-preinstall in place).
+
+Press Ctrl+C before the countdown ends to try that instead.
+END
+echo "5..."
+sleep 1
+echo "4..."
+sleep 1
+echo "3..."
+sleep 1
+echo "2..."
+sleep 1
+echo "1..."
+sleep 1
+
 if [ -z "$1" ]; then
     echo
     echo "You must specify by a PHP version (such as 7.4)"

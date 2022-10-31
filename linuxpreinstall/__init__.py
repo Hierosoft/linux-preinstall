@@ -147,7 +147,7 @@ alt_names = {}  # Initialized in _init_packagenames, used in add_pkg
 
 refresh_parts = None
 install_parts = None
-uninstall_parts = None
+# uninstall_parts = None  # See remove_parts
 remove_parts = None
 list_installed_parts = None
 pkg_search_parts = None
@@ -215,7 +215,7 @@ def _init_commands():
     echo1("* _init_commands...")
     global refresh_parts
     global install_parts
-    global uninstall_parts
+    # global uninstall_parts  # See remove_parts
     global remove_parts
     global list_installed_parts
     global pkg_search_parts

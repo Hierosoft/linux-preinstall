@@ -38,6 +38,8 @@ from linuxpreinstall import(
     split_package_parts,
     is_decimal,
     which,
+    install_parts,
+    remove_parts,
 )
 
 
@@ -73,35 +75,36 @@ def get_php_package_groups():
             packaged_mod_names.append(name)
             # echo0("- {}".format(name))
 
-    results = {}
-    results['unversioned_modules'] = []
-    results['versioned_modules'] = []
-    results['versions'] = []
-    results['other'] = []
-    results['other_versioned'] = []
+    groups = {}
+    groups['unversioned_modules'] = []
+    groups['versioned_modules'] = []
+    groups['versions'] = []
+    groups['other'] = []
+    groups['other_versioned'] = []
 
     # echo0("All php packages: ({})".format(len(packaged_mod_names)))
     for name in packaged_mod_names:
         # echo0("- "+name)
         parts = split_package_parts(name)
         if len(parts) == 1:
-            results['other'].append(name)
+            groups['other'].append(name)
         elif len(parts) == 2:
             if parts[0] == "libapache2-mod-php" and is_decimal(parts[1]):
-                results['other_versioned'].append(name)
+                groups['other_versioned'].append(name)
             elif parts[0] == "php" and is_decimal(parts[1]):
-                results['versions'].append(name)
+                groups['versions'].append(name)
             else:
-                results['unversioned_modules'].append(name)
+                groups['unversioned_modules'].append(name)
         else:
-            results['versioned_modules'].append(name)
+            groups['versioned_modules'].append(name)
 
-    return results
+    return groups
 
 # See <https://tecadmin.net/switch-between-multiple-php-version-on-debian/>
 apache_pre_commands = '''
 sudo a2dismod {old_version_names}
 sudo a2enmod php{new_version}
+sudo a2enmod {new_modules}
 sudo service apache2 restart
 '''
 # ^ old_version_names must be like: php7.4 php5.6
@@ -124,8 +127,11 @@ def main():
         for mod in group:
             # echo0("- {}".format(split_package_parts(mod)))
             echo0("- {}".format(mod))
+    del group
     if len(sys.argv) < 2:
+        echo0("Specify a version to get php version switch commands.")
         return 0
+    new_version = None
     arg = sys.argv[1]
     # parts = split_package_parts(arg)
     version_parts = []
@@ -139,14 +145,59 @@ def main():
     if len(version_parts) != 2:
         echo0("The format of the param must be like: 8.0")
         return 1
+    new_version = arg
     # echo0("version_parts: {}".format(version_parts))
-    echo0("You must run the following manually"
+    echo0()
+    echo0("You must run the following sets of command manually"
           " (can be piped as standard output):")
+    echo0()
     services = []
-    if which(a2enmod) is not None:
+    if which("apache2") is not None:
         services.append("apache2")
+        echo0("apache2={}".format(which("apache2")))
+    if which("nginx") is not None:
+        services.append("nginx")
+        echo0("nginx={}".format(which("nginx")))
     # ^ won't work since only for root (in /usr/sbin/)
-    print(apache_pre_commands)
+    #
+    # echo0("remove_parts={}".format(remove_parts))
+    print(" ".join(remove_parts)+" "+" ".join(groups['versioned_modules']))
+    new_versioned_modules = []
+    for name in groups['versioned_modules']:
+        parts = split_package_parts(name)
+        if len(parts) != 3:
+            raise ValueError(
+                'len(parts) for versioned_modules must be 3'
+                ' such as ["php", "8.0", "fpm"]'
+            )
+        new_name = parts[0] + new_version
+        # if len(parts) > 2:
+        new_name += "-" + parts[2]
+        new_versioned_modules.append(new_name)
+    install_cmd = " ".join(install_parts)
+    print(install_cmd+" php"+new_version)
+    print(install_cmd+" "+" ".join(new_versioned_modules))
+    if "apache2" in services:
+        print(apache_pre_commands.format(
+            old_version_names=" ".join(groups['versions']),
+            new_version=new_version,
+            new_modules=" ".join(groups['versioned_modules'])
+        ))
+    print(sys_commands.format(
+        new_version=new_version,
+    ))
+    if "nginx" in services:
+        print(nginx_post_commands)
+
+
+    if len(services) < 1:
+        echo0("Error: Neither the apache2 nor nginx command was detected."
+              " Ensure apache2 or nginx are installed and that you are"
+              " running this script as root. Otherwise, run commands"
+              " before or after the commands above as necessary to"
+              " restart the appropriate service and disable and enable"
+              " the modules listed above.")
+        exit(1)
     return 0
 
 
