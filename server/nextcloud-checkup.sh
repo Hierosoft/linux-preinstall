@@ -1,7 +1,11 @@
 #!/bin/bash
 
 #PHP_VERSION=`php --version | grep PHP | grep -v "PHP Group" | cut -d' ' -f2`
-PHP_VERSION=`php --version | head -n1 | cut -d' ' -f2`
+#PHP_VERSION=`php --version | head -n1 | cut -d' ' -f2`
+# ^ gives build number, so instead:
+PHP_VER_MAJOR=`php --version | head -n1 | cut -d' ' -f2 | cut -d'.' -f1`
+PHP_VER_MINOR=`php --version | head -n1 | cut -d' ' -f2 | cut -d'.' -f2`
+PHP_VERSION="$PHP_VER_MAJOR.$PHP_VER_MINOR"
 cat <<END
 You must manually type:
 
