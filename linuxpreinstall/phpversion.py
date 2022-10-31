@@ -120,8 +120,22 @@ sudo update-alternatives --set php-config /usr/bin/php-config{new_version}
 '''
 nginx_post_commands = '''
 echo "You should set your website conf files to use php{new_version}-fpm rather than an old version. The remove commands of this script are optional, and should be skipped if some site(s) require an old version of PHP."
+sudo systemctl enable php{new_version}-fpm
 sudo systemctl restart nginx
+if [ ! -e /run/php/php{new_version}-fpm.sock ]; then echo "Error: missing /run/php/php{new_version}-fpm.sock"; fi
 '''
+# ^ /run/php/php7.4-fpm.sock (or other version) is neither a file nor a directory, and only exists when the service above is running.
+# ^ still got 'FastCGI sent in stderr: "PHP message: PHP Fatal error:'
+#   '  Uncaught Error: Class \'OCA\DAV\Connector\Sabre\ExceptionLoggerPlugin\''
+#   ' not found in /var/www/nextcloud/remote.php:61'
+#   so as per <https://github.com/nextcloud/server/issues/5043> install:
+#   php7.4-memcache
+#   - However, some people said to comment the following, where my
+#     config.php uses redis:
+#     'memcache.local' => '\\OC\\Memcache\\Redis'
+#     'memcache.locking' => '\\OC\\Memcache\\Redis'
+#     Therefore, instead of commenting them install:
+#     php7.4-redis
 
 sury_commands = '''
 # NOTE: As of 2022-10-30, Debian buster only goes up to PHP 7.3, so use sury.
@@ -203,10 +217,12 @@ def main():
         # if len(parts) > 2:
         new_name += "-" + parts[2]
         if float(new_version) >= 8.0:
-            if parts[2] == "json":
-                # It is a virtual package in php 8.0 (or at least 8.1).
+            if parts[2] in ["json", "openssl"]:
+                # It is a virtual package in php 8.0.
                 # See the json_issue_note global.
                 continue
+        if parts[2] == "libxml":
+            print('echo "Warning: You are installing the libxml module. Ensure libxml2 >=2.7.0 is installed as required by Nextcloud if you plan to use Nextcloud."')
         new_versioned_modules.append(new_name)
     install_cmd = " ".join(install_parts)
 
@@ -215,7 +231,7 @@ def main():
 
     print(install_cmd+" php"+new_version)
     print(install_cmd+" "+" ".join(new_versioned_modules))
-    print(install_cmd+" "+" ".join(unversioned_modules))
+    print(install_cmd+" "+" ".join(groups['unversioned_modules']))
     if "apache2" in services:
         print(apache_pre_commands.format(
             old_version_names=" ".join(groups['versions']),
@@ -230,6 +246,9 @@ def main():
             new_version=new_version,
         ))
 
+    print('echo "Run ./server/nextcloud-checkup.py in linux-preinstall if you are using Nextcloud to ensure required and recommended packages are installed."')
+    print('echo "Nextcloud 23 can\'t handle PHP > 8.0"')
+    print('echo "Nextcloud 24 is the first major Nextcloud release to work with PHP8.1"')
     echo0("")
     if len(services) < 1:
         echo0("Error: Neither the apache2 nor nginx command was detected."
