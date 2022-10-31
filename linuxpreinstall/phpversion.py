@@ -97,6 +97,8 @@ def get_php_package_groups():
                 groups['unversioned_modules'].append(name)
         else:
             groups['versioned_modules'].append(name)
+    for key, group in groups.items():
+        group = sorted(group)
 
     return groups
 
@@ -117,7 +119,32 @@ sudo update-alternatives --set phpize /usr/bin/phpize{new_version}
 sudo update-alternatives --set php-config /usr/bin/php-config{new_version}
 '''
 nginx_post_commands = '''
+echo "You should set your website conf files to use php{new_version}-fpm rather than an old version. The remove commands of this script are optional, and should be skipped if some site(s) require an old version of PHP."
 sudo systemctl restart nginx
+'''
+
+sury_commands = '''
+# NOTE: As of 2022-10-30, Debian buster only goes up to PHP 7.3, so use sury.
+# Get new key and run dist-upgrade as per <https://i-mscp.net/thread/20595-packages-sury-org-new-signing-key/>:
+apt-key del 95BD4743
+echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" | sudo tee /etc/apt/sources.list.d/php.list
+wget -O /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg
+apt update
+apt-get dist-upgrade -y
+
+'''
+
+# apt on Debian buster says (on trying to install php8.1-json--but
+#   not when installing 7.4 [<=7.4 required for Nextcloud 20.0.14]):
+json_issue_note = '''
+Package php8.1-json is a virtual package provided by:
+  php8.1-phpdbg 8.1.12-1+0~20221028.28+debian10~1.gbpc35f51
+  php8.1-fpm 8.1.12-1+0~20221028.28+debian10~1.gbpc35f51
+  php8.1-cli 8.1.12-1+0~20221028.28+debian10~1.gbpc35f51
+  php8.1-cgi 8.1.12-1+0~20221028.28+debian10~1.gbpc35f51
+  libphp8.1-embed 8.1.12-1+0~20221028.28+debian10~1.gbpc35f51
+  libapache2-mod-php8.1 8.1.12-1+0~20221028.28+debian10~1.gbpc35f51
+You should explicitly select one to install.
 '''
 
 def main():
@@ -147,10 +174,7 @@ def main():
         return 1
     new_version = arg
     # echo0("version_parts: {}".format(version_parts))
-    echo0()
-    echo0("You must run the following sets of command manually"
-          " (can be piped as standard output):")
-    echo0()
+
     services = []
     if which("apache2") is not None:
         services.append("apache2")
@@ -159,6 +183,11 @@ def main():
         services.append("nginx")
         echo0("nginx={}".format(which("nginx")))
     # ^ won't work since only for root (in /usr/sbin/)
+
+    echo0()
+    echo0("You must run the following sets of command manually"
+          " (can be piped as standard output):")
+    echo0()
     #
     # echo0("remove_parts={}".format(remove_parts))
     print(" ".join(remove_parts)+" "+" ".join(groups['versioned_modules']))
@@ -173,10 +202,20 @@ def main():
         new_name = parts[0] + new_version
         # if len(parts) > 2:
         new_name += "-" + parts[2]
+        if float(new_version) >= 8.0:
+            if parts[2] == "json":
+                # It is a virtual package in php 8.0 (or at least 8.1).
+                # See the json_issue_note global.
+                continue
         new_versioned_modules.append(new_name)
     install_cmd = " ".join(install_parts)
+
+    if install_cmd.startswith("apt"):
+        print(sury_commands)
+
     print(install_cmd+" php"+new_version)
     print(install_cmd+" "+" ".join(new_versioned_modules))
+    print(install_cmd+" "+" ".join(unversioned_modules))
     if "apache2" in services:
         print(apache_pre_commands.format(
             old_version_names=" ".join(groups['versions']),
@@ -187,9 +226,11 @@ def main():
         new_version=new_version,
     ))
     if "nginx" in services:
-        print(nginx_post_commands)
+        print(nginx_post_commands.format(
+            new_version=new_version,
+        ))
 
-
+    echo0("")
     if len(services) < 1:
         echo0("Error: Neither the apache2 nor nginx command was detected."
               " Ensure apache2 or nginx are installed and that you are"
