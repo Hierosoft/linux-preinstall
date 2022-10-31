@@ -206,6 +206,7 @@ def main():
     # echo0("remove_parts={}".format(remove_parts))
     remove_modules = []
     for name in groups['versioned_modules']:
+        parts = split_package_parts(name)
         if len(parts) != 3:
             raise ValueError(
                 'len(parts) for versioned_modules must be 3'
