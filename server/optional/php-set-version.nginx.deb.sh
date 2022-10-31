@@ -107,6 +107,15 @@ echo
 ver=$requested_ver
 
 if [ "@$CHANGE" = "@true" ]; then
+
+    # NOTE: As of 2022-10-30, Debian buster only goes up to PHP 7.3, so use sury.
+    # Get new key and run dist-upgrade as per <https://i-mscp.net/thread/20595-packages-sury-org-new-signing-key/>:
+    apt-key del 95BD4743
+    echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" | sudo tee /etc/apt/sources.list.d/php.list
+    wget -O /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg
+    apt update
+    apt-get dist-upgrade -y
+
     apt install -y php$ver-gd php$ver-json php$ver-mysql php$ver-curl php$ver-mbstring
     apt install -y php$ver-intl php-imagick php$ver-xml php$ver-zip
     # ^ This installs php-imagick php5.6-imagick php7.0-imagick php7.1-imagick php7.2-imagick php7.2-intl php7.2-xml php7.2-zip php7.3-imagick
@@ -124,8 +133,6 @@ if [ "@$CHANGE" = "@true" ]; then
 
     # For WordPress plugins:
     ## As of 2020-04-01, sury is required for php7.4-mbstring (See https://github.com/wyveo/nginx-php-fpm/blob/master/Dockerfile)
-    echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" > tee /etc/apt/sources.list.d/php.list
-    apt update
     apt install -y php$ver-mbstring
 
 
