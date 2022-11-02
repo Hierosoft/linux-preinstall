@@ -241,9 +241,14 @@ cd "$USER_DIR" || customExit "Cannot cd to specified USER_DIR: \"$USER_DIR\" (Yo
 echo "* cd \"$USER_DIR\""
 #fi
 
-echo "  - USER (--user) directories such as \"$REMOTE_GIT_USER\" will appear under USER_DIR ('$USER_DIR')"
-echo "    - Repo directories will appear under that."
-
+if [ "$UNUSED_REPOS_DIR" != "$REPOS_DIR" ]; then
+    # Normal operation
+    echo "  - USER (--user) directories such as \"$REMOTE_GIT_USER\" will appear under REPOS_DIR ('$REPOS_DIR')"
+    echo "    - Repo directories will appear under USER_DIR ('$USER_DIR')."
+else
+    # Forced flat directory structure
+    echo "  - All repo directories will appear under $USER_DIR during this run (since USER_DIR=REPOS_DIR with the provided arguments)."
+fi
 
 if [ "@$WEBSITE" = "@" ]; then
     WEBSITE=""
