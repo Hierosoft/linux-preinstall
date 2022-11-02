@@ -22,6 +22,7 @@ Mate is pretty good but [nohang](../nohang.md) is still advisable.
   - Remove the Application menu ("Classic Menu"): Right-click the application menu at the bottom left, then click "Remove from Panel".
   - Add Brisk Menu at the bottom left where the classic menu was: Right-click the panel, click "Add to Panel..." Then drag "Brisk Menu" to the panel.
   - Install mozo `*`: This application makes the "Edit" feature of the Brisk Menu load the mozo GUI).
+- For Caja additions such as "Open in Terminal" on right-click, see [Caja](caja.md).
 
 `*` See [everyone/MATE/mate-panel-additions.deb.sh](../../everyone/MATE/mate-panel-additions.deb.sh)
 
