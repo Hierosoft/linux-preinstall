@@ -1,6 +1,8 @@
 #!/bin/bash
 if [ "x$SITE" = "x" ]; then
-    SITE=iosite
+    if [ -f "/var/log/nginx/iosite_access.log" ]; then
+        SITE=iosite
+    fi
 fi
 GA_DATA=/opt/goaccess
 if [ -f "$GA_DATA/out.txt" ]; then rm -f "$GA_DATA/out.txt"; fi
@@ -38,9 +40,15 @@ customExit(){
     exit $code
 }
 
-src="/var/log/nginx/${SITE}_access.log"
-dst=/var/www/$SITE/stats.html
-# ^ These defaults are set now for the usage screen, but are changed after processing CLI arguments further down.
+# EXAMPLES for usage screen only:
+if [ "x$SITE" = "x" ]; then
+    src="/var/log/nginx/access.log"
+    dst=/var/www/html/stats.html
+else
+    src="/var/log/nginx/${SITE}_access.log"
+    dst=/var/www/$SITE/stats.html
+fi
+# ^ changed after processing CLI arguments further down.
 
 if [ "x$WRITE_HTML" = "x" ]; then
     WRITE_HTML=false
@@ -89,14 +97,26 @@ if [ ! -f "`command -v goaccess`" ]; then
     exit 4
 fi
 
-src=/var/log/nginx/${SITE}_access.log
-if [ "x$PUBLISH_DIR" = "x" ]; then
-    PUBLISH_DIR=/var/www/$SITE
+
+
+if [ "x$SITE" = "x" ]; then
+    src="/var/log/nginx/access.log"
+    if [ "x$PUBLISH_DIR" = "x" ]; then
+        PUBLISH_DIR=/var/www/html
+    fi
+else
+    src="/var/log/nginx/${SITE}_access.log"
+    if [ "x$PUBLISH_DIR" = "x" ]; then
+        PUBLISH_DIR=/var/www/$SITE
+    fi
 fi
 dst=$PUBLISH_DIR/stats.html
+
 if [ ! -d "$PUBLISH_DIR" ]; then
     if [ "x$WRITE_HTML" = "true" ]; then
         echo "Error: '$PUBLISH_DIR' (PUBLISH_DIR) doesn't exist, but the WRITE_HTML option (or --html argument) is true. There is nowhere to write the file, so nothing will be done."
+        echo "Site names will be listed below if any are obtainable via \"/var/log/nginx/*access*.log\"."
+        ls -1 /var/log/nginx/*access*.log | tr '\n' '\0' | xargs -0 -n 1 basename | sed -e 's/access\.log$//' | sed -e 's/_$//' | grep -v _redir | grep -v _top.log
         exit 5
     fi
 fi
