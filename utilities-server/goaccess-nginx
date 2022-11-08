@@ -17,10 +17,10 @@ If using NGINX, conf file requires, at minimum:
 1. The log-format line to be equivalent to the one in nginx.conf. For the default format, log-format COMBINED is supposed to work, but here is an example for comparison:
    - nginx.conf:
      log_format main
-        'FFA:$http_x_forwarded_for REA:$remote_addr REU:$remote_user [$time_local] '
-        '"$request" status BBS:$body_bytes_sent '
-        '"REF:$http_referer" "UA:$http_user_agent" '
-        '"GZ:$gzip_ratio"';
+        'FFA:\$http_x_forwarded_for REA:\$remote_addr REU:\$remote_user [\$time_local] '
+        '"\$request" status BBS:\$body_bytes_sent '
+        '"REF:\$http_referer" "UA:\$http_user_agent" '
+        '"GZ:\$gzip_ratio"';
    - $GA_CONF:
      log-format FFA:%^ REA:%h REU:%^ [%d:%t %^] "%r" %^:%b "REF:%R" "UA:%u" "GZ:%^"
 2. time-format %T
@@ -71,13 +71,20 @@ END
 }
 
 prev_var=""
+
 for var in "$@"
 do
     if [ "x$prev_var" = "xsite" ]; then
         SITE="$var"
         prev_var=""
+    elif [ "x$prev_var" = "xlog-format" ]; then
+        LOG_FORMAT="$var"
+        # TODO: Implement LOG_FORMAT override.
+        prev_var=""
     elif [ "x$var" = "x--site" ]; then
         prev_var="site"
+    elif [ "x$var" = "x--log-format" ]; then
+        prev_var="log-format"
     elif [ "x$var" = "x--html" ]; then
          WRITE_HTML=true
     elif [ "x$var" = "x--help" ]; then
@@ -98,6 +105,18 @@ if [ ! -f "`command -v goaccess`" ]; then
 fi
 
 
+UNCOMMENTED_LINES=`grep log_format /etc/nginx/nginx.conf | grep -v "\s*#.*log_format"`
+# if grep -q log_format /etc/nginx/nginx.conf
+if [ ! -z "$UNCOMMENTED_LINES" ]; then
+then
+    echo "* log_format detected (assuming OldCoder format):"
+    cat <<END
+$UNCOMMENTED_LINES
+END
+else
+    echo "Warning: There is no log_format in nginx.conf, so you may need the default. Try adjusting /opt/goaccess/goaccess.conf's log format to an equivalent like NCSA Combined Log Format:"
+    echo 'log-format %h %^[%d:%t %^] "%r" %s %b "%R" "%u"'
+fi
 
 if [ "x$SITE" = "x" ]; then
     src="/var/log/nginx/access.log"
