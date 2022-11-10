@@ -21,6 +21,10 @@ Other features:
   excluded, as a record of which zips were excluded from the backup
   (The full path is calculated using the location of the
   exclude_from_backup.txt file).
+- The current working directory can be used as the HOME directory if it
+  contains exclude_from_backup.txt. This is useful such as if the
+  User's directory is mounted at a special location during a drive
+  recovery where only files not excluded are desired.
 
 For further rsnapshot notes and a setup specific to Poikilos machines
 and scripts such as linux-preinstall, see
@@ -98,16 +102,20 @@ dst_confs = os.path.join("/opt", "rsnapshot")
 dst_txt = os.path.join(dst_confs, "exclude_from_backup-absolute-generated.txt")
 
 enable_chown = False
-
+try_homes = [
+    os.path.realpath("."),
+    os.path.join("/home", "owner")
+]
 if not os.path.isfile(src_txt):
-    enable_chown = True
-    try_home = os.path.join("/home", "owner")
-    try_txt = os.path.join(try_home, src_txt_name)
-    if os.path.isfile(try_txt):
-        src_txt = try_txt
-        HOME = try_home
-        HOMES, USER_DIR_NAME = os.path.split(HOME)
-        echo0("* detected {}".format(try_txt))
+    for try_home in try_homes:
+        enable_chown = True
+        try_txt = os.path.join(try_home, src_txt_name)
+        if os.path.isfile(try_txt):
+            src_txt = try_txt
+            HOME = try_home
+            HOMES, USER_DIR_NAME = os.path.split(HOME)
+            echo0("* detected {}".format(try_txt))
+            break
 echo0('HOMES="{}"'.format(HOMES))
 echo0('USER_DIR_NAME="{}"'.format(USER_DIR_NAME))
 echo0('HOME="{}"'.format(HOME))
@@ -132,7 +140,11 @@ def main():
                 path = line
                 if path.endswith("*.zip"):
                     # Leave a trail of breadcrumbs for downloads:
+
                     parent = os.path.join(HOME, os.path.split(path)[0])
+                    # ^ OK since ignores HOME if 2nd param starts with /
+                    #   but see the other join command further down
+                    #   which has to check manually since adding "*"
                     list_name = "1.list_of_zips.txt"
                     list_path = os.path.join(parent, list_name)
                     if not os.path.isfile(list_path):
@@ -166,6 +178,10 @@ def main():
                     else:
                         echo0('* skipped existing "{}"'.format(list_path))
                 if not path.startswith(HOMES):
+                    # and (not path.startswith("/")):
+                    # ^ starting with / doesn't matter since
+                    #   that prevents HOMES and * to be prepended anyway
+                    #   (the check makes no difference):
                     path = os.path.join(HOMES, "*", path)
                 outs.write(path+"\n")
         echo0('* wrote "{}"'.format(dst_txt))
