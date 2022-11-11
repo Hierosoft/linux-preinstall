@@ -74,3 +74,14 @@ https://bugzilla.redhat.com/show_bug.cgi?id=2075598
 duplicate) gets auto-closed on each Fedora release but they never fix
 it! RedHat's policy of closing all issue with each Fedora release is
 dodgy.
+
+
+## Install
+I recommend using the packaged version on Devuan 4 (See [From source](#from-source)).
+- If using sysvinit (Devuan 4 also has the option of runit or OpenRC) it runs from:
+  - /etc/init.d/nohang
+- Ensure you are running sysvinit :
+  - `pidof /sbin/init && echo "sysvinit" || echo "other"`
+
+### From source
+It never seems to run on Devuan 4 (chimaera) (based on Debian 11 (bullseye)).

@@ -24,3 +24,4 @@ The "before" script could be (or could run) `linux-preinstall/utilities/generate
   - For further documentation see the docstring (long block comment at the top) of [../utilities/generate_exclude.py](../utilities/generate_exclude.py).
 
 To know whether it ran, first ensure logging is enabled for cron. See [cron.md](cron.md).
+- Also check that log for errors following the rsnapshot line.
