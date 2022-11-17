@@ -1,5 +1,6 @@
 #!/bin/bash
-
+MY_DIR=`dirname $0`
+MY_DIR=`realpath $MY_DIR`
 if [ "@$1" != "@--force" ]; then
 cat <<END
 This script is for installing a version of Xfce Terminal that has the
@@ -13,8 +14,11 @@ feature into a later version of Xfce Terminal:
 
 To install the old repu1sion fork anyway, run
   $0 --force
+
+Otherwise try $MY_DIR/xfce4-tabset-laclin.sh
 END
 exit 0
+fi
 
 REPO_USER=repu1sion
 REPO_NAME=xfce4-terminal
