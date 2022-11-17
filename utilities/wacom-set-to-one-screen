@@ -1,4 +1,38 @@
 #!/usr/bin/env python3
+'''
+wacom-set-to-one-screen
+-----------------------
+This script is part of <https://github.com/poikilos/linux-preinstall>
+by Jake Gustafson.
+
+This module generates commands necessary to set a Wacom tablet to only
+use one screen so that having multiple monitors doesn't cause your
+lines to be skewed when drawing.
+
+
+Usage:
+    wacom-set-to-one-screen [port] [options]
+
+Examples:
+    wacom-set-to-one-screen
+    # ^ list all screens then exit
+
+    wacom-set-to-one-screen HDMI-1
+    # ^ align the Wacom tablet with an output called HDMI-1 if it exists and
+    #   has a screen connected to it.
+
+Sequential arguments:
+screen          Specify the name of a display port such as HDMI-1, but
+                it must exist and have a screen connected to it. If you
+                do not specify a port, wacom-set-to-one-screen will
+                list ports with connected screens similarly to xrandr
+                but with simplified output.
+
+Options:
+--help          Show this screen then exit.
+--verbose       Show more output.
+--debug         Show even more output.
+'''
 # See https://github.com/linuxwacom/xf86-input-wacom/wiki/Dual-and-Multi-Monitor-Set-Up-II
 from __future__ import print_function
 import sys
@@ -16,6 +50,8 @@ from linuxpreinstall import (
     run_and_get_lists,
 )
 
+me = "wacom-set-to-one-screen"
+
 # TMP_PATH = os.path.join(profile, "tmp")
 
 PRE_MSG = (
@@ -31,7 +67,42 @@ POST_MSG = (
     " speed in the x and y direction, given that your tablet's aspect"
     " ratio is the same as your screen's."
 )
+
+def usage():
+    echo0()
+    echo0()
+    echo0(__doc__)
+
+
+def generate_cmd_parts(input_device, output):
+    '''
+    Generate an xsetwacom command that will align the tablet to a single
+    screen.
+    '''
+    return ["xsetwacom", "set", input_device, "MapToOutput", output]
+
+
 def main():
+    selected = None
+    for argI in range(1, len(sys.argv)):
+        arg = sys.argv[argI]
+        if arg.startswith("--"):
+            if arg in ["--verbose", "--debug"]:
+                # Already handled by the module.
+                pass
+            elif arg in ["--help", "/?"]:
+                usage()
+                return 0
+            else:
+                usage()
+                echo0("The argument is not valid: {}".format(arg))
+                return 2
+        elif selected is None:
+            selected = arg
+        else:
+            usage()
+            echo0("The argument is not valid: {}".format(arg))
+            return 3
     XRANDR = which("xrandr")
     if XRANDR is None:
         echo0("Error: This linux-preinstall utility requires xrandr."
@@ -49,13 +120,28 @@ def main():
     if xrandr_code != 0:
         echo0('Error: "{}" returned code {}'
               ''.format(xrandr_cmd, xrandr_code))
-    print(xrandr_out)
-    echo0(xrandr_err)
+    # print(xrandr_out)
+    c_outputs = []  # connected
+    d_outputs = []  # disconnected
+    p_output = None  # primary
+    for rawL in xrandr_out:
+        line = rawL.strip()
+        d_ender_i = line.find(" disconnected")
+        c_ender_i = line.find(" connected")
+        p_ender_i = line.find(" connected primary")
+        if p_ender_i > -1:
+            p_output = line[:p_ender_i]
+            c_outputs.append(p_output)
+        elif c_ender_i > -1:
+            c_outputs.append(line[:c_ender_i])
+        elif d_ender_i > -1:
+            d_outputs.append(line[:d_ender_i])
+    # echo0(xrandr_err)
     echo1('* using "{}"'.format(XSETWACOM))
 
     cmd_parts = ["xsetwacom", "--list"]
     cmd = shlex.join(cmd_parts)
-    out, err, code = run_and_get_lists(cmd_parts)
+    list_out, list_err, list_code = run_and_get_lists(cmd_parts)
     echo0()
     input_devices = []
     '''
@@ -72,7 +158,7 @@ def main():
         "Finger touch",
         "Pad pad",
     ]
-    for rawL in out:
+    for rawL in list_out:
         line = rawL.strip()
         ender = "id:"
         ender_i = line.find(ender)
@@ -83,22 +169,62 @@ def main():
             return 1
         input_devices.append(line[:ender_i].strip())
     output_device = "HDMI-1"
+    if p_output is not None:
+        output_device = p_output
+    elif len(c_outputs) > 0:
+        output_device = c_outputs[0]
+    else:
+        echo0('Error: xrandr did not list any " connected" monitors.')
+        echo0("* {} output line(s)".format(len(xrandr_out)))
+        echo0(xrandr_out)
+        echo0()
+        echo0("* {} errors".format(len(xrandr_err)))
+        echo0(xrandr_err)
+        echo0()
+    if selected is not None:
+        for input_device in input_devices:
+            cmd_parts = generate_cmd_parts(input_device, selected)
+            cmd = shlex.join(cmd_parts)
+            print(cmd)
+            out, err, code = run_and_get_lists(cmd_parts)
+            if code == 0:
+                echo0("# OK (done)")
+            else:
+                echo0("# FAILED")
+                echo0(out)
+                echo0(err)
+        return code
     echo0()
     echo0()
     example_device = None
     if len(input_devices) > 0:
         example_device = input_devices[0]
-
+    '''
     echo0(PRE_MSG.format(
         example_device=example_device,
         output_device=output_device,
     ))
+    '''
     echo0()
     for input_device in input_devices:
-        echo0('xsetwacom set "{}" MapToOutput {}'
-              ''.format(input_device, output_device))
+        echo0(shlex.join(generate_cmd_parts(input_device, output_device)))
     echo0()
     echo0(POST_MSG)
+    if len(d_outputs) > 0:
+        echo0("The following outputs are not connected: {}"
+              "".format(d_outputs))
+    if len(c_outputs) > 0:
+        echo0()
+        echo0("One of the following can be specified to set the {}"
+              " input device(s) above automatically:"
+              "".format(len(input_devices)))
+        for output in c_outputs:
+            print("{} {}".format(me, output))
+    else:
+        echo0("No outputs were detected in xrandr output,"
+              " but if you are sure you know what you are doing, you"
+              " can specify a monitor name after {}"
+              "".format(me))
     echo0()
     echo0()
     # Other method (choose a display and input device): See tablet-map-to-monitor.txt
