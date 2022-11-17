@@ -1,0 +1,117 @@
+#!/bin/bash
+me="linux-preinstall's graphite runner script"
+REPOS_PATH="$HOME/Downloads/git/GraphiteEditor"
+REPO_PATH="$REPOS_PATH/Graphite"
+if [ ! -f "`command -v npm`" ]; then
+    xmessage "Error: 'npm' is not in PATH. This program requires node.js (Such as by installing the node package on your distro)"
+    exit 1
+fi
+GIT_URL='https://github.com/GraphiteEditor/Graphite.git'
+mkdir -p ~/.var/log
+LOG=~/.var/log/linux-preinstall--graphite.log
+NPM_INSTALL_LOG=~/.var/log/linux-preinstall--graphite-npm_install.log
+NPM_START_LOG=~/.var/log/linux-preinstall--graphite-npm_start.log
+echo "linux-preinstall graphite runner script log" | tee $LOG
+# ^ do *not* append, overwrite
+echo "-------------------------------------------" | tee -a $LOG
+echo "originally from https://github.com/poikilos/linux-preinstall"
+echo "based on the instructions at https://graphite.rs/contribute/ accessed 2022-11-16"
+echo "The script started at: `date`" | tee -a $LOG
+echo "[$me] stat $0..." | tee -a $LOG
+stat "$0" | tee -a $LOG
+echo | tee -a $LOG
+
+# `|&` is shorthand for `2>&1 |` according to the bash manual
+# - See comments on https://serverfault.com/a/201062
+
+customExit(){
+    error="$1"
+    code=1
+    if [ "x$2" != "x" ]; then
+        code=$2
+    fi
+    if [ "x$error" = "x" ]; then
+        error="[$me] unknown error"
+    fi
+    echo >>$LOG
+    echo "$error" >>$LOG
+    cat "$LOG"
+    echo
+    echo "[$me] Showing GUI error..."
+    xmessage -file $LOG
+    echo "[$me] error $code"
+    exit $code
+}
+
+if [ ! -d "$REPO_PATH" ]; then
+    mkdir -p "$REPOS_PATH" |& tee -a "$LOG"
+
+    echo "cd \"$REPOS_PATH\"..." | tee -a "$LOG"
+    cd "$REPOS_PATH"
+    # |& tee -a "$LOG"
+    # ^ makes it do nothing :(
+    code=$?
+    if [ $code -ne 0 ]; then
+        customExit "[$me] Error: 'cd \"$REPOS_PATH\"' failed with code $code." $code
+    fi
+
+    if [ ! -f "`command -v git`" ]; then
+        customExit "[$me] Error: 'git' is not in PATH. linux-preinstall's Graphite startup script requires git (Such as by installing git node package on your distro) unless the $GIT_URL repo is already cloned as $REPO_PATH" 1
+    fi
+    echo "[$me] 'git clone $GIT_URL' in \"`pwd`\"..."
+    git clone "$GIT_URL" |& tee -a "$LOG"
+    code=$?
+    if [ $code -ne 0 ]; then
+        customExit "[$me] Error: git clone '$GIT_URL' failed in `pwd` with code $code." $code
+    fi
+    cd Graphite
+    code=$?
+    if [ $code -ne 0 ]; then
+        customExit "[$me] Error: 'cd Graphite' failed in `pwd` with code $code." $code
+    fi
+else
+    echo "cd \"$REPOS_PATH\"..." | tee -a "$LOG"
+    cd "$REPOS_PATH"
+    # |& tee -a "$LOG"
+    # ^ makes it do nothing :(
+    code=$?
+    if [ $code -ne 0 ]; then
+        customExit "[$me] Error: 'cd \"$REPOS_PATH\"' failed with code $code." $code
+    fi
+
+    cd Graphite
+    code=$?
+    if [ $code -ne 0 ]; then
+        customExit "[$me] Error: 'cd Graphite' failed in `pwd` with code $code." $code
+    fi
+    echo "[$me] 'git pull' in \"`pwd`\"..."
+    git pull |& tee -a "$LOG"
+    code=$?
+    if [ $code -ne 0 ]; then
+        echo "[$me] Warning: 'git pull' failed in `pwd` with code $code." | tee -a $LOG
+    fi
+fi
+
+cd frontend
+code=$?
+if [ $code -ne 0 ]; then
+    customExit "[$me] Error: 'cd frontend' failed in \"`pwd`\" with code $code." $code
+fi
+
+if [ ! -d "node_modules" ]; then
+    echo "[$me] npm install in \"`pwd`\"..." | tee $NPM_INSTALL_LOG
+    # ^ do *not* append, overwrite
+    npm install |& tee -a $NPM_INSTALL_LOG
+    code=$?
+    if [ $code -ne 0 ]; then
+        echo "[$me] Warning: 'npm install' failed in `pwd` with code $code. See $NPM_INSTALL_LOG for details." | tee -a $LOG
+    fi
+fi
+echo "[$me] 'npm start' in \"`pwd`\"..." | tee $NPM_START_LOG
+# ^ do *not* append, overwrite
+npm start |& tee -a $NPM_START_LOG
+code=$?
+if [ $code -ne 0 ]; then
+    customExit "[$me] Error: 'npm start' failed in `pwd` with code $code. See $NPM_START_LOG for details" $code
+fi
+
