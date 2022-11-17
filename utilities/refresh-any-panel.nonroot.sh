@@ -1,10 +1,16 @@
 
-mate_panels="`ps aux | grep mate-panel | grep -v grep`"
-if [ ! -z "$mate_panels" ]; then
+found_mate_panel="`ps aux | grep mate-panel | grep -v grep`"
+if [ ! -z "$found_mate_panel" ]; then
     mate-panel --replace
 fi
 update-desktop-database
 # /home/owner/.local/share/applications/xfce4-appfinder.desktop
+
+found_cinnamon="`ps | grep cinnamon`"
+# TODO: use a universal reloader (see code in )
+if [ ! -z "$found_cinnamon" ]; then
+    nohup cinnamon --replace & disown
+fi
 
 
 # See <https://askubuntu.com/a/722713>
