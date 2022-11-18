@@ -29,7 +29,7 @@ verbosity = 0
 for argI in range(1, len(sys.argv)):
     arg = sys.argv[argI]
     if arg.startswith("--"):
-        if arg == "--verbosity":
+        if arg == "--verbose":
             verbosity = 1
         elif arg == "--debug":
             verbosity = 2
@@ -55,13 +55,9 @@ from linuxpreinstall import (
     echo1,  # formerly debug
 )
 
-tryRepo = os.path.join(profile, "git", "pycodetool")
-tryModule = os.path.join(tryRepo, "pycodetool")
+from linuxpreinstall.find_hierosoft import hierosoft
 
-if os.path.isdir(tryModule):
-    sys.path.insert(0, tryRepo)
-
-from pycodetool.ggrep import (
+from hierosoft.ggrep import (
     is_like_any,
     any_contains,
 )

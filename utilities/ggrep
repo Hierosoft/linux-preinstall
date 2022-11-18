@@ -5,9 +5,9 @@ import sys
 import os
 import platform
 
-from find_pycodetool import pycodetool
+from find_hierosoft import hierosoft
 
-from pycodetool.ggrep import main
+from hierosoft.ggrep import main
 
 if __name__ == '__main__':
     sys.argv[0] = re.sub(r'(-script\.pyw|\.exe)?$', '', sys.argv[0])

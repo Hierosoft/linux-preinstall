@@ -39,7 +39,7 @@ verbosity = 0
 for argI in range(1, len(sys.argv)):
     arg = sys.argv[argI]
     if arg.startswith("--"):
-        if arg == "--verbosity":
+        if arg == "--verbose":
             verbosity = 1
         elif arg == "--debug":
             verbosity = 2

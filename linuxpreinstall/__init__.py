@@ -7,67 +7,21 @@ import subprocess
 import platform
 from csv import reader
 
-verbosity = 0
-for argI in range(1, len(sys.argv)):
-    arg = sys.argv[argI]
-    if arg.startswith("--"):
-        if arg == "--verbosity":
-            verbosity = 1
-        elif arg == "--debug":
-            verbosity = 2
+from linuxpreinstall.find_hierosoft import hierosoft
 
-
-def get_verbosity():
-    return verbosity > 0
-    return True
-
-
-def write0(arg):
-    sys.stderr.write(arg)
-    sys.stderr.flush()
-    return True
-
-
-def write1(arg):
-    if verbosity < 1:
-        return False
-    sys.stderr.write(arg)
-    sys.stderr.flush()
-    return True
-
-
-def write2(arg):
-    if verbosity < 2:
-        return False
-    sys.stderr.write(arg)
-    sys.stderr.flush()
-    return True
-
-
-def echo0(*args, **kwargs):  # formerly prerr
-    print(*args, file=sys.stderr, **kwargs)
-    return True
-
-
-def echo1(*args, **kwargs):  # formerly debug
-    if verbosity < 1:
-        return False
-    print(*args, file=sys.stderr, **kwargs)
-    return True
-
-
-def echo2(*args, **kwargs):  # formerly extra
-    if verbosity < 2:
-        return False
-    print(*args, file=sys.stderr, **kwargs)
-    return True
-
-
-def echo3(*args, **kwargs):
-    if verbosity < 3:
-        return False
-    print(*args, file=sys.stderr, **kwargs)
-    return True
+from hierosoft import (
+    write0,
+    write1,
+    write2,
+    echo0,
+    echo1,
+    echo2,
+    echo3,
+    get_verbosity,
+    set_verbosity,
+    run_and_get_lists,
+    which,
+)
 
 
 def endsWithAny(haystack, needles, CS=True):
@@ -116,26 +70,6 @@ else:
 
 digits = "1234567890"  # or use s.isdigit()
 digit_or_dot = digits + "."
-
-
-# from https://github.com/poikilos/DigitalMusicMC
-# and https://github.com/poikilos/blnk
-def which(cmd):
-    paths_str = os.environ.get('PATH')
-    if paths_str is None:
-        echo1("Warning: There is no PATH variable, so returning {}"
-              "".format(cmd))
-        return cmd
-    paths = paths_str.split(os.path.pathsep)
-    for path in paths:
-        echo1("looking in {}".format(path))
-        tryPath = os.path.join(path, cmd)
-        if os.path.isfile(tryPath):
-            return tryPath
-        else:
-            echo1("There is no {}".format(tryPath))
-    return None
-
 
 osrelease = None
 data_path = os.path.dirname(__file__)
@@ -288,76 +222,6 @@ def _init_commands():
             echo1("* linuxpreinstall is not refreshing the package list"
                   " since you are not a superuser.")
     echo1("  * done _init_commands")
-
-
-def run_and_get_lists(cmd_parts, collect_stderr=True):
-    '''
-    Returns:
-    a tuple of (out, err, returncode) where out and err are each a list
-    of 0 or more lines.
-    '''
-    # See <https://stackabuse.com/executing-shell-commands-with-python>:
-    # called = subprocess.run(list_installed_parts,
-    #                         stdout=subprocess.PIPE, text=True)
-    # , input="Hello from the other side"
-    # echo0(called.stdout)
-    outs = []
-    errs = []
-    # See <https://stackoverflow.com/a/7468726/4541104>
-    # "This approach is preferable to the accepted answer as it allows
-    # one to read through the output as the sub process produces it."
-    # –Hoons Jul 21 '16 at 23:19
-    if collect_stderr:
-        sp = subprocess.Popen(cmd_parts, stdout=subprocess.PIPE,
-                              stderr=subprocess.PIPE)
-    else:
-        sp = subprocess.Popen(cmd_parts, stdout=subprocess.PIPE)
-
-    if sp.stdout is not None:
-        for rawL in sp.stdout:
-            line = rawL.decode()
-            # TODO: is .decode('UTF-8') ever necessary?
-            outs.append(line.rstrip("\n\r"))
-    if sp.stderr is not None:
-        for rawL in sp.stderr:
-            line = rawL.decode()
-            while True:
-                bI = line.find("\b")
-                if bI < 0:
-                    break
-                elif bI == 0:
-                    print("WARNING: Removing a backspace from the"
-                          " start of \"{}\".".format(line))
-                line = line[:bI-1] + line[bI+1:]
-                # -1 to execute the backspace not just remove it
-            errs.append(line.rstrip("\n\r"))
-    # MUST finish to get returncode
-    # (See <https://stackoverflow.com/a/16770371>):
-    more_out, more_err = sp.communicate()
-    if len(more_out.strip()) > 0:
-        echo0("[run_and_get_lists] got extra stdout: {}".format(more_out))
-    if len(more_err.strip()) > 0:
-        echo0("[run_and_get_lists] got extra stderr: {}".format(more_err))
-
-    # See <https://stackoverflow.com/a/7468725/4541104>:
-    # out, err = subprocess.Popen(
-    #     ['ls','-l'],
-    #     stdout=subprocess.PIPE,
-    # ).communicate()
-
-    # out, err = sp.communicate()
-    # (See <https://stackoverflow.com/questions/10683184/
-    # piping-popen-stderr-and-stdout/10683323>)
-    # if out is not None:
-    #     for rawL in out.splitlines():
-    #         line = rawL.decode()
-    #         outs.append(line.rstrip("\n\r"))
-    # if err is not None:
-    #     for rawL in err.splitlines():
-    #         line = rawL.decode()
-    #         errs.append(line.rstrip("\n\r"))
-
-    return outs, errs, sp.returncode
 
 
 def get_installed():

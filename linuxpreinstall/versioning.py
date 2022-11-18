@@ -136,6 +136,11 @@ def splitNestedVersion(s, verbose=False):
       a dot) such as "b".
 
     '''
+    if verbose not in [True, False]:
+        if verbose is None:
+            verbose = False
+        else:
+            verbose = verbose > 0
     write1('  * running splitVersion({})...'
            ''.format(json.dumps(s)))
     parts, version = splitVersion(s)

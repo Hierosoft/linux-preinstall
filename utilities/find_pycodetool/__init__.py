@@ -21,7 +21,7 @@ def echo0(*args, **kwargs):  # formerly prerr
     print(*args, file=sys.stderr, **kwargs)
 
 
-if os.path.isfile(os.path.join(nearbyRepo, "pycodetool", "changes.py")):
+if os.path.isfile(os.path.join(nearbyRepo, "pycodetool", "__init__.py")):
     sys.path.insert(0, nearbyRepo)
     echo0("[{}] using nearby {}".format(CALLER_NAME, nearbyRepo))
 elif os.path.isdir(tryModule):

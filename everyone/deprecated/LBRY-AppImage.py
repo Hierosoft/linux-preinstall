@@ -254,8 +254,11 @@ class LBRYDownloadPageParser(HTMLParser):
 
 class LBRYLinkManager:
     """
-    Based on LinkManager from blendernightly
+    Based on DownloadManager from https://github.com/Hierosoft/hierosoft
+    (formerly LinkManager from blendernightly) and relicensed by
+    author.
     """
+
     def __init__(self):
         self.meta = {}
         self.html_url = "https://lbry.com/linux"
@@ -333,7 +336,7 @@ def d_done(evt):
 
 def main():
     mgr = LBRYLinkManager()
-    urls = mgr.get_urls()  # verbose=True
+    urls = mgr.get_urls()
     # print("URLs: {}".format(urls))
     AppImage_URLs = []
     for url in urls:
