@@ -34,67 +34,16 @@ import sys
 import os
 import platform
 
+from find_hierosoft import hierosoft
 
-verbosity = 0
-for argI in range(1, len(sys.argv)):
-    arg = sys.argv[argI]
-    if arg.startswith("--"):
-        if arg == "--verbose":
-            verbosity = 1
-        elif arg == "--debug":
-            verbosity = 2
-
-
-def get_verbosity():
-    return verbosity
-
-
-def set_verbosity(level):
-    global verbosity
-    verbosity_levels = [True, False, 0, 1, 2]
-    if level not in verbosity_levels:
-        raise ValueError("verbosity must be 0-2 but was {}".format(verbosity))
-    verbosity = level
-
-
-def echo0(*args, **kwargs):
-    print(*args, file=sys.stderr, **kwargs)
-
-
-def echo1(*args, **kwargs):
-    if not verbosity:
-        return
-    print(*args, file=sys.stderr, **kwargs)
-
-
-def echo2(*args, **kwargs):
-    if verbosity < 2:
-        return
-    print(*args, file=sys.stderr, **kwargs)
-
-
-def echo3(*args, **kwargs):
-    if verbosity < 3:
-        return
-    print(*args, file=sys.stderr, **kwargs)
-
-
-HOME = os.environ.get('HOME')
-if platform.system() == "Windows":
-    HOME = os.environ['USERPROFILE']
-
-HOMES, USER_DIR_NAME = os.path.split(HOME)
-
-
-'''
-from moreplatform import (
+from hierosoft import (
     USER_DIR_NAME,
     echo0,
     echo1,
     echo2,
-    profile
+    HOME,  # profile,
+    PROFILES,
 )
-'''
 
 src_txt_name = "exclude_from_backup.txt"
 src_txt = os.path.join(HOME, src_txt_name)
@@ -113,10 +62,10 @@ if not os.path.isfile(src_txt):
         if os.path.isfile(try_txt):
             src_txt = try_txt
             HOME = try_home
-            HOMES, USER_DIR_NAME = os.path.split(HOME)
+            PROFILES, USER_DIR_NAME = os.path.split(HOME)
             echo0("* detected {}".format(try_txt))
             break
-echo0('HOMES="{}"'.format(HOMES))
+echo0('PROFILES="{}"'.format(PROFILES))
 echo0('USER_DIR_NAME="{}"'.format(USER_DIR_NAME))
 echo0('HOME="{}"'.format(HOME))
 echo0('src_txt="{}"'.format(src_txt))
@@ -177,12 +126,12 @@ def main():
                             echo0('* skipped creating 0-length "{}"'.format(list_path))
                     else:
                         echo0('* skipped existing "{}"'.format(list_path))
-                if not path.startswith(HOMES):
+                if not path.startswith(PROFILES):
                     # and (not path.startswith("/")):
                     # ^ starting with / doesn't matter since
-                    #   that prevents HOMES and * to be prepended anyway
+                    #   that prevents PROFILES and * to be prepended anyway
                     #   (the check makes no difference):
-                    path = os.path.join(HOMES, "*", path)
+                    path = os.path.join(PROFILES, "*", path)
                 outs.write(path+"\n")
         echo0('* wrote "{}"'.format(dst_txt))
     return 0

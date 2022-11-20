@@ -37,11 +37,15 @@ from linuxpreinstall import(
     get_installed,
     split_package_parts,
     is_decimal,
-    which,
     install_parts,
     remove_parts,
 )
 
+from linuxpreinstall.find_hierosoft import hierosoft
+
+from hierosoft import (
+    which,
+)
 
 def get_php_package_groups():
     '''
