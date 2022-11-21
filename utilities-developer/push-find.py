@@ -2,6 +2,40 @@
 import os
 import sys
 import shutil
+# Importing difflib
+import difflib
+
+
+def diff(file1, file2):
+    '''
+    Get a list of differences between files.
+    '''
+    # import difflib
+    results = []
+    # See
+    # <https://www.geeksforgeeks.org/compare-two-files-line-by-line-in-python/>
+    with open(file1) as file_1:
+        file_1_text = file_1.readlines()
+
+    with open(file2) as file_2:
+        file_2_text = file_2.readlines()
+
+    # Find and print the diff:
+    for line in difflib.unified_diff(
+                file_1_text,
+                file_2_text,
+                fromfile=file1,
+                tofile=file2,
+                lineterm='',
+            ):
+        results.append(line)
+    return results
+
+
+def has_diff(file1, file2):
+    return len(diff(file1, file2)) > 0
+
+
 me = os.path.basename(__file__)
 MY_DIR = os.path.dirname(os.path.realpath(__file__))
 REPO_DIR = os.path.dirname(MY_DIR)
@@ -9,6 +43,7 @@ REPOS_DIR = os.path.dirname(REPO_DIR)
 
 if sys.version_info.major < 3:
     NotADirectoryError = OSError
+
 
 def shinra_tensei(source_paths, grandparent, subdirectories=None):
     '''
@@ -49,7 +84,8 @@ def shinra_tensei(source_paths, grandparent, subdirectories=None):
             # try:
             _subdirectories = os.listdir(repo_path)
             # except NotADirectoryError:
-            #     # "NotADirectoryError: [Errno 20] Not a directory: '/home/owner/git/.directory'"
+            #     # "NotADirectoryError: [Errno 20] Not a directory:
+            #     #     '/home/owner/git/.directory'"
             force = False
         for scripts_name in _subdirectories:
             scripts_path = os.path.join(repo_path, scripts_name)
@@ -66,6 +102,9 @@ def shinra_tensei(source_paths, grandparent, subdirectories=None):
                 dst_path = os.path.join(scripts_path, script_name)
                 if os.path.isfile(dst_path):
                     if src_path == dst_path:
+                        continue
+                    if not has_diff(src_path, dst_path):
+                        print('# no diff: "{}" "{}"'.format(src_path, dst_path))
                         continue
                     print('cp "{}" "{}"'.format(src_path, dst_path))
                     shutil.copy(src_path, dst_path)
@@ -89,12 +128,14 @@ def main():
     sub = "push-find.py"
     if not os.path.isfile(sub):
         raise RuntimeError('"{}" is missing.'.format(sub))
+    files_here.append(sub)
     print("[{}] collected {}".format(me, sub))
     return shinra_tensei(
         files_here,
         REPOS_DIR,
         subdirectories=subdirectories,
     )
+
 
 if __name__ == "__main__":
     sys.exit(main())
