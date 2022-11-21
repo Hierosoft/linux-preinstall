@@ -112,6 +112,7 @@ def shinra_tensei(source_paths, grandparent, subdirectories=None):
                         continue
                     print('cp "{}" "{}"'.format(src_path, dst_path))
                     shutil.copy(src_path, dst_path)
+                    shutil.copystat(src_path, dst_path)
 
 
 def main():
