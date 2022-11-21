@@ -5,9 +5,9 @@ import sys
 import os
 import platform
 
-REPO_USER = "Hierosoft"
-REPO_NAME = "hierosoft"
-MODULE_NAME = "hierosoft"  # See also import hierosoft statements
+REPO_USER = "poikilos"
+REPO_NAME = "pycodetool"
+MODULE_NAME = "pycodetool"  # See also import pycodetool statements
 
 GIT_SERVER= "https://github.com"
 
@@ -41,10 +41,10 @@ else:
     # use the one in the python path (or fail)
     # print("There is no {}".format(os.path.join(thisRepo, MODULE_NAME)))
 
-import hierosoft
+import pycodetool
 
 try:
-    import hierosoft
+    import pycodetool
 except ImportError as ex:
     echo0("sys.path={}".format(sys.path))
     echo0(str(ex))
