@@ -4,8 +4,7 @@ import os
 import shutil
 import traceback
 import math
-python_mr = sys.version_info.major
-if python_mr > 2:
+if sys.version_info.major >= 3:
     from tkinter import *
     # from io import StringIO
 else:

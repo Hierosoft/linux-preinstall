@@ -6,8 +6,7 @@ instantiate BriskMenuSettings and get or set the list.
 from __future__ import print_function
 import sys
 import os
-python_mr = sys.version_info.major
-# if python_mr >= 3:
+# if sys.version_info.major >= 3:
 #     import functools  # Python 3
 # import sys
 import gi
@@ -119,7 +118,7 @@ class BriskMenuSettings(Gio.Settings):
         self.set_value('favourites', var)
 
     def sort_favs(self):
-        # if python_mr >= 3:
+        # if sys.version_info.major >= 3:
         #     self.favs = sorted(self.favs,
         #                        key=functools.cmp_to_key(compare_sc_fn))
         # else:

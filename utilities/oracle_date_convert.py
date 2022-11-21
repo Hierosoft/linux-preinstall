@@ -2,8 +2,6 @@
 from __future__ import print_function
 import os
 
-python_mr = sys.version_info.major
-
 digits = "0123456789"
 alphaLower = "abcdefghijklmnopqrstuvwxyz"
 alphaUpper = alphaLower.upper()
@@ -53,7 +51,7 @@ def addDateConv(path):
     changedCount = 0
     ins = None
     outs = None
-    if python_mr > 2:
+    if sys.version_info.major >= 3:
         ins = open(path, 'r', encoding="latin-1")
     else:  # python 2
         ins = open(path, 'r')
