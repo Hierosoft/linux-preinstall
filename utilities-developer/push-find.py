@@ -6,6 +6,10 @@ import shutil
 import difflib
 
 
+def echo0(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
+
+
 def diff(file1, file2):
     '''
     Get a list of differences between files.
@@ -71,7 +75,7 @@ def shinra_tensei(source_paths, grandparent, subdirectories=None):
                 " subdirectories=None instead."
             )
         force = True
-    print("Shinra Tensei!")
+    echo0("Shinra Tensei!")
     for repo in os.listdir(grandparent):
         repo_path = os.path.join(grandparent, repo)
         if not os.path.isdir(repo_path):
