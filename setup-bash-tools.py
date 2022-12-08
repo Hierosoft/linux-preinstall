@@ -322,8 +322,10 @@ def main():
         echo0("")
         return 1
     else:
+        # FIXME: help_lines don't always appear (before 2022-12-08 commit)
         echo0("* Setup of bash tools completed successfully.")
         if len(help_lines) > 0:
+            echo0("{} help message(s):".format(len(help_lines)))
             echo0()
             for help_line in help_lines:
                 print(help_line)

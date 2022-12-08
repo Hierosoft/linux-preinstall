@@ -4,9 +4,10 @@ if [ ! -f "linuxpreinstall/__init__.py" ]; then
     exit 1
 fi
 LINUX_PREINSTALL="$PWD"
-./setup.sh
+echo "[$0] This file installs linux-preinstall in place (using $LINUX_PREINSTALL for all shortcuts!)."
+echo "[$0] Running ./setup.sh first..."
+./setup.sh "$@"
 code=$?
-echo "This file installs linux-preinstall in place (using $LINUX_PREINSTALL for all shortcuts!)."
 if [ $code -ne 0 ]; then
     echo "Error: $0 will not continue since ./setup.sh failed."
     exit $code
@@ -17,7 +18,9 @@ mkdir -p ~/.local/share/applications
 code=$?
 if [ $code -ne 0 ]; then exit $code; fi
 rm ~/.local/share/applications/reconnect-audio.desktop >& /dev/null
-cp AlwaysAdd/HOME-in-place/.local/share/applications/reconnect-audio.desktop ~/.local/share/applications/
+# cp AlwaysAdd/replace_linux-preinstall_dir/.local/share/applications/reconnect-audio.desktop ~/.local/share/applications/
+cp utilities/reconnect-audio.desktop ~/.local/share/applications/
+# TODO: ^ ensure path is ok inside desktop file:
 sed -i "s#\\\$LINUX_PREINSTALL#$LINUX_PREINSTALL#g" ~/.local/share/applications/reconnect-audio.desktop
 # ^ \\ to send '\' to sed, then another \ to send $ to sed instead of processing it
 
@@ -36,7 +39,7 @@ if [ ! -f ~/.local/bin/whichicon ]; then
 fi
 
 if [ ! -f "$HOME/.local/bin/blnk" ]; then
-    BLNK_GIT_URL="https://github.com/poiklios/blnk"
+    BLNK_GIT_URL="https://github.com/Poikilos/blnk"
     echo "* installing blnk from $BLNK_GIT_URL"
     if [ ! -d "$HOME/git/blnk" ]; then
         git clone $BLNK_GIT_URL $HOME/git/blnk
