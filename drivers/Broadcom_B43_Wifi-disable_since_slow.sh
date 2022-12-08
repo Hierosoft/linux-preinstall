@@ -1,6 +1,67 @@
 #!/bin/bash
+#!/bin/bash
+>&2 cat <<END
+Blacklist trashy builtin Broadcom WiFi adapters such as BCM4313 on Gateway laptaps which have a poor, slow connection compared to various Realtek USB devices.
+
+Make sure you have another connection to the internet before running this!
+END
 # me=./`basename $0`
 me="$0"
+# BLACKLIST="/etc/modprobe.d/blacklist.conf"
+BLACKLIST="/etc/modprobe.d/blacklist-broadcom.conf"
+source /etc/os-release
+
+REPO_TYPE=rpm
+
+if [ "$NAME" = "Ubuntu" ]; then
+    REPO_TYPE=apt
+elif [ "$ID_LIKE" = "ubuntu debian" ]; then
+    # such as Linux Mint 21
+    REPO_TYPE=apt
+elif [ ! -f "`command -v rpm`" ]; then
+    REPO_TYPE=apt
+fi
+
+write_bcma_blacklist(){
+    cat > $BLACKLIST  <<END
+blacklist b43
+blacklist bcma
+blacklist bcma-pci-bridge
+END
+}
+
+if [ "$REPO_TYPE" = "apt" ]; then
+    # According to:
+    #   pci (lspci -nnk | grep -iA2 net)
+    #   (such as used after this exit)
+    #   the card uses the bcma kernel module on Linux Mint 21 (not not wl like on Fedora).
+    #   It also uses bcma-pci-bridge, so as per
+    #   Pilot6's answer edited Jan 22, 2020 at 20:55
+    #   answered Jan 22, 2020 at 20:30 on
+    #   <https://askubuntu.com/a/1205001/766334>:
+    >&2 echo "* writing $BLACKLIST"
+    # 'tee $BLACKLIST 1>&2' or >/dev/null HANGS until enter pressed,
+    #   or permanently if script is redirected!
+    #   Therefore, to avoid tee to reserve stdout for linux-preinstall log,
+    #   follow <https://unix.stackexchange.com/a/269080/343286>:    
+    sudo bash -c "$(declare -f write_bcma_blacklist); write_bcma_blacklist"
+
+    if [ $? -ne 0 ]; then
+        exit 1
+    else
+        >&2 echo "OK"
+    fi
+    sudo update-initramfs -u 1>&2
+    >&2 echo
+    >&2 echo
+    >&2 echo "A reboot is required."
+    >&2 echo
+    exit 0
+fi
+# Exit if Ubuntu since
+# apparently kmod-wl is only used on Fedora not Linux Mint 21:
+
+
 cat > /dev/null <<END
 Blacklisting wl sounds like a bad idea, but slow BCM4313 uses it:
 
@@ -76,7 +137,7 @@ fi
 if [ "@$has_all" = "@true" ]; then
     if [ "@$2" = "@--undo" ]; then
         # echo "* Un-blacklisting $DRIVER_NAME..."
-        # sed 's/blacklist $DRIVER_NAME//' -i /etc/modprobe.d/blacklist.conf
+        # sed 's/blacklist $DRIVER_NAME//' -i $BLACKLIST
         echo "* Regular blacklisting is not useful since wl is used for so many cards."
         printf "* removing \"$dest_rule\"..."
         rm "$dest_rule"
@@ -89,7 +150,7 @@ if [ "@$has_all" = "@true" ]; then
     else
         # echo "* Blacklisting $DRIVER_NAME..."
         # See <https://askubuntu.com/a/604070>:
-        # echo "blacklist $DRIVER_NAME" | tee -a /etc/modprobe.d/blacklist.conf
+        # echo "blacklist $DRIVER_NAME" | tee -a $BLACKLIST
         echo "* Regular blacklisting is not useful since wl is used for so many cards."
         # See <https://www.pclinuxos.com/forum/index.php?topic=146211.0>:
         tmp_rule="/tmp/$dest_rule_name"
