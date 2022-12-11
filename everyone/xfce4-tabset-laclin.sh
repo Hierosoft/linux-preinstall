@@ -5,21 +5,36 @@ if [ -f "`command -v xfce4-terminal`" ]; then
 fi
 mkdir -p ~/tmp
 cd ~/tmp
+TMP_SUB=~/tmp/xfce4-tabset-211106
 # wget -O xfce4-tabset-211106.zip https://laclin.com/misc/xfce4-tabset-211106.zip
 # unzip xfce4-tabset-211106.zip
 # ^ empty, so:
-mkdir xfce4-tabset-211106
-cd xfce4-tabset-211106
+mkdir $TMP_SUB
+cd $TMP_SUB
+code=$?
 if [ $code -ne 0 ]; then exit $code; fi
 wget https://laclin.com/misc/xfce4-tabset.txt
+code=$?
 if [ $code -ne 0 ]; then exit $code; fi
 wget -O xfce4-terminal-xfce4-terminal-0.8.10.zip https://gitlab.xfce.org/apps/xfce4-terminal/-/archive/xfce4-terminal-0.8.10/xfce4-terminal-xfce4-terminal-0.8.10.zip
+code=$?
 if [ $code -ne 0 ]; then exit $code; fi
-unzip xfce4-terminal-xfce4-terminal-0.8.10.zip
+unzip -o xfce4-terminal-xfce4-terminal-0.8.10.zip
+# -o: overwrite files without prompting
+code=$?
 if [ $code -ne 0 ]; then exit $code; fi
-mv xfce4-terminal-xfce4-terminal-0.8.10 xfce4-terminal-0.8.10
+LONG_DIR=$TMP_SUB/xfce4-terminal-xfce4-terminal-0.8.10
+SHORT_DIR=$TMP_SUB/xfce4-terminal-0.8.10
+echo "mv $LONG_DIR $SHORT_DIR..."
+if [ -d "$SHORT_DIR" ]; then
+    echo "* removing old $SHORT_DIR"
+    rm -Rf "$SHORT_DIR"
+fi
+mv $LONG_DIR $SHORT_DIR
+code=$?
 if [ $code -ne 0 ]; then exit $code; fi
 cd xfce4-terminal-0.8.10
+code=$?
 if [ $code -ne 0 ]; then exit $code; fi
 patch -p1 < ../xfce4-tabset.txt
 # ^ p1 strips off one level of the path in the patch file (xfce4-terminal-0.8.10.old/ or xfce4-terminal-0.8.10/ in this case)
@@ -33,6 +48,7 @@ if [ ! -f "configure" ]; then
         # It will show a message to install:
         # xfce4-dev-tools glib2 gtk-doc gtk+-3.0 vte-2.91 libxfce4ui-2
         echo "For Debian-based distros: sudo apt install -y xfce4-dev-tools libglib2.0-dev gtk-doc-tools gtk+-3.0-dev libvte-2.91-dev libxfce4ui-2-dev"
+        echo 'For Fedora: sudo dnf groupinstall "Development Tools" "Development Libraries" && sudo dnf install libtool'
         exit $code
     fi
     make
