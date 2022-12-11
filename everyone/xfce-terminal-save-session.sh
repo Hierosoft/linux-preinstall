@@ -11,11 +11,11 @@ action is to install the oldcoder fork which integrates the repu1sion
 feature into a later version of Xfce Terminal:
 
     <https://laclin.com/xfce4-tabset.html>
+    such as via:
+    $MY_DIR/xfce4-terminal-tabset-laclin.sh
 
 To install the old repu1sion fork anyway, run
   $0 --force
-
-Otherwise try $MY_DIR/xfce4-tabset-laclin.sh
 END
 exit 0
 fi
