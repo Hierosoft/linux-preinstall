@@ -47,8 +47,17 @@ if [ ! -f "configure" ]; then
     if [ $code -ne 0 ]; then
         # It will show a message to install:
         # xfce4-dev-tools glib2 gtk-doc gtk+-3.0 vte-2.91 libxfce4ui-2
-        echo "For Debian-based distros: sudo apt install -y xfce4-dev-tools libglib2.0-dev gtk-doc-tools gtk+-3.0-dev libvte-2.91-dev libxfce4ui-2-dev"
-        echo 'For Fedora: sudo dnf groupinstall "Development Tools" "Development Libraries" && sudo dnf install libtool'
+        cat <<END
+For Debian-based distros: sudo apt install -y xfce4-dev-tools libglib2.0-dev gtk-doc-tools gtk+-3.0-dev libvte-2.91-dev libxfce4ui-2-dev
+For Fedora:
+  sudo dnf groupinstall "Development Tools" "Development Libraries"
+  # If you get an selinux error, click Troubleshoot, run the commands it suggests if is correct, then reinstall:
+  # sudo dnf groupremove "Development Tools" "Development Libraries"
+  # sudo dnf groupinstall "Development Tools" "Development Libraries"
+  sudo dnf install libtool gtk3-devel vte291-devel libxfce4ui-devel
+  # Didn't help: vte-devel
+  # You may have to close and reopen the terminal.
+END
         exit $code
     fi
     make
