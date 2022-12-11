@@ -290,18 +290,19 @@ class LBRYLinkManager:
         return self.parser.urls
 
     def download(self, file_path, url, cb_progress=None, cb_done=None,
-                 chunk_len=16*1024):
+                 chunk_size=16*1024, evt=None):
         response = request.urlopen(url)
-        evt = {}
+        if evt is None:
+            evt = {}
         evt['loaded'] = 0
         # evt['total'] is not implemented (would be from contentlength
         # aka content-length)
         with open(file_path, 'wb') as f:
             while True:
-                chunk = response.read(chunk_len)
+                chunk = response.read(chunk_size)
                 if not chunk:
                     break
-                evt['loaded'] += chunk_len
+                evt['loaded'] += chunk_size
                 if cb_progress is not None:
                     cb_progress(evt)
                 f.write(chunk)
