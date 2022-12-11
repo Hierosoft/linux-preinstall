@@ -64,8 +64,7 @@ echo "Only say 'y' to the following if you're really sure and you are in a text-
 #(try to add '--skip-broken' to skip uninstallable packages)
 #```
 #so try:
-# Get the underlying name via:
-sudo dnf grouplist --hidden -v
+# Get the underlying name via: sudo dnf grouplist --hidden -v
 # Remove extras that will block gnome-shell uninstall:
 sudo dnf remove "gnome-shell-*"
 # swap avoids removing packages that both use:
