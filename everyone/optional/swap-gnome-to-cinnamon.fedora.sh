@@ -3,7 +3,8 @@ echo
 echo
 echo "This file must run in test mode since removing gdm exits the desktop environment!"
 echo
-echo "If you're in a GUI Terminal press Ctrl+C to cancel in 5..."
+echo "If you're in a GUI Terminal application press Ctrl+C to cancel!"
+echo "5..."
 sleep 1
 echo "4..."
 sleep 1
@@ -22,7 +23,7 @@ sudo mkdir /etc/dnf/protected.d-unprotected-by-linux-preinstall
 sudo mv /etc/dnf/protected.d/fedora-workstation.conf /etc/dnf/protected.d-unprotected-by-linux-preinstall/
 # ^ contains NetworkManager and gnome-shell, and
 #   cinnamon network applet uses NetworkManager, so:
-echo "NetworkManager" | sudo tee -a /etc/dnf/protected.d/cinnamon-fedora-workstation-linux-preinstall.conf
+echo "NetworkManager" | sudo tee /etc/dnf/protected.d/cinnamon-fedora-workstation-linux-preinstall.conf
 
 # Now the hard part is separating required fedora-like stuff from gnome itself:
 cat >/dev/null <<END
