@@ -70,4 +70,6 @@ make -j$((physical_cores-1))
 if [ $? -ne 0 ]; then >&2 echo "[$me] make failed in `pwd`. If you don't see an error in red/orange, maybe a test failed. You may want to copy the output to a text editor and search for the word \"error\""; exit 1; fi
 
 cd src
+>&2 echo "Running `realpath ./prusa-slicer`"
 ./prusa-slicer
+>&2 echo "Done running `realpath ./prusa-slicer`"
