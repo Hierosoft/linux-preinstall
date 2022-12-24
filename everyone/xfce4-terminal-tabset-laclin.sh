@@ -1,4 +1,5 @@
 #!/bin/bash
+# See also developer/developer.fedora.sh
 if [ -f "`command -v xfce4-terminal`" ]; then
     echo "Error: xfc4-terminal is already installed. If you installed a packaged version, uninstall it first. If you installed from source delete or rename '`command -v xfce4-terminal`' then run this script again."
     exit 1

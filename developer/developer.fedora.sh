@@ -1,5 +1,5 @@
 #!/bin/bash
-
+# See also everyone/xfce4-terminal-tabset-laclin.sh
 
 # STATUS: PERMANENT FEATURE FREEZE
 # - All commands and comments are now represented in the linuxpreinstall module's package_names.csv and meta.
