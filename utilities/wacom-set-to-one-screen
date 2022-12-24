@@ -68,6 +68,25 @@ POST_MSG = (
     " ratio is the same as your screen's."
 )
 
+INSTALL_TIP = '''
+Make sure the following are installed as per <https://linuxwacom.github.io/>:
+  input-wacom
+  xf86-input-wacom
+  libwacom
+
+Or on Fedora:
+sudo dnf install -y xorg-x11-drv-wacom
+
+If the Tablet's light (if it has one) doesn't come on, you may need to plug the Tablet directly into a USB port rather than into a HUB.
+'''
+
+WHY_HEAD_MSG_FMT = '''
+Users of the nvidia binary driver must use HEAD-# such as via:
+  wacom-set-to-one-screen HEAD-{}
+until the Wacom driver supports XRandR 1.2 or later.
+See <https://unix.stackexchange.com/a/700836/343286>
+'''
+
 def usage():
     echo0()
     echo0()
@@ -143,7 +162,12 @@ def main():
     cmd = shlex.join(cmd_parts)
     list_out, list_err, list_code = run_and_get_lists(cmd_parts)
     echo0()
+    example_device = None
     input_devices = []
+    if list_code != 0:
+        echo0(list_err)
+    # else there yet may be 0. See `len(input_devices) < 1` further down
+        
     '''
     input_devices = [
         "Wacom Graphire2 4x5 Pen",
@@ -168,6 +192,21 @@ def main():
                   ''.format(ender, line, cmd))
             return 1
         input_devices.append(line[:ender_i].strip())
+
+    if len(input_devices) < 1:
+        if len(list_out) > 0:
+            echo0("xsetwacom didn't detect any Wacom input devices"
+                  " with any: {}.".format(known_endings))
+            echo0("Only got:")
+            for rawL in list_out:
+                echo0("{}".format(rawL))
+        else:
+            echo0("xsetwacom didn't detect any Wacom input devices.")
+        echo0(INSTALL_TIP)
+        return 1
+    else:
+        example_device = input_devices[0]
+
     output_device = "HDMI-1"
     if p_output is not None:
         output_device = p_output
@@ -187,6 +226,26 @@ def main():
             cmd = shlex.join(cmd_parts)
             print(cmd)
             out, err, code = run_and_get_lists(cmd_parts)
+            if err is not None:
+                for err_line in err:
+                    if "Unable to find an output" in err_line:
+                        found_head = False
+                        found_no = 0
+                        # parts = []
+                        # if selected is not None:  # already guaranteed
+                        parts = selected.split("-")
+                        if len(parts) == 2:
+                            try:
+                                found_no = int(parts[1])
+                            except ValueError:
+                                pass
+                        for this_err_line in err:
+                            if "HEAD" in this_err_line:
+                                found_head = True
+                            echo0(this_err_line)
+                        if not found_head:
+                            echo0(WHY_HEAD_MSG_FMT.format(found_no))
+                        return 1
             if code == 0:
                 echo0("# OK (done)")
             else:
@@ -196,9 +255,6 @@ def main():
         return code
     echo0()
     echo0()
-    example_device = None
-    if len(input_devices) > 0:
-        example_device = input_devices[0]
     '''
     echo0(PRE_MSG.format(
         example_device=example_device,
