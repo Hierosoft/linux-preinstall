@@ -58,6 +58,10 @@ fi
 DEBUG_OPTION=""
 if [ "x$LP_CMAKE_DEBUG" = "xtrue" ]; then
     DEBUG_OPTION="-DCMAKE_BUILD_TYPE=Debug"
+    echo "LP_CMAKE_DEBUG=$LP_CMAKE_DEBUG"
+    sleep 1
+else
+    echo "LP_CMAKE_DEBUG=$LP_CMAKE_DEBUG (!= true)"
 fi
 # NOTE: "DEBUG" is already in
 # - so env DEBUG=true causes a redefinition error in
@@ -155,7 +159,7 @@ fi
 cd src
 >&2 echo "Running `realpath ./prusa-slicer`"
 if [ "x$LP_CMAKE_DEBUG" = "xtrue" ]; then
-    echo "Type run to run the program in gdb. If there is a crash, type bt, enter for a backtrace."
+    echo "When using gdb and the program crashes (such as Segfault), type bt, enter for a backtrace."
     gdb -ex run ./prusa-slicer
     if [ $? -ne 0 ]; then
         echo "If you are on macOS, you don't have the -ex option. Debug as follows:"
