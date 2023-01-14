@@ -319,6 +319,7 @@ if [ ! -d "$DEST" ]; then
             _found=true
             # git clone $OPTIONS $CUSTOM_URL $DEST
             update_repo $DEST $URL $OPTIONS
+            code=$?
         else
             echo "  * not found"
         fi
@@ -336,6 +337,7 @@ if [ ! -d "$DEST" ]; then
         echo "* cloning the detected $URL in `pwd` (OPTIONS=$OPTIONS)"
         # git clone $OPTIONS $NOTABUG_URL $DEST
         update_repo $DEST $URL $OPTIONS
+        code=$?
     else
         echo "  * not found"
     fi
@@ -353,6 +355,7 @@ if [ ! -d "$DEST" ]; then
         echo "* cloning $URL to $DEST (OPTIONS=$OPTIONS)"
         # git clone $OPTIONS $GITLAB_URL $DEST
         update_repo $DEST $URL $OPTIONS
+        code=$?
     else
         echo "  * not found: yes | git ls-remote -h --exit-code $GITLAB_URL -q"
     fi
@@ -373,6 +376,7 @@ if [ ! -d "$DEST" ]; then
         _found=true
         # git clone $OPTIONS $GITHUB_URL $DEST
         update_repo $DEST $URL $OPTIONS
+        code=$?
     else
         echo "  * not found"
     fi
@@ -383,15 +387,19 @@ if [ ! -d "$DEST" ]; then
     # git clone $URL $USER_DIR/$REPO_NAME
     # git clone $URL || customExit "'git clone $URL' failed in '`pwd`'"
     fi
+    echo "Downloaded \"$DEST\""
 else
     cd "$DEST" || customExit "'cd \"$DEST\"' failed in '`pwd`'"
     if [ "@$IS_MIRROR" = "@true" ]; then
         git remote update || customExit "'git remote update' failed in '`pwd`'"
+        code=$?
     else
         git pull --no-rebase || customExit "'git pull' failed in '`pwd`'"
+        code=$?
     fi
+    echo "Updated \"$DEST\""
 fi
-if [ $? -eq 0 ]; then
+if [ $code -eq 0 ]; then
     echo "[$myName] OK"
 else
     echo "[$myName] Error: There was an untracked error."
