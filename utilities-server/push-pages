@@ -1,0 +1,279 @@
+#!/usr/bin/env python3
+'''
+push
+----
+
+Usage:
+push <options>
+
+Options:
+(all options can be omitted if at least remote_dir is in config.json)
+--images              Enable uploading images on the current run.
+--remote_dir <path>   (required) Set the remote dir
+--js_dir <path>       A directory containing .js files.
+--css_dir <path>       A directory containing .css files.
+
+Example:
+push --remote_dir example.com:/var/www/site1 --images
+^ or set remote_dir in config.json and simply do:
+push --images
+# or to only upload html not images:
+push
+
+
+If your SSH port is not 22, you must set port in ~/.ssh/config
+such as:
+Host server1
+     Hostname n.n.n.n
+     Port x
+
+where x is the port and n.n.n.n is the ip address or domain,
+then set remote_dir to:
+server1:/var/www/site1
+'''
+
+# for SUB in 0 1 2 3 4 5
+# do
+# done
+# . website.rc
+import sys
+import os
+import shlex
+import subprocess
+from datetime import datetime
+import json
+DATE = datetime.today().strftime('%Y%m%d')
+# DATE = "`date +%Y%m%d`"  # such as 20230114
+# datetime.today().strftime('%Y-%m-%d %H:%M:%S')
+
+sys.path.insert(0, os.getcwd())  # Make sure cwd's push_config is used.
+config = None
+
+
+def echo0(*args):
+    if len(args) < 1:
+        print("", file=sys.stderr)
+        return True
+    print(*args, file=sys.stderr)
+    return True
+
+
+def to_bool(value):
+    trues = (True, 1)
+    falses = (False, 0, None)
+    if value in trues:
+        return True
+    elif value in falses:
+        return False
+    true_strings = ("true", "on", "yes", "1")
+    false_strings = ("false", "off", "no", "0")
+    if value.lower() in true_strings:
+        return True
+    if value.lower() in false_strings:
+        return False
+    raise ValueError(
+        '"{}" could not be interpreted as True or False.'
+        ' Expected one of: {}'
+        ''.format(value, trues+falses+true_strings+false_strings)
+    )
+
+
+def require(key, tip=None):
+    if config.get(key) is None:
+        msg = (
+            'This script requires "{}" in {} or the environment'
+            ' for scripting purposes'
+            ''.format(key, push_config)
+        )
+        if tip is not None:
+            msg += " " + tip + "."
+        else:
+            msg += "."
+        raise KeyError(msg)
+    return config[key]
+
+
+def require_json(config_file):
+    this_config = None
+    with open(config_file, "r") as ins:
+        try:
+            this_config = json.load(ins)
+        except json.decoder.JSONDecodeError as ex:
+            msg = str(ex)
+            parts = msg.split()
+            flagI = None
+            lineN = 0
+            # Show a JSON line error instead of a traceback:
+            try:
+                flagI = parts.index("line")
+                lineN = int(parts[flagI+1])
+                # ^ could throw IndexError, but won't since line is
+                #   always followed by a number in JSONDecoderError.
+            except ValueError:
+                # thrown if value not list
+                pass
+            echo0('File "{}", line {}: JSON Syntax Error: {}'
+                  ''.format(config_file, lineN, msg))
+            return None
+    return this_config
+
+
+def load_config():
+    config_name = "push_config.json"
+    config_file = os.path.realpath(config_name)
+    if not os.path.isfile(config_name):
+        echo0("{} is required in {}."
+              "".format(config_name, os.path.dirname(config_file)))
+        return None
+    this_config = require_json(config_file)
+    if this_config is None:
+        return None
+
+    print('Using "{}"'.format(config_file))
+
+    if this_config.get('local_dir') is None:
+        this_config['local_dir'] = os.getcwd()  # LOCAL_DIR
+        # os.path.dirname(os.path.realpath(__file__)),
+        if os.path.isdir("static"):
+            raise ValueError(
+                'You have a directory named "static" but are not pushing it.'
+                ' Set local_dir the correct directory to force not using it,'
+                ' otherwise set it to "static".'
+            )
+    else:
+        this_config['local_dir'] = os.path.realpath(this_config['local_dir'])
+
+    return this_config
+
+def usage():
+    echo0()
+    echo0(__doc__)
+    echo0()
+
+def main():
+    global config
+    config = load_config()
+    if config is None:
+        return 1
+    '''
+    remote_local_dir = require(
+        'remote_local_dir',
+        tip='(same as REMOTE_DIR but without the \"hostname:\" part)',
+    )
+    '''
+    print()
+    print()
+
+    bools = ['images']
+    config['images'] = to_bool(os.environ.get('_IMAGES'))
+    key = None
+    for argi in range(1, len(sys.argv)):
+        arg = sys.argv[argi]
+        if key is not None:
+            if isinstance(config.get('key'), list):
+                raise ValueError("Setting a list isn't implemented.")
+            config[key] = arg
+            print("Set {}={}".format(key, arg))
+            key = None
+        elif arg.startswith("--"):
+            key = arg[2:]
+            if key not in config:
+                echo0("Error: {} is not a known config key."
+                      " Known keys are: {}".format(key, config.keys()))
+                return 1
+            if key in bools:
+                config[key] = True
+                key = None
+        else:
+            usage()
+            echo0("Error: {} is not a valid option.".format(arg))
+            return 1
+
+    print('Pushing "{}"'.format(config['local_dir']))
+    remote_dir = require('remote_dir')
+    local_dir = require('local_dir')
+
+    if to_bool(config.get("images")):
+        for rel_dir in require("image_dirs"):  # DIRNAME
+            print("* processing \"/imgsite\"...")
+
+            # --exclude="*" since rsync only uses the first matching filter
+            #   and any not matching should be excluded:
+
+            # The remote dir: See ./website.rc
+            cmd_fmt = (
+                'rsync -tvP --dirs --prune-empty-dirs --include="/{rel_dir}"'
+                ' --include="*.png" --include="*.jpg" --include="*.gif"'
+                ' --exclude="*" {local_dir}/{rel_dir}/ {remote_dir}/{rel_dir}'
+            )
+            cmd = cmd_fmt.format(rel_dir=rel_dir, remote_dir=remote_dir,
+                                 local_dir=local_dir)
+            print("Running: {}".format(cmd))
+            cmd_parts = shlex.split(cmd)
+            subprocess.run(cmd_parts, stderr=sys.stderr, stdout=sys.stdout)
+            print("* You still may have to do the following"
+                  " on the remote machine:")
+            print("  chown www-data.www-data -R {remote_dir}/{rel_dir}"
+                  "".format(remote_dir=remote_dir, rel_dir=rel_dir))
+
+            # The following problem doesn't happen after changing the
+            #   source from ".../*" to ".../":
+            # echo0("# and if the directory didn't exist,"
+            #       " rsync may make it into a file :(."
+            #       " In that case remove it then do:")
+            # echo0("  sudo mkdir \"$REMOTE_DIR_AS_LOCAL/$DIRNAME\"")
+            # echo0("# then re-run this script.")
+    # else see != True further down
+
+    print("* processing \"/\"...")
+    cmd_fmt = ('rsync -tvP --dirs --prune-empty-dirs --include="/"'
+               ' --include="*.html" --exclude="*" {local_dir}/ {remote_dir}')
+    cmd = cmd_fmt.format(local_dir=local_dir, remote_dir=remote_dir)
+    print("Running: {}".format(cmd))
+    cmd_parts = shlex.split(cmd)
+    subprocess.run(cmd_parts, stderr=sys.stderr, stdout=sys.stdout)
+    # -f: see <https://superuser.com/questions/436070/
+    #     rsync-copying-directory-contents-non-recursively>
+    #     (retain "recursive" [all files] behavior but only process top-level
+    #     - didn't work: -f '- /*/' -f '- .*' )
+    # --include: See <https://stackoverflow.com/questions/11111562/
+    #     rsync-copy-over-only-certain-types-of-files-using-include-option>
+    #     (If you include, you must exclude everything but then include
+    #     directories :( )
+    #     - didn't work: --include="*/" --include="*.html" --exclude="*"
+    print()
+    print()
+    known_pairs = {}
+    known_pairs['css_dir'] = "*.css"
+    known_pairs['js_dir'] = "*.js"
+    asset_dirs_count = 0
+    print("Checking for {}...".format(known_pairs.keys()))
+    for key, mask in known_pairs.items():
+        rel_dir = config.get(key)
+        if rel_dir is None:
+            continue
+        asset_dirs_count += 1
+        print("* processing \"{rel_dir}\"...".format(rel_dir=rel_dir))
+        cmd_fmt = ('rsync -tvP --dirs --prune-empty-dirs --include="/{rel_dir}"'
+                   ' --include="{mask}" --exclude="*" {local_dir}/{rel_dir}/'
+                   ' {remote_dir}/{rel_dir}')
+        cmd = cmd_fmt.format(rel_dir=rel_dir, local_dir=local_dir,
+                             remote_dir=remote_dir, mask=mask)
+        print("Running: {}".format(cmd))
+        cmd_parts = shlex.split(cmd)
+        subprocess.run(cmd_parts, stderr=sys.stderr, stdout=sys.stdout)
+
+    if asset_dirs_count < 1:
+        echo0("Warning: No asset dirs were set. The following can be set: {}"
+              "".format(known_pairs.keys()))
+
+    if not to_bool(config.get("images")):
+        echo0("* not processing imgsite: For images and data,"
+              " set _IMAGES=true or specify --images")
+        echo0()
+
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
