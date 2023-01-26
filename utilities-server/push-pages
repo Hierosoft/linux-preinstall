@@ -210,7 +210,8 @@ def main():
                                  local_dir=local_dir)
             print("Running: {}".format(cmd))
             cmd_parts = shlex.split(cmd)
-            subprocess.run(cmd_parts, stderr=sys.stderr, stdout=sys.stdout)
+            subprocess.run(cmd_parts, stderr=sys.stderr, stdout=sys.stdout,
+                           stdin=sys.stdin)
             print("* You still may have to do the following"
                   " on the remote machine:")
             print("  chown www-data.www-data -R {remote_dir}/{rel_dir}"
@@ -226,12 +227,20 @@ def main():
     # else see != True further down
 
     print("* processing \"/\"...")
-    cmd_fmt = ('rsync -tvP --dirs --prune-empty-dirs --include="/"'
-               ' --include="*.html" --exclude="*" {local_dir}/ {remote_dir}')
+    cmd_fmt = 'rsync -rtvP --dirs --prune-empty-dirs'
+    # ^ -r (recursive) is only necessary for html_dir(s) than "/" :
+    html_dirs = config.get("html_dirs")
+    if html_dirs is None:
+        html_dirs = "/"
+    for html_dir in html_dirs:
+        cmd_fmt += ' --include="{}"'.format(html_dir)
+    cmd_fmt += ' --include="*.html" --exclude="*" {local_dir}/ {remote_dir}'
+
     cmd = cmd_fmt.format(local_dir=local_dir, remote_dir=remote_dir)
     print("Running: {}".format(cmd))
     cmd_parts = shlex.split(cmd)
-    subprocess.run(cmd_parts, stderr=sys.stderr, stdout=sys.stdout)
+    subprocess.run(cmd_parts, stderr=sys.stderr, stdout=sys.stdout,
+                   stdin=sys.stdin)
     # -f: see <https://superuser.com/questions/436070/
     #     rsync-copying-directory-contents-non-recursively>
     #     (retain "recursive" [all files] behavior but only process top-level
@@ -261,7 +270,8 @@ def main():
                              remote_dir=remote_dir, mask=mask)
         print("Running: {}".format(cmd))
         cmd_parts = shlex.split(cmd)
-        subprocess.run(cmd_parts, stderr=sys.stderr, stdout=sys.stdout)
+        subprocess.run(cmd_parts, stderr=sys.stderr, stdout=sys.stdout,
+                       stdin=sys.stdin)
 
     if asset_dirs_count < 1:
         echo0("Warning: No asset dirs were set. The following can be set: {}"
@@ -271,6 +281,9 @@ def main():
         echo0("* not processing imgsite: For images and data,"
               " set _IMAGES=true or specify --images")
         echo0()
+
+    message = config.get('message')
+    echo0(message)
 
     return 0
 
