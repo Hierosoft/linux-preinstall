@@ -67,6 +67,6 @@ lpoptions -o media=Letter -o sides=one-sided
 # ^ result: cups-client
 #   (documented in error at beginning of this script if lpadmin wasn't found)
 
-/usr/sbin/lpadmin -p MFCL2740DW -o media=Letter
+$this_lpadmin -p MFCL2740DW -o media=Letter
 # ^ SOLVED! Result in web interface link above is now:
 #   Defaults:	job-sheets=none, none media=na_letter_8.5x11in sides=one-sided

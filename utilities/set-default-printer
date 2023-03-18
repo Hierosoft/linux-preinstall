@@ -1,4 +1,14 @@
 #!/bin/bash
+
+this_lpadmin="`command -v lpadmin`"
+if [ ! -f "$this_lpadmin" ]; then
+    this_lpadmin=/usr/sbin/lpadmin
+fi
+if [ ! -f "$this_lpadmin" ]; then
+    echo "Error: lpadmin is missing. Install cups-client first and run this script ($SCRIPTPATH) with root privileges (otherwise using a user in the lpadmin group may work)."
+    exit 1
+fi
+
 lpstat -p -d
 # ^ such as:
 # printer MFCL2740DW is idle.  enabled since Wed 21 Apr 2021 02:15:31 PM EDT
@@ -62,15 +72,7 @@ if [ "@$THIS_PRINTER" = "@no system default destination" ]; then
     else
         echo "* setting default printer to \"$SET_PRINTER\" as specified"
     fi
-    if [ -f "`command -v lpadmin`" ]; then
-        lpadmin -d $SET_PRINTER
-    elif [ -f "/usr/sbin/lpadmin" ]; then
-        /usr/sbin/lpadmin -d $SET_PRINTER
-    else
-        echo "Error: lpadmin is neither in the path nor in /usr/sbin."
-        exit 1
-    fi
-    # -bash: lpadmin: command not found
+    $this_lpadmin -d $SET_PRINTER
     echo "* See also: https://`hostname -I | cut -d' ' -f1`:631/printers/$SET_PRINTER"
 else
     echo "* The default is present, so this script will leave it as \"$THIS_PRINTER\"."
