@@ -1,0 +1,77 @@
+#!/bin/bash
+lpstat -p -d
+# ^ such as:
+# printer MFCL2740DW is idle.  enabled since Wed 21 Apr 2021 02:15:31 PM EDT
+# printer TS6200USB is idle.  enabled since Thu 11 Mar 2021 11:08:46 AM EST
+# no system default destination
+
+# lpstat -a
+# ^ such as:
+# MFCL2740DW accepting requests since Wed 21 Apr 2021 02:15:31 PM EDT
+# TS6200USB accepting requests since Thu 11 Mar 2021 11:08:46 AM EST
+P_COUNT=`lpstat -a | wc -l`
+echo "* usb_printerid /dev/usb/lp0:"
+usb_printerid /dev/usb/lp0
+for NUM in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20
+do
+    echo "* usb_printerid /dev/usb/lp$NUM:"
+    usb_printerid /dev/usb/lp$NUM
+    if [ $? -ne 0 ]; then
+        echo "^ ignore that error, this is a test to find each printer"
+        break
+    fi
+done
+
+# cat /etc/printcap
+# ^ such as:
+# MFCL2740DW:\
+#         :mx=0:\
+#         :sd=/var/spool/lpd/MFCL2740DW:\
+#         :sh:\
+#         :lp=/dev/usb/lp0:\
+#         :if=/opt/brother/Printers/MFCL2740DW/lpd/filter_MFCL2740DW:
+
+# lpstat -a | cut -f1 -d ' '
+# ^ such as:
+# MFCL2740DW
+# TS6200USB
+
+# ^ See <https://superuser.com/a/1016825> on
+#   <https://superuser.com/questions/177445/how-to-list-printer-names-acceptable-for-use-with-lpr>
+
+# lpstat -d
+# ^ get default such as:
+# no system default destination
+# ^ (return is still 0; output goes to standard output)
+# ^ or:
+# system default destination: MFCL2740DW
+THIS_PRINTER="`lpstat -d`"
+if [ ! -z "$1" ]; then
+    SET_PRINTER="$1"
+    # ^ such as MFCL2740DW
+fi
+if [ "@$THIS_PRINTER" = "@no system default destination" ]; then
+    if [ -z "$SET_PRINTER" ]; then
+        if [ $P_COUNT -gt 0 ]; then
+            echo "Error: You must specify a printer but there are 0 printers listed above via 'lpstat -a'."
+            exit 1
+        elif
+            echo "Error: You must specify a printer from the $P_COUNT listed above via 'lpstat -a'."
+            exit 1
+        fi
+    else
+        echo "* setting default printer to \"$SET_PRINTER\" as specified"
+    fi
+    if [ -f "`command -v lpadmin`" ]; then
+        lpadmin -d $SET_PRINTER
+    elif [ -f "/usr/sbin/lpadmin" ]; then
+        /usr/sbin/lpadmin -d $SET_PRINTER
+    else
+        echo "Error: lpadmin is neither in the path nor in /usr/sbin."
+        exit 1
+    fi
+    # -bash: lpadmin: command not found
+    echo "* See also: https://`hostname -I | cut -d' ' -f1`:631/printers/$SET_PRINTER"
+else
+    echo "* The default is present, so this script will leave it as \"$THIS_PRINTER\"."
+fi

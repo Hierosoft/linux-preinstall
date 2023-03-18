@@ -1,0 +1,72 @@
+#!/bin/bash
+
+SCRIPTPATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
+# ^ See <https://stackoverflow.com/a/4774063>
+
+this_lpadmin="`command -v lpadmin`"
+if [ ! -f "$this_lpadmin" ]; then
+    this_lpadmin=/usr/sbin/lpadmin
+fi
+if [ ! -f "$this_lpadmin" ]; then
+    echo "Error: lpadmin is missing. Install cups-client first and run this script ($SCRIPTPATH) with root privileges (otherwise using a user in the lpadmin group may work)."
+    exit 1
+fi
+
+PRINTER="`lpstat -d`"
+PRINTER=${PRINTER##system default destination:}
+
+if [ "x$1" != "x" ]; then
+    PRINTER="$1"
+    echo "Selected printer: \"$MEDIA\"."
+else
+    echo "You can provide a printer name as the first argument. Printers:"
+    lpstat -p
+    if [ -z "$PRINTER" ]; then
+        echo "Error: You didn't specify a printer and no \"system default destination\" was detected with \"lpstat -d\"."
+        exit 1
+    fi
+fi
+
+MEDIA=Letter
+if [ "x$2" != "x" ]; then
+    MEDIA="$2"
+    echo "You are setting the media size to \"$MEDIA\"."
+else
+    echo "Warning: No argument was given, so media size is defaulting to \"$MEDIA\"."
+fi
+
+lpoptions -l -p MFC-L2740DW
+# ^ list options
+# lpoptions -p MFC-L2740DW -o media=$MEDIA
+
+
+# ^ Remote CUPS users still get A4 as the default
+#   So see <https://wiki.archlinux.org/title/CUPS/Troubleshooting>...
+
+# echo "DefaultPaperSize $MEDIA" | tee -a /etc/cups/cupsd.conf
+# systemctl restart cups
+
+# CUPS Web Interface such as https://$HOST:631/printers/MFCL2740DW
+# (where $HOST is the hostname or IP address) still says:
+#Defaults:	job-sheets=none, none media=iso_a4_210x297mm sides=one-sided
+#
+#So see <https://opensource.apple.com/source/cups/cups-30/doc/sum.shtml>:
+## lpoptions -o media=Letter -o sides=two-sided-long-edge
+#lpoptions -o media=Letter -o sides=one-sided
+
+lpoptions -o media=Letter -o sides=one-sided
+# systemctl restart cups  # doesn't help either
+
+# No change, so...
+# reboot  # doesn't solve it either
+# So see <https://macadminsdoc.readthedocs.io/en/master/General/Peripherals/Printing.html>:
+
+#sudo apt-get install apt-file
+#apt-file update
+#apt-file search lpadmin
+# ^ result: cups-client
+#   (documented in error at beginning of this script if lpadmin wasn't found)
+
+/usr/sbin/lpadmin -p MFCL2740DW -o media=Letter
+# ^ SOLVED! Result in web interface link above is now:
+#   Defaults:	job-sheets=none, none media=na_letter_8.5x11in sides=one-sided
