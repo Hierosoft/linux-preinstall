@@ -9,7 +9,7 @@ A thumbnailer lets you see a preview of the files in a list. If you cannot see p
 
 ### Other STL thumnailers
 - [stl-thumb](https://github.com/unlimitedbacon/stl-thumb/releases)
-
+  - Open STL files with [../utilities/stl-as-thumb](../utilities/stl-as-thumb) to use it as a (static 2D) viewer.
 
 ## Regenerate thumbnails
 To clear old thumbnails so new thumbnails are generated, the thumbnails must be cleared from "~/.cache/thumbnails".
