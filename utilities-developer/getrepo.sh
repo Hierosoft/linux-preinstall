@@ -123,6 +123,12 @@ do
         elif [ "$NEXT_VAR" = "--url" ]; then
             CUSTOM_URL="$var"
             # CUSTOM_WEBSITE="$WEBSITE"
+        elif [ "$NEXT_VAR" = "--github" ]; then
+            WEBSITE="https://github.com"
+        elif [ "$NEXT_VAR" = "--gitlab" ]; then
+            WEBSITE="https://gitlab.com"
+        elif [ "$NEXT_VAR" = "--notabug" ]; then
+            WEBSITE="https://notabug.org"
         elif [ "$NEXT_VAR" = "--repos_dir" ]; then
             REPOS_DIR="$var"
         elif [ "$NEXT_VAR" = "--user_dir" ]; then
