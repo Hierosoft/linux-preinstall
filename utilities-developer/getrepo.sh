@@ -123,12 +123,6 @@ do
         elif [ "$NEXT_VAR" = "--url" ]; then
             CUSTOM_URL="$var"
             # CUSTOM_WEBSITE="$WEBSITE"
-        elif [ "$NEXT_VAR" = "--github" ]; then
-            WEBSITE="https://github.com"
-        elif [ "$NEXT_VAR" = "--gitlab" ]; then
-            WEBSITE="https://gitlab.com"
-        elif [ "$NEXT_VAR" = "--notabug" ]; then
-            WEBSITE="https://notabug.org"
         elif [ "$NEXT_VAR" = "--repos_dir" ]; then
             REPOS_DIR="$var"
         elif [ "$NEXT_VAR" = "--user_dir" ]; then
@@ -152,6 +146,12 @@ do
             NEXT_VAR="$var"
         elif [ "@$var" = "@--url" ]; then
             NEXT_VAR="$var"
+        elif [ "$var" = "--github" ]; then
+            WEBSITE="https://github.com"
+        elif [ "$var" = "--gitlab" ]; then
+            WEBSITE="https://gitlab.com"
+        elif [ "$var" = "--notabug" ]; then
+            WEBSITE="https://notabug.org"
         elif [ "@$var" = "@--mirror" ]; then
             OPTIONS="$OPTIONS --mirror"
             REPO_DIR_SUFFIX=".git"
