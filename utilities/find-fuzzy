@@ -3,4 +3,59 @@
 # find "`pwd`" -type f -printf '%T@ %t %p\n' | sort -k 1 -n | cut -d ' ' -f2-
 # ^ type f: only files
 # ^ type d: only directories
-find "`pwd`" -iname "*$1*"
+
+usage(){
+>&2 cat <<END
+find-fuzzy <criteria> [option]
+
+The criteria you specify is used as a case-insensitive substring for finding files.
+The current working directory (cwd) is used unless --thing is specified.
+
+Options:
+--thing        Search only in ~/Meshes and either ~/Nextcloud/Meshes or
+               ~/ownCloud/Meshes, whichever exists (Nextcloud has priority).
+
+Examples:
+find-fuzzy oblin  # Find files like Goblins.stl and GOBLIN.stl in cwd.
+fund-fuzzy GOBL --thing  # Find the same files but only in "Meshes" directories listed above.
+END
+}
+
+fuzz="$1"
+option=""
+if [ "x$1" == "x--thing" ]; then
+    fuzz="$2"
+    option="--thing"
+fi
+if [ "x" = "x$fuzz" ]; then
+    >&2 printf "[find-fuzzy] Error: You didn't specify a criteria for the"
+    if [ "x$option" != "x" ]; then
+        >&2 printf " $option"
+    fi
+    echo " search."
+    exit 1
+fi
+if [ "x$option" == "x--thing" ]; then
+    has_any=false
+    if [ -d "$HOME/Meshes" ]; then
+        find "$HOME/Meshes" -iname "*$fuzz*"
+        has_any=true
+    else
+        >&2 echo "[find-fuzzy] Warning: There is no $HOME/Meshes for the '--thing' option."
+    fi
+    if [ -d "$HOME/Nextcloud/Meshes" ]; then
+        find "$HOME/Nextcloud/Meshes" -iname "*$fuzz*"
+        has_any=true
+    elif [ -d "$HOME/ownCloud/Meshes" ]; then
+        find "$HOME/ownCloud/Meshes" -iname "*$fuzz*"
+        has_any=true
+    else
+        >&2 echo "[find-fuzzy] Warning: There is no $HOME/Nextcloud/Meshes nor $HOME/ownCloud/Meshes for the '--thing' option."
+    fi
+    if [ "$has_any" != "true" ]; then
+        >&2 echo "[find-fuzzy] Error: There are 0 known '--thing' locations."
+        exit 1
+    fi
+else
+    find "`pwd`" -iname "*$fuzz*"
+fi
