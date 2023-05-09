@@ -78,6 +78,29 @@ icon_paths = [
     "/var/lib/flatpak/exports/share/applications",
 ]
 
+
+def add_icon_dirs_recursively(parent, hidden=False):
+    this_count = 0
+    recursive_count = 0
+    for sub in os.listdir(parent):
+        if not hidden:
+            if sub.startswith("."):
+                continue
+        sub_path = os.path.join(parent, sub)
+        if os.path.isdir(sub_path):
+            recursive_count += add_icon_dirs_recursively(sub_path)
+        elif (sub.lower().endswith(".desktop") or
+                sub.lower().endswith(".lnk")):
+            this_count += 1
+    if this_count > 0:
+        icon_paths.append(parent)
+    return recursive_count
+
+
+wine_programs = os.path.join(profile, ".local", "share", "applications", "wine")
+if os.path.isdir(wine_programs):
+    add_icon_dirs_recursively(wine_programs)
+
 identifier_keys = [
     "Exec",
     "TryExec",
