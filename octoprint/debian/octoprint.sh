@@ -125,4 +125,18 @@ cat <<END
       - `action:showstart` lcd-stats --x=153 --y=40 "The 3D print has started."
       - `action:showend` lcd-stats --x=153 --y=40   "The 3D print is finished."
       - To use the --host command and specify a remote host,
+
+Add the following to sudoers:
+$UNPRIV_USER ALL=(ALL:ALL) NOPASSWD:/usr/bin/systemctl restart octoprint.service
+$UNPRIV_USER ALL=(ALL:ALL) NOPASSWD:/usr/bin/systemctl stop octoprint.service
+$UNPRIV_USER ALL=(ALL:ALL) NOPASSWD:/usr/bin/systemctl start octoprint.service
+$UNPRIV_USER ALL=(ALL:ALL) NOPASSWD:/usr/sbin/reboot
+$UNPRIV_USER ALL=(ALL:ALL) NOPASSWD:/usr/sbin/shutdown
+$UNPRIV_USER ALL=(ALL:ALL) NOPASSWD:/etc/init.d/octoprint *
+
+Then you can add the commands to OctoPrint Settings, Server:
+systemctl restart octoprint
+reboot
+shutdown -h now
+
 END

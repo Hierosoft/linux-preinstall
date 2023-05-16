@@ -20,8 +20,8 @@ if [ ! -d "OctoPrint" ]; then
 fi
 cd OctoPrint || customDie "'cd OctoPrint' failed in `pwd`."
 virtualenv venv || customDie "'virtualenv venv' failed in `pwd` as $USER"
-source venv/bin/activate || customDie "'source venv/bin/activate' failed in `pwd`"
-pip install pip --upgrade || customDie "'pip install pip --upgrade' failed in `pwd` as $USER"
-pip install octoprint || customDie "'pip install octoprint --upgrade' failed in `pwd` as $USER"
-deactivate
+# source venv/bin/activate || customDie "'source venv/bin/activate' failed in `pwd`"
+venv/bin/pip install pip --upgrade || customDie "'pip install pip --upgrade' failed in `pwd` as $USER"
+venv/bin/pip install octoprint || customDie "'pip install octoprint --upgrade' failed in `pwd` as $USER"
+# deactivate
 
