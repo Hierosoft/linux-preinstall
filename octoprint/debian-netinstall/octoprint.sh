@@ -1,21 +1,22 @@
 #!/bin/bash
-customDie() {
-    echo
-    echo
-    echo "ERROR:"
-    echo "$1"
-    echo
-    echo
+customExit() {
+    >&2 echo
+    >&2 echo
+    >&2 echo "ERROR:"
+    >&2 echo "$1"
+    >&2 echo
+    >&2 echo
     exit 1
 }
 HOW="from unknown config"
 if [ -z "$SUDOER" ]; then
     if [ -z "$1" ]; then
-	customDie "You must specify a user to become sudoer as the parameter."
+        customExit "You must specify a user to become sudoer as the parameter."
     fi
     HOW="by first parameter"
     SUDOER="$1"
-elsepriveleges
+else
+    # privileges
     HOW="as SUDOER"
 fi
 if [ ! -d "/home/$SUDOER" ]; then
