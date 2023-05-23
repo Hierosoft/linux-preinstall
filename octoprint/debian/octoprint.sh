@@ -1,26 +1,7 @@
 #!/bin/bash
 echo "Instead, use the install script from <https://github.com/paukstelis/octoprint_install>."
 cat <<END
-Installs (optionally):
-1) CancelObject			6) PrintTimeGenius
-2) Bed Visualizer		7) UI Customizer
-3) Firmware Updater
-4) Terminal Commands Extended:
-5) Active Filters Extended
-
-Post-install steps:
-Go to the web interface to set the stream URL.
-Settings, Features, Webcam & Timelapse,
-Then if you choose the ustreamer option, set
-- Webcam, Stream URL http://`hostname`.local:8001?action=stream
-- Timelapse, Snapshot URL http://buzzy.local:8001?action=snapshot
-
-Change resolution:
-- If using ustreamer,
-sudo nano /etc/systemd/system/cam_octoprint.service
-# change Exec as necessary then save
-sudo systemctl daemon-reload
-sudo systemctl restart cam_octoprint
+See documentation/Klipper.md at http://github.com/Poikilos/marlininfo
 END
 exit 1
 
