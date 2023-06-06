@@ -1,6 +1,7 @@
 #!/bin/bash
-echo "Instead, use the install script from <https://github.com/paukstelis/octoprint_install>."
 cat <<END
+Instead, use the install script from <https://github.com/paukstelis/octoprint_install>
+or better yet (such as for x86), <https://github.com/th33xitus/kiauh>.
 See documentation/Klipper.md at http://github.com/Poikilos/marlininfo
 END
 exit 1
