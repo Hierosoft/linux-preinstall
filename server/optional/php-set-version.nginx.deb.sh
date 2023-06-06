@@ -1,8 +1,8 @@
 #!/bin/bash
-
+# Checked with https://www.shellcheck.net/
 # see also https://github.com/nextcloud/server/issues/11638#issuecomment-483868535
 
-cat <<END "
+cat <<END
 Warning: This script is deprecated.
 For the most up-to-date version of this process, use the phpversion
 command provided by installing the linux-preinstall package
@@ -25,7 +25,7 @@ systemctl status nginx
 code=$?
 if [ $code -ne 0 ]; then
     echo
-    echo "The settings will not be attempted since systemctl status nginx returned with an error ($code)."
+    echo "The settings will not be attempted since systemctl status nginx returned with error ($code)."
     echo
     exit 1
 fi
@@ -62,17 +62,17 @@ if [ "$requested_ver" != "$ver" ]; then
         apt remove -y php$ver-intl php-imagick php$ver-xml php$ver-zip >& /dev/null
         apt remove -y php$ver-fpm >& /dev/null
     fi
-    for SITE in `ls -t /etc/nginx/sites-available`
+    for SITE in /etc/nginx/sites-available/*
     do
         if [ ! -f "/etc/nginx/sites-available/$SITE" ]; then
             # It must be a directory, so ignore it.
             continue
         fi
         #echo "* checking $SITE"
-        ANY_OLD="`grep -F $ver-fpm /etc/nginx/sites-available/$SITE`"
+        ANY_OLD="$(grep -F $ver-fpm /etc/nginx/sites-available/"$SITE")"
         # ^ -F is literal string (same as fgrep)
-        if [ ! -z "$ANY_OLD" ]; then
-            ANY_OLD=`echo $ANY_OLD | sed -r 's/( )+//g'`
+        if [ -n "$ANY_OLD" ]; then
+            ANY_OLD=$(echo "$ANY_OLD" | sed -r 's/( )+//g')
             # ^ remove whitespace as per bruziuz' comment on
             # https://stackoverflow.com/questions/369758/how-to-trim-whitespace-from-a-bash-variable
             ANY_OLD_firstchar=${ANY_OLD:0:1}
@@ -82,7 +82,7 @@ if [ "$requested_ver" != "$ver" ]; then
                 # ^ ignore comments
             fi
         fi
-        if [ ! -z "$ANY_OLD" ]; then
+        if [ -n "$ANY_OLD" ]; then
             # echo "  * found $ANY_OLD"
             WARNING_SITES="${WARNING_SITES}* /etc/nginx/sites-available/${SITE} uses: '${ANY_OLD}'${NL}"
             # STR="${H}"$'\n'"${W}"
@@ -116,47 +116,47 @@ if [ "@$CHANGE" = "@true" ]; then
     apt update
     apt-get dist-upgrade -y
 
-    apt install -y php$ver-gd php$ver-json php$ver-mysql php$ver-curl php$ver-mbstring
-    apt install -y php$ver-intl php-imagick php$ver-xml php$ver-zip
+    apt install -y "php$ver-gd" "php$ver-json" "php$ver-mysql" "php$ver-curl" "php$ver-mbstring"
+    apt install -y "php$ver-intl" "php-imagick" "php$ver-xml" "php$ver-zip"
     # ^ This installs php-imagick php5.6-imagick php7.0-imagick php7.1-imagick php7.2-imagick php7.2-intl php7.2-xml php7.2-zip php7.3-imagick
     #     php7.4-imagick php8.0-imagick ttf-dejavu-core
     #   for some reason.
 
 
-    apt install -y php$ver-fpm
-    systemctl enable php$ver-fpm
-    systemctl start php$ver-fpm
-    systemctl status php$ver-fpm
+    apt install -y "php$ver-fpm"
+    systemctl enable "php$ver-fpm"
+    systemctl start "php$ver-fpm"
+    systemctl status "php$ver-fpm"
 
     # NOTE: at this point, the other services should already be masked,
     # so don't bother doing anything to them.
 
     # For WordPress plugins:
     ## As of 2020-04-01, sury is required for php7.4-mbstring (See https://github.com/wyveo/nginx-php-fpm/blob/master/Dockerfile)
-    apt install -y php$ver-mbstring
+    apt install -y "php$ver-mbstring"
 
 
     echo "enabling php$ver..."
     apt install -y postgresql postgresql-contrib
-    apt install -y php$ver-pgsql
-    # apt install php$ver-sqlite3
-    apt install -y php$ver-opcache
-    apt install -y php$ver-readline
+    apt install -y "php$ver-pgsql"
+    # apt install "php$ver-sqlite3"
+    apt install -y "php$ver-opcache"
+    apt install -y "php$ver-readline"
     apt install -y memcached
-    apt install -y php$ver-memcached
+    apt install -y "php$ver-memcached"
     echo "* running 'update-alternatives --set php /usr/bin/php$ver'..."
-    update-alternatives --set php /usr/bin/php$ver
+    update-alternatives --set php "/usr/bin/php$ver"
     # systemctl reload nginx
     echo "* restarting nginx..."
     systemctl restart nginx
 fi
-if [ ! -z "$WARNING_SITES" ]; then
+if [ -n "$WARNING_SITES" ]; then
     echo "WARNING: The following sites in /etc/nginx/sites-available still try to call old versions of php:"
     echo "$WARNING_SITES"
     echo
     echo "The correct location where the sock will be created is defined"
     echo "in: /etc/php/$requested_ver/fpm/pool.d/www.conf:"
-    cat /etc/php/$requested_ver/fpm/pool.d/www.conf | grep sock
+    cat "/etc/php/$requested_ver/fpm/pool.d/www.conf" | grep sock
     # ^ according to https://www.xspdf.com/resolution/58767959.html
     echo
 fi
