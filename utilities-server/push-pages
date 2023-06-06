@@ -7,15 +7,24 @@ Usage:
 push <options>
 
 Options:
-(all options can be omitted if at least remote_dir is in config.json)
+(all options can be omitted if at least remote_dir is in push_config.json)
+--local_dir           The full path or subfolder of the current working
+                      directory to upload. Default: current working directory.
 --images              Enable uploading images on the current run.
 --remote_dir <path>   (required) Set the remote dir
 --js_dir <path>       A directory containing .js files.
 --css_dir <path>       A directory containing .css files.
 
+Additional options for push_config.json:
+image_dirs:             A list of subdirectories of the local_dir.
+                        containing images.
+unfiltered_dirs:        A list of subdirectories of the local_dir. Each
+                        in the list will be synchronized recursively
+                        without any exclusions!
+
 Example:
 push --remote_dir example.com:/var/www/site1 --images
-^ or set remote_dir in config.json and simply do:
+^ or set remote_dir in push_config.json and simply do:
 push --images
 # or to only upload html not images:
 push
@@ -117,6 +126,19 @@ def require_json(config_file):
             return None
     return this_config
 
+def resolve_local_dir(this_config):
+    if this_config.get('local_dir') is None:
+        this_config['local_dir'] = os.getcwd()  # LOCAL_DIR
+        # os.path.dirname(os.path.realpath(__file__)),
+        if os.path.isdir("static"):
+            raise ValueError(
+                'You have a directory named "static" but are not pushing it.'
+                ' Set local_dir the correct directory to force not using it,'
+                ' otherwise set it to "static".'
+            )
+    else:
+        this_config['local_dir'] = os.path.realpath(this_config['local_dir'])
+
 
 def load_config():
     config_name = "push_config.json"
@@ -130,19 +152,7 @@ def load_config():
         return None
 
     print('Using "{}"'.format(config_file))
-
-    if this_config.get('local_dir') is None:
-        this_config['local_dir'] = os.getcwd()  # LOCAL_DIR
-        # os.path.dirname(os.path.realpath(__file__)),
-        if os.path.isdir("static"):
-            raise ValueError(
-                'You have a directory named "static" but are not pushing it.'
-                ' Set local_dir the correct directory to force not using it,'
-                ' otherwise set it to "static".'
-            )
-    else:
-        this_config['local_dir'] = os.path.realpath(this_config['local_dir'])
-
+    resolve_local_dir(this_config)
     return this_config
 
 def usage():
@@ -174,6 +184,8 @@ def main():
                 raise ValueError("Setting a list isn't implemented.")
             config[key] = arg
             print("Set {}={}".format(key, arg))
+            if key == "local_dir":
+                resolve_local_dir(config)  # performs checks as well
             key = None
         elif arg.startswith("--"):
             key = arg[2:]
@@ -192,22 +204,34 @@ def main():
     print('Pushing "{}"'.format(config['local_dir']))
     remote_dir = require('remote_dir')
     local_dir = require('local_dir')
-
+    image_extensions = ["png", "jpg", "gif"]  # "mp4"
+    image_dotexts = ["." + ext for ext in image_extensions]
     if to_bool(config.get("images")):
         for rel_dir in require("image_dirs"):  # DIRNAME
-            print("* processing \"/imgsite\"...")
-
+            print("* processing \"/{}\"...".format(rel_dir))
+            local_sub_path = os.path.join(local_dir, rel_dir)
+            for sub_sub in os.listdir(local_sub_path):
+                sub_sub_path = os.path.join(local_sub_path, sub_sub)
+                sub_sub_noext, sub_sub_dotext = os.path.splitext(sub_sub)
+                if sub_sub_dotext not in image_dotexts:
+                    print('Warning: skipping image type not in filter set: "{}"'
+                          ''.format(sub_sub_path))
             # --exclude="*" since rsync only uses the first matching filter
             #   and any not matching should be excluded:
 
             # The remote dir: See ./website.rc
             cmd_fmt = (
                 'rsync -tvP --dirs --prune-empty-dirs --include="/{rel_dir}"'
-                ' --include="*.png" --include="*.jpg" --include="*.gif"'
-                ' --exclude="*" {local_dir}/{rel_dir}/ {remote_dir}/{rel_dir}'
             )
-            cmd = cmd_fmt.format(rel_dir=rel_dir, remote_dir=remote_dir,
-                                 local_dir=local_dir)
+            for extension in image_extensions:
+                cmd_fmt += ' --include="*.{}"'.format(extension)
+            cmd_fmt += ' --exclude="*" {local_sub_path} {remote_dir}'
+            # ^ exclude / at end of first path to create it in the dest.
+            cmd = cmd_fmt.format(
+                local_sub_path=local_sub_path,
+                remote_dir=remote_dir,
+                rel_dir=rel_dir,  # required for include (see further up)
+            )
             print("Running: {}".format(cmd))
             cmd_parts = shlex.split(cmd)
             subprocess.run(cmd_parts, stderr=sys.stderr, stdout=sys.stdout,
@@ -235,12 +259,26 @@ def main():
     for html_dir in html_dirs:
         cmd_fmt += ' --include="{}"'.format(html_dir)
     cmd_fmt += ' --include="*.html" --exclude="*" {local_dir}/ {remote_dir}'
-
     cmd = cmd_fmt.format(local_dir=local_dir, remote_dir=remote_dir)
     print("Running: {}".format(cmd))
     cmd_parts = shlex.split(cmd)
     subprocess.run(cmd_parts, stderr=sys.stderr, stdout=sys.stdout,
                    stdin=sys.stdin)
+
+    unfiltered_dirs = config.get("unfiltered_dirs")
+    if unfiltered_dirs is not None:
+        for sync_dir in unfiltered_dirs:
+            print("* processing \"{}\"...".format(sync_dir))
+            cmd_fmt = 'rsync -rtvP --prune-empty-dirs'
+            cmd_fmt += ' {local_dir}/{sync_dir} {remote_dir}'
+            # ^ exclude / at end of first path to create it in the dest.
+            cmd = cmd_fmt.format(local_dir=local_dir, sync_dir=sync_dir,
+                                 remote_dir=remote_dir)
+            print("Running: {}".format(cmd))
+            cmd_parts = shlex.split(cmd)
+            subprocess.run(cmd_parts, stderr=sys.stderr, stdout=sys.stdout,
+                           stdin=sys.stdin)
+
     # -f: see <https://superuser.com/questions/436070/
     #     rsync-copying-directory-contents-non-recursively>
     #     (retain "recursive" [all files] behavior but only process top-level
@@ -255,6 +293,7 @@ def main():
     known_pairs = {}
     known_pairs['css_dir'] = "*.css"
     known_pairs['js_dir'] = "*.js"
+    # known_pairs['fonts_dir'] = ["*.otf", "*.eot", "*.svg", "*.ttf", "*.woff", "*.woff2"]
     asset_dirs_count = 0
     print("Checking for {}...".format(known_pairs.keys()))
     for key, mask in known_pairs.items():
