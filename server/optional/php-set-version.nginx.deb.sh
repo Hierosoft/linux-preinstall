@@ -6,8 +6,15 @@ cat <<END
 Warning: This script is deprecated.
 For the most up-to-date version of this process, use the phpversion
 command provided by installing the linux-preinstall package
-(or in utilities-server if running linux-preinstall in place).
+(or use the phpversion script in utilities-server if running
+linux-preinstall in place without installing).
 
+It is used as follows:
+  phpversion 8.0 1>set_php_8.0.sh
+END
+echo 1
+
+cat <<END
 Press Ctrl+C before the countdown ends to try that instead.
 END
 echo "5..."

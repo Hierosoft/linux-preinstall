@@ -165,6 +165,16 @@ Package php8.1-json is a virtual package provided by:
 You should explicitly select one to install.
 '''
 
+
+def print_echo(msg):
+    '''
+    Print an echo statement such as for emitting shell script.
+    '''
+    print('echo "{}"'.format(
+        msg.replace('"', '\\"').replace("\n", "\\n")
+    ))
+
+
 def main():
     groups = get_php_package_groups()
     for key, group in groups.items():
@@ -238,7 +248,7 @@ def main():
                 # See the json_issue_note global.
                 continue
         if parts[2] == "libxml":
-            print('echo "Warning: You are installing the libxml module. Ensure libxml2 >=2.7.0 is installed as required by Nextcloud if you plan to use Nextcloud."')
+            print_echo("Warning: You are installing the libxml module. Ensure libxml2 >=2.7.0 is installed as required by Nextcloud if you plan to use Nextcloud.")
         new_versioned_modules.append(new_name)
     install_cmd = " ".join(install_parts)
     del name
@@ -270,10 +280,30 @@ def main():
             new_version=new_version,
         ))
 
-    print('echo "Run ./server/nextcloud-checkup.py in linux-preinstall if you are using Nextcloud to ensure required and recommended packages are installed."')
-    print('echo "Nextcloud 23 can\'t handle PHP > 8.0"')
-    print('echo "Nextcloud 24 is the first major Nextcloud release to work with PHP8.1"')
-    echo0("")
+    print_echo("Run ./server/nextcloud-checkup.py in linux-preinstall"
+               " if you are using Nextcloud to ensure required"
+               " and recommended packages are installed.")
+    print_echo("Nextcloud 23 can't handle PHP > 8.0")
+    print_echo("Nextcloud 24 is the first major Nextcloud release"
+               " to work with PHP8.1")
+    print_echo("* Remember to create a php-fpm config for the new version!"
+               " Example:")
+    print_echo("  sudo cp /etc/php/{new_version}/fpm/pool.d/default.conf"
+               " /etc/php/{new_version}/fpm/pool.d/nginx-poikilos.conf"
+               "".format(new_version=new_version))
+    print_echo("- Use the same user used by nginx or your web server:"
+               " may be clp not www-data!")
+    print_echo("* Remember to use the new sock file"
+               " in your website conf files in nginx! Example:")
+    print_echo('  /var/run/php/php{new_version}-fpm-poikilos.sock'
+               ''.format(new_version=new_version))
+    print_echo("  (or whatever was set in the fpm conf above)")
+    print_echo("* Remember to use 755 for directories and 644 for files"
+               " so they will be both accessible and protected.")
+    print_echo("* If sites still don't load, check the site's log"
+               " such as sudo tail /var/log/nginx/poikilos_error.log,"
+               " or if you have not set a specific log in your website's conf,"
+               " then maybe /var/log/nginx/error.log")
     if len(services) < 1:
         echo0("Error: Neither the apache2 nor nginx command was detected."
               " Ensure apache2 or nginx are installed and that you are"
