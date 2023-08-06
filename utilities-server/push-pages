@@ -221,7 +221,7 @@ def main():
 
             # The remote dir: See ./website.rc
             cmd_fmt = (
-                'rsync -tvP --dirs --prune-empty-dirs --include="/{rel_dir}"'
+                'rsync -rtvP --dirs --prune-empty-dirs --include="/{rel_dir}"'
             )
             for extension in image_extensions:
                 cmd_fmt += ' --include="*.{}"'.format(extension)
@@ -302,7 +302,7 @@ def main():
             continue
         asset_dirs_count += 1
         print("* processing \"{rel_dir}\"...".format(rel_dir=rel_dir))
-        cmd_fmt = ('rsync -tvP --dirs --prune-empty-dirs --include="/{rel_dir}"'
+        cmd_fmt = ('rsync -rtvP --dirs --prune-empty-dirs --include="/{rel_dir}"'
                    ' --include="{mask}" --exclude="*" {local_dir}/{rel_dir}/'
                    ' {remote_dir}/{rel_dir}')
         cmd = cmd_fmt.format(rel_dir=rel_dir, local_dir=local_dir,
