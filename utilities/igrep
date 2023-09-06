@@ -1,0 +1,67 @@
+#!/bin/sh
+if [ -z "$1" ]; then
+    echo
+    echo "Error: You must Specify a search term."
+    echo
+fi
+#_grep_param1="$1"
+#_grep_param2="$2"
+#_grep_param3="$3"
+#_grep_param4="$4"
+#_grep_param5="$5"
+#_grep_param6="$6"
+#_grep_param7="$7"
+#_grep_param8="$8"
+_results=/tmp/igrep-output.txt
+echo "" > $_results
+if [ $? -ne 0 ]; then
+    echo "writing $_results failed."
+    exit 1
+fi
+_grep_h="-H"
+_grep_r="-r"
+_grep_n="-n"
+_param_i=1
+for var in "$@"
+do
+    if [ "@$var" = "@-H" ]; then
+        _grep_h=""
+        # There was already an -H param, so don't add one.
+    elif [ "@$var" = "@-r" ]; then
+        _grep_r=""
+        # There was already an -r param, so don't add one.
+    elif [ "@$var" = "@-n" ]; then
+        _grep_n=""
+        # There was already an -n param, so don't add one.
+    fi
+    _param_i=$((_param_i + _param_i))
+    # ^ See <https://stackoverflow.com/questions/6348902/how-can-i-add-numbers-in-a-bash-script>
+done
+# for hexchat_path in ~/.config/hexchat-bad ~/.config/hexchat-bad2 ~/.config/hexchat
+hexchat_path=~/.config/hexchat
+
+# for logname in "ircnow for minetest etc by jrmu via oldcoder" irc.oldcoder.org "minetest.io irc bouncer"
+# ~~Use "find" to get the full path (See <https://stackoverflow.com/questions/246215/how-can-i-generate-a-list-of-files-with-their-absolute-path-in-linux>).~~
+# - find doesn't handle spaces in filenames well
+# Use `for dir in */` since that handles spaces in filenames (See <https://stackoverflow.com/questions/4895484/loop-over-directories-with-whitespace-in-bash>).
+cd "$hexchat_path/logs"
+for logname in */
+do
+    echo
+    echo "* searching $logname..."
+#    cat <<END
+#    grep "$@" -r "$logpath" >> "$_results"
+#END
+    # grep $_grep_param1 $_grep_param2 $_grep_param3 -r "$hexchat_path/logs/$logname" >> "$_results"
+    echo grep "$@" $_grep_r $_grep_h $_grep_n "$logname"
+    #cd /
+    grep "$@" $_grep_r $_grep_h $_grep_n "$hexchat_path/logs/$logname" >> "$_results"
+    # ^ -H (to show the full path) doesn't work unless the full path is specified.
+    # ^ You must quote "$@" or bash will "revert to the broken $* semantics" according to
+    #   tripleee on <https://stackoverflow.com/questions/4824590/propagate-all-arguments-in-a-bash-shell-script>
+    # grep $_grep_param1 $_grep_param2 $_grep_param3 -r "$hexchat_path/logs/$logname"
+done
+cat $_results
+echo "outputinspector \"$_results\""
+outputinspector "$_results"
+rm "$_results"
