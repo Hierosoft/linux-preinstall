@@ -10,7 +10,6 @@ This submodule is also present in
 <https://github.com/Poikilos/marlininfo>
 in preload_tft_sdcard.py (since they are trivial and should make
 the script depend on linuxpreinstall).
-
 '''
 
 import os
@@ -29,6 +28,7 @@ else:
 
 def echo0(*args):
     print(*args, file=sys.stderr)
+
 
 def get_or_pull(repo_url, repo_dir):
     '''

@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 '''
+thingi
+------
 Gather and organize files from a zip file(s)
 
 Usage:
@@ -102,9 +104,9 @@ def unzip_unmess(src_path, dst_path):
                 echo1('removing "{}" from "{}"'.format(dstName[:uI],  dstName))
                 dstName = dstName[uI+1:]
             else:
-                echo1('isdigit({}): no'.format(shlex.join([dstName[:uI],])))
+                echo1('isdigit({}): no'.format(shlex.join([dstName[:uI], ])))
         else:
-            echo1('"_" in {}: no'.format(shlex.join([dstName,])))
+            echo1('"_" in {}: no'.format(shlex.join([dstName, ])))
         dstName = dstName.strip(" _").strip()
         # ^ strip again in case of unusual/unicode whitespace characters
         if dstName != oldName:
@@ -177,11 +179,9 @@ def unzip_unmess(src_path, dst_path):
 
 def main():
     paths = []
-    in_place=True
-    # TODO: Keyword arguments:
-    '''
-    in_place -- Use the location of the file as the destination directory.
-    '''
+    # TODO: Keyword argument: in_place=True
+    # in_place (bool): Use the location of the file as the destination
+    #     directory.
     for argI in range(1, len(sys.argv)):
         arg = sys.argv[argI]
         if arg.startswith("--"):
@@ -205,7 +205,8 @@ def main():
         dst_path = os.getcwd()
         echo1('os.path.realpath(path): "{}"'.format(os.path.realpath(path)))
         echo1('os.getcwd(): "{}"'.format(os.getcwd()))
-        echo1('os.path.join(os.getcwd(), path): "{}"'.format(os.path.join(os.getcwd(), path)))
+        echo1('os.path.join(os.getcwd(), path): "{}"'
+              ''.format(os.path.join(os.getcwd(), path)))
         if os.path.realpath(path) != os.path.join(os.getcwd(), path):
             dst_path = os.path.dirname(path)
         code = unzip_unmess(path, dst_path)

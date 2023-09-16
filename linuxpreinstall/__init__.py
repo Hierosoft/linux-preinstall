@@ -5,8 +5,10 @@ import os
 import sys
 import subprocess
 import platform
-from csv import reader
 import json
+
+from collections import OrderedDict
+from csv import reader
 
 HOME = None
 if platform.system() == "Windows":
@@ -36,6 +38,20 @@ for argI in range(1, len(sys.argv)):
             verbosity = 1
         elif arg == "--debug":
             verbosity = 2
+
+
+def is_enclosed(value, start, end):
+    if len(value) < len(start) + len(end):
+        return False
+    return value.startswith(start) and value.endswith(end)
+
+
+def is_str_like(value):
+    return type(value).__name__ in ("str", "bytes", "bytearray", "unicode")
+
+
+pformat_preferred_quote = None  # < See quote under set_pformat_preferred_quote
+
 
 def pformat(value, quote_if_like_str=True):
     """This is mostly like pformat from pprint except always on one line.
@@ -190,11 +206,10 @@ def set_verbosity(verbosity_level):
             "".format(verbosity_levels, vMsg)
         )
     verbosity = verbosity_level
-
 # endregion hierosoft.morelogging relicensed by author for linux-preinstall
 
-# region from hierosoft and relicensed by author for linux-preinstall
 
+# region from hierosoft and relicensed by author for linux-preinstall
 def run_and_get_lists(cmd_parts, collect_stderr=True):
     '''
     Returns:
@@ -263,6 +278,7 @@ def run_and_get_lists(cmd_parts, collect_stderr=True):
     #         errs.append(line.rstrip("\n\r"))
 
     return outs, errs, sp.returncode
+
 
 def is_exe(path):
     # Jay, & Mar77i. (2017, November 10). Path-Test if executable exists in
@@ -340,15 +356,10 @@ def which(program_name, more_paths=[]):
                   ' but is not executable.'.format(fallback_path))
             result = fallback_path
     return result
-
-
 # endregion from hierosoft and relicensed by author for linux-preinstall
 
 
-
 # region hierosoft.ggrep relicensed by author for linux-preinstall
-
-
 def _wild_increment(haystack_c, needle_c):
     if needle_c == "*":
         return 0
@@ -445,21 +456,26 @@ def is_like(haystack, needle, allow_blank=False, quiet=False,
             haystack_start=None, needle_start=None, indent=2):
     '''Compare to needle using wildcard notation not regex.
 
-    Sequential arguments:
-    haystack -- a string in which to find the needle.
-    needle -- It is a filename pattern such as "*.png" not regex, so the
-        only wildcards are '*' and '?'.
+    Args:
+        haystack (str): a string in which to find the needle.
+        needle (str): It is a filename pattern such as "*.png" not
+            regex, so the only wildcards are '*' and '?'.
+        allow_blank (Optional[bool]): Instead of raising an exception on
+            a blank needle, return False and show a warning (unless
+            quiet).
+        quiet (Optional[bool]): Do not report errors to stderr.
+        haystack_start (Optional[bool]): Start at this character index
+            in haystack.
+        needle_start (Optional[bool]): Start at this character index in
+            needle.
+        indent (Optional[int]): Set the visual indent level for debug
+            output, expressed as a number of spaces. The default is 2
+            since some higher level debugging will normally be taking
+            place and calling this method.
 
-    Keyword arguments:
-    allow_blank -- Instead of raising an exception on a blank needle,
-        return False and show a warning (unless quiet).
-    quiet -- Do not report errors to stderr.
-    haystack_start -- Start at this character index in haystack.
-    needle_start -- Start at this character index in needle.
-    indent -- Set the visual indent level for debug output, expressed as
-        a number of spaces. The default is 2 since some higher level
-        debugging will normally be taking place and calling this
-        method.
+    Returns:
+        bool: If needle in literal text or wildcard syntax matches
+            haystack.
     '''
     tab = " " * indent
     if haystack_start is None:
@@ -583,7 +599,7 @@ def is_like(haystack, needle, allow_blank=False, quiet=False,
             if (nI+1) == len(needle):
                 # The needle ends with *, so the matching is complete.
                 return True
-            match_indices = []
+            # match_indices = []
             next_needle_c = needle[nI+1]
             echo3(tab+"* checking for each possible continuation of"
                   " needle[needle.find('*')+1]"
@@ -639,7 +655,6 @@ def is_like_any(haystack, needles, allow_blank=False, quiet=False):
                    quiet=quiet):
             return True
     return False
-
 # endregion hierosoft.ggrep relicensed by author for linux-preinstall
 
 
@@ -691,9 +706,11 @@ digits = "1234567890"  # or use s.isdigit()
 digit_or_dot = digits + "."
 
 osrelease = None
-data_path = os.path.dirname(__file__)
+MODULE_DIR = os.path.dirname(__file__)
+ASSETS_DIR = os.path.join(MODULE_DIR, "static")
 
 packages_name = "package_names.csv"
+# ^ See uses for how full path is determined.
 alt_names = {}  # Initialized in _init_packagenames, used in add_pkg
 # ^ Nested: use alt_names['Debian']['10'] occurs if there is a space
 #   in the column header, otherwise it is alt_names['Debian']['10']
@@ -708,19 +725,6 @@ upgrade_parts = None
 package_type = None
 install_bin = None
 packageInfos = None
-
-
-
-
-def set_verbosity(v):
-    global verbosity
-    # NOTE: True in [0, 1] is also True!
-    verbosity_levels = [True, False, 0, 1, 2]
-    if v in verbosity_levels:
-        verbosity = v
-    else:
-        raise ValueError("Verbose must be any of {} but the value was"
-                         " {}.".format(verbosity_levels, v))
 
 
 class InstallManager:
@@ -743,17 +747,16 @@ class InstallManager:
         raise NotImplementedError("")
 
     def port_package_id(self, package_id):
-        '''
-        Translate the package id to the one for the desired os_name
-        using "package_names.csv".
+        '''Translate the package id to the one for the desired os_name
+        (uses "package_names.csv").
 
         Append install instructions using files such as
         linux-preinstall/meta/post_install_instructions/
         by_fedora_packagename/geany-plugin-spellcheck.txt
 
-        Returns
-        a tuple of name and type, such as
-        ("org.codeblocks.codeblocks", "flatpak")
+        Returns:
+            tuple[str]: (name, type), such as
+                ("org.codeblocks.codeblocks", "flatpak")
         '''
 
         raise NotImplementedError("port_package_id")
@@ -1026,7 +1029,7 @@ def _init_packagenames():
     global packageInfos
     if packageInfos is None:
         packageInfos = {}
-    listPath = os.path.join(data_path, packages_name)
+    listPath = os.path.join(ASSETS_DIR, packages_name)
     if not os.path.isfile(listPath):
         raise FileNotFoundError(listPath)
     # raise NotImplementedError("_init_packagenames")

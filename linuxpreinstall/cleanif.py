@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 """
+cleanif
+-------
 Delete files and directories in delPath if they are in readRoot
 recursively, but only delete directories that become empty.
 

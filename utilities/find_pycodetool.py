@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-import re
+# import re
 import sys
 import os
 import platform
@@ -9,7 +9,7 @@ REPO_USER = "poikilos"
 REPO_NAME = "pycodetool"
 MODULE_NAME = "pycodetool"  # See also import pycodetool statements
 
-GIT_SERVER= "https://github.com"
+GIT_SERVER = "https://github.com"
 
 CALLER_NAME = os.path.split(sys.argv[0])[1]
 profile = os.environ.get('HOME')
@@ -41,10 +41,10 @@ else:
     # use the one in the python path (or fail)
     # print("There is no {}".format(os.path.join(thisRepo, MODULE_NAME)))
 
-import pycodetool
+import pycodetool  # noqa E402
 
 try:
-    import pycodetool
+    import pycodetool  # noqa E401
 except ImportError as ex:
     echo0("sys.path={}".format(sys.path))
     echo0(str(ex))

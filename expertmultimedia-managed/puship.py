@@ -9,6 +9,7 @@ from __future__ import print_function
 import socket
 import urllib
 import json
+import sys
 # See <https://stackoverflow.com/questions/17822158/
 #      how-to-get-an-utc-date-string-in-python>
 # from datetime import datetime, timezone
@@ -55,12 +56,14 @@ def main():
     # See <https://stackoverflow.com/questions/17822158/
     #      how-to-get-an-utc-date-string-in-python>
     # Works with Python 2 & 3:
-    now_utc = datetime.utcnow()
     params["stated_hostname"] = socket.gethostname()
-    # The server does:
-    # - `params["updated_utc"] = now_utc.strftime(dt_fmt)`
+
+    # now_utc = datetime.utcnow()
+    # - `params["stated_updated_utc"] = now_utc.strftime(dt_fmt)`
     # - wan_ip
     # - wan_host
+    # ^ Instead, the server does the timestamp to ensure it is real
+
     params["stated_lan_ip"] = socket.gethostbyname(
         params["stated_hostname"]  # or socket.gethostname()
     )

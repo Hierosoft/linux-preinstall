@@ -2,7 +2,11 @@
 '''
 zcimages
 --------
+Convert images in projects/images/ to 3 sizes usable by ZenCart and
+place them in images/.
+
 This script is part of <https://github.com/poikilos/linux-preinstall>.
+
 Run this script in an offline Zen Cart directory (or online one where
 the projects directory is hidden from the public) containing both the
 source projects/images and the destination images/ to convert images in
@@ -13,7 +17,6 @@ feature isn't working: The following 3 images will be generated:
 - images/$name.jpg
 - images/medium/$name_MED.jpg
 - images/large/$name_LRG.jpg
-
 '''
 import sys
 import os
@@ -21,9 +24,7 @@ import os
 from PIL import Image
 # Image requires Pillow such as via: python3 -m pip install --user Pillow
 
-from find_pycodetool import (
-    pycodetool
-)
+from find_pycodetool import pycodetool
 
 from pycodetool.parsing import (
     find_slice,

@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 '''
+thumbnails
+----------
 Process thumbnails from XDG desktops.
 
 If this file runs directly, the default action is to delete the

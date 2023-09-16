@@ -3,8 +3,8 @@ from __future__ import print_function
 import sys
 import os
 # import pprint
-import shlex
-import subprocess
+# import shlex
+# import subprocess
 import json
 from linuxpreinstall import (
     echo0,
@@ -76,7 +76,6 @@ echo0()
 echo0("This file will setup the linux-preinstall shell backend.")
 
 
-
 def get_conf_value(path, name):
     opener = "{}=".format(name)
     with open(path, 'r') as ins:
@@ -144,6 +143,7 @@ if not os.path.isdir(myConfDir):
 
 globalsPath = os.path.join(myConfDir, "globals.rc")
 
+
 def appendConfLine(line):
     appendFileLine(globalsPath, line)
 
@@ -176,11 +176,11 @@ def main():
     rcName = "api.rc"
     rcPath = os.path.join(LINUX_PREINSTALL, rcName)
     goodFlagPath = rcPath
-    if not os.path.isfile(rcPath):
+    if not os.path.isfile(goodFlagPath):
         raise RuntimeError(
             "You must run install-shell-backend from the"
             " linux-preinstall repo directory containing api.rc"
-            " (tried in {})".format(rcPath)
+            " (tried in {})".format(goodFlagPath)
         )
 
     indent = ""
@@ -210,7 +210,7 @@ def main():
     ui_path_line = get_line(ui_env_path, "/.local/bin")
     if ui_path_line is None:
         appendFileLine(ui_env_path,
-                      'export PATH="$PATH:$HOME/.local/bin"')
+                       'export PATH="$PATH:$HOME/.local/bin"')
         print("* added $HOME/.local/bin to PATH in {}"
               "".format(ui_env_path))
     else:
@@ -237,7 +237,7 @@ def main():
                           " {}."
                           "".format(sh_env_path))
     echo2(indent+"* reading {}:".format(json.dumps(sh_env_path)))
-    for line,flag in line_flags.items():
+    for line, flag in line_flags.items():
         got_sh_line = get_line(sh_env_path, flag)
         if got_sh_line is None:
             echo2("  - {} is not in {}".format(flag, sh_env_path))
@@ -277,7 +277,7 @@ def main():
     odd_chm_lines = [old_add_line, old_set_line, odd_add_line]
     for chm_line in chm_lines + odd_chm_lines:
         echo1("  - checking for misplaced: {}".format(chm_line))
-        bad_line =  get_line(sh_env_path, chm_line, indent="    ")
+        bad_line = get_line(sh_env_path, chm_line, indent="    ")
         # ^ check if in sh_env_path instead of correct sh_rc_path
         if bad_line is not None:
             bad_lines.append(bad_line)
@@ -292,7 +292,7 @@ def main():
     edit_path = sh_rc_path
     if len(bad_lines) > 0:
         echo0("Error: lines are in {} but should be in {}."
-             "".format(sh_env_path, sh_rc_path))
+              "".format(sh_env_path, sh_rc_path))
         remove_existing_lines = bad_lines
         edit_path = sh_env_path
     elif len(got_old_lines) > 0:
@@ -331,6 +331,7 @@ def main():
                 print(help_line)
         echo0()
     return 0
+
 
 if __name__ == "__main__":
     sys.exit(main())

@@ -1,10 +1,13 @@
 #!/usr/bin/env python
+"""
+Interact with bash (Bourne Again Shell) idiosyncrasies using Python.
+"""
 from __future__ import print_function
 import sys
-from linuxpreinstall import (
+from linuxpreinstall import (  # noqa F401
     echo0,
-    echo1,
-    echo2,
+    echo1,  # noqa F401
+    echo2,  # noqa F401
 )
 import json
 import shlex
@@ -13,17 +16,15 @@ import subprocess
 
 def get_bash_values(path, only_exported=False,
                     builtins=['PWD', 'SHLVL', '_', '']):
-    '''
-    Process a script using bash then get all values from its
-    environment as a dict.
+    '''Process a script then collect all bash environment variables.
 
-    Keyword arguments:
-    only_exported -- Only get variables that are exported using bash's
-        export statement.
-    builtins -- Remove these builtins from the results.
+    Args:
+        only_exported (Optional[bool]): Only get variables that are
+            exported using bash's export statement.
+        builtins (list[str]): Remove these builtins from the results.
 
     Returns:
-    A dictionary of values as bash interprets them.
+        dict: All bash variables.
     '''
 
     '''

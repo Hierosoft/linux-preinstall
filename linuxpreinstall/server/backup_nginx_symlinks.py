@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 '''
-Running this script (Run as root usually) will create or overwrite a
-file called `/opt/restore-nginx-symlinks.sh` if the file is writable.
-Change the directory by setting the LP_BACKUPS environment variable to
-something other than /opt.
+backup_nginx_symlinks
+---------------------
+Create or overwrite a file called `/opt/restore-nginx-symlinks.sh` if
+the file is writable. Change the directory by setting the LP_BACKUPS
+environment variable to something other than /opt.
+
+Usually you must run this as root.
 
 Running the generated `sh` file will remove all symlinks (not files) in
 /etc/nginx/sites-enabled and re-add symlinks that were there on the

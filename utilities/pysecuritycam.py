@@ -7,8 +7,10 @@ from getpass import getpass
 #   access-ip-camera-in-python-opencv>
 
 import io
-import pygame as pg
 import requests
+import sys
+import pygame as pg
+
 from requests.auth import HTTPBasicAuth
 
 if sys.version_info.major >= 3:
@@ -72,7 +74,10 @@ def show_error(msg, color=red):
         text = font.render(line, True, color, black)
         if textRect is None:
             textRect = text.get_rect()
-            textRect.center = (resolution_pair[0] // 2, resolution_pair[1] // 2)
+            textRect.center = (
+                resolution_pair[0] // 2,
+                resolution_pair[1] // 2
+            )
         else:
             textRect = textRect.move((0, text.get_rect().height))
         screen.blit(text, textRect)

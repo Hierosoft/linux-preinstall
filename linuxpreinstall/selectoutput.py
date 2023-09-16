@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 '''
+selectoutput
+------------
 Set the preferred audio device as specified in the 1st parameter as a
 search term.
 

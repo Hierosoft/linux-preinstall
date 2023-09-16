@@ -1,2 +1,3 @@
 https://github.com/poikilos/pycodetool/archive/refs/heads/master.zip
 Pillow
+python-magic

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 '''
--------------------------------- USAGE --------------------------------
-
+whichicon
+---------
 Given a binary name or path, this script outputs the first matching
 desktop file to standard output (all other messages including successive
 matches go to stderr).
@@ -12,10 +12,13 @@ desktop file.
 Install:
 pip install https://github.com/poikilos/linux-preinstall/archive/refs/heads/master.zip
 
+Usage:
+whichicon <executable path substring or program name substring>
+
 Examples:
 whichicon openscad
 # The output could be something like: /usr/share/applications/openscad.desktop
-# To get a variable:
+# To use this command in your scripts and obtain the result:
 OPENSCAD_PATH="`whichicon openscad`"
 '''
 from __future__ import print_function

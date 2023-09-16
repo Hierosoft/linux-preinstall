@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 import re
 import sys
-import platform
-import os
+# import platform
+# import os
 
-from find_linuxpreinstall import linuxpreinstall
+from find_linuxpreinstall import linuxpreinstall  # noqa E401
 
 from linuxpreinstall.findmime import main
 

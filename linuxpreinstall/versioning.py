@@ -1,15 +1,15 @@
 #!/usr/bin/env python
 from __future__ import print_function
-import os
+# import os
 import sys
 import select
 import json
 
-from linuxpreinstall import (
-    write0,
+from linuxpreinstall import (  # noqa F401
+    write0,  # noqa F401
     write1,
     echo0,  # formerly prerr
-    echo1,
+    echo1,  # noqa F401
     get_verbosity,
 )
 

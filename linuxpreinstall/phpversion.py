@@ -8,8 +8,27 @@ Script(s) based on this module may eventually be able to replace:
 '''
 from __future__ import print_function
 import sys
-import os
-# See https://stackoverflow.com/a/29444060
+# import os
+
+from linuxpreinstall import (  # noqa F401
+    echo0,
+    echo1,  # noqa F401
+    echo2,  # noqa F401
+    get_installed,
+    split_package_parts,
+    is_decimal,
+    install_parts,
+    remove_parts,
+    which,
+)
+
+# See https://stackoverflow.com/a/29444060:
+# import apt
+# cache = apt.Cache()
+# for mypkg in cache:
+#     if cache[mypkg.name].is_installed:
+#         print mypkg.name
+
 apt_help = '''
 
 The apt module could not be imported. First try:
@@ -30,39 +49,27 @@ except ImportError:
 '''
 # ^ use get_installed (cross-distro) from linuxpreinstall instead.
 
-from linuxpreinstall import(
-    echo0,
-    echo1,
-    echo2,
-    get_installed,
-    split_package_parts,
-    is_decimal,
-    install_parts,
-    remove_parts,
-    which,
-)
 
 def get_php_package_groups():
-    '''
-    Split packages including the term "php" into named sets. For
-    info on dependency managers supported, see get_installed in
+    '''Split packages including the term "php" into named sets.
+    For info on dependency managers supported, see get_installed in
     linuxpreinstall.
 
     Returns:
-    A dictionary of lists where each list is a type of php package:
-    - 'unversioned_modules' such as php-cgi
-    - 'versioned_modules' such as php7.4-cgi
-    - 'versions' such as php7.4
-    - 'other_versioned' such as libapache2-mod-php7.4
-    - 'other' such as 'php'
+        A dictionary of lists where each list is a type of php package:
+        - 'unversioned_modules' such as php-cgi
+        - 'versioned_modules' such as php7.4-cgi
+        - 'versions' such as php7.4
+        - 'other_versioned' such as libapache2-mod-php7.4
+        - 'other' such as 'php'
     '''
     packaged_mod_names = []
     # packaged_names = []
     # cache = apt.Cache()
     # for mypkg in cache:
-        # name = mypkg.name
-        # if cache[name].is_installed:
-        # packaged_names.append(name)
+    # name = mypkg.name
+    # if cache[name].is_installed:
+    # packaged_names.append(name)
     packaged_names = get_installed()
     # echo0("names:")
     for raw_name in packaged_names:
@@ -100,6 +107,7 @@ def get_php_package_groups():
         group = sorted(group)
 
     return groups
+
 
 # See <https://tecadmin.net/switch-between-multiple-php-version-on-debian/>
 apache_pre_commands = '''
@@ -186,7 +194,7 @@ def main():
     # parts = split_package_parts(arg)
     version_parts = []
     # if len(parts) == 2:
-    version_parts = arg.split(".") # parts[1].split('.')
+    version_parts = arg.split(".")  # parts[1].split('.')
     if len(version_parts) == 2:
         if len(version_parts[1].strip()) == 0:
             version_parts = version_parts[:1]
@@ -243,7 +251,10 @@ def main():
                 # See the json_issue_note global.
                 continue
         if parts[2] == "libxml":
-            print_echo("Warning: You are installing the libxml module. Ensure libxml2 >=2.7.0 is installed as required by Nextcloud if you plan to use Nextcloud.")
+            print_echo("Warning: You are installing the libxml module."
+                       " Ensure libxml2 >=2.7.0 is installed"
+                       " as required by Nextcloud"
+                       " if you plan to use Nextcloud.")
         new_versioned_modules.append(new_name)
     install_cmd = " ".join(install_parts)
     del name

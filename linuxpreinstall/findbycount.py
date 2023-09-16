@@ -55,20 +55,21 @@ def usage():
 
 
 def findByCount(options):
-    '''
+    '''Show directories that have a certain file count.
+
     Recursively count files in directories and display any full
     directory path that contains a file count that is in the counts
     list.
 
-    Sequential arguments:
-    options -- Can have the following keys:
-        parent: The directory path
-        counts (list): The counts to find
-        dotExts (list, optional): Limit the count to these file
-            extensions (case-insensitive).
-        ignores (list, optional): Do not recurse into a directory that
-            is in this list of directories. Each must be either a name
-            only or a full path (both are case-sensitive).
+    Args:
+        options (dict): Can have the following keys:
+            - parent: The directory path
+            - counts (list): The counts to find
+            - dotExts (list, optional): Limit the count to these file
+              extensions (case-insensitive).
+            - ignores (list, optional): Do not recurse into a directory
+              that is in this list of directories. Each must be either a
+              name only or a full path (both are case-sensitive).
     '''
     # ^ Any more added must also be passed along for recursion!
     parent = options.get('parent')
