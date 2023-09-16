@@ -39,11 +39,6 @@ from linuxpreinstall import(
     is_decimal,
     install_parts,
     remove_parts,
-)
-
-from linuxpreinstall.find_hierosoft import hierosoft
-
-from hierosoft import (
     which,
 )
 

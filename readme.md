@@ -278,15 +278,6 @@ sudo ln -s /home/user/git/linux-preinstall/utilities/sortversion /usr/local/bin/
 # # ^ before the "export PATH" line, otherwise add that afterward.
 ```
 
-### nopackage
-The old install_any.py script's features have been moved to
-<https://github.com/poikilos/nopackage> which provides the new command
-`nopackage`:
-
-You can use `nopackage` to install almost anything, such as a single
-file (AppImage or other), a zip file, or to install a deb package on
-any distro in your profile, all without superuser priveleges!
-
 ### System commands
 The system commands become available after installing the repository
 via pip (See the "[Install](#install)" section).
@@ -318,13 +309,27 @@ via pip (See the "[Install](#install)" section).
 
 #### pycodetool commands
 The following scripts utilize <https://github.com/poikilos/pycodetool>:
-- `ggrep`: Get a geany command to go to the line in the file from grep
-  (searching within file(s)). Recursively search directories by default.
 - `changes`: Look for repos in the current directory and show what
   changes are not yet committed (including untracked).
 
 #### System commands for servers
 - [backup-nginx-symlinks](linuxpreinstall/server/backup_nginx_symlinks.py)
+
+
+### Commands moved to other repos
+#### nopackage
+The old install_any.py script's features have been moved to
+<https://github.com/poikilos/nopackage> which provides the new command
+`nopackage`:
+
+You can use `nopackage` to install almost anything, such as a single
+file (AppImage or other), a zip file, or to install a deb package on
+any distro in your profile, all without superuser priveleges!
+
+#### ggrep
+- `ggrep`: Get a geany command to go to the line in the file from grep
+  (searching within file(s)). Recursively search directories by default.
+  - Moved to [hierosoft](https://github.com/Hierosoft/hierosoft)
 
 
 ## More Information

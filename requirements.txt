@@ -1,3 +1,2 @@
 https://github.com/poikilos/pycodetool/archive/refs/heads/master.zip
-https://github.com/Hierosoft/hierosoft/archive/refs/heads/master.zip
 Pillow

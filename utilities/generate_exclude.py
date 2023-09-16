@@ -34,9 +34,13 @@ import sys
 import os
 import platform
 
-from find_hierosoft import hierosoft
+SCRIPTS_DIR = os.path.dirname(os.path.realpath(__file__))
+REPO_DIR = os.path.dirname(SCRIPTS_DIR)
 
-from hierosoft import (
+if os.path.isfile(os.path.join(REPO_DIR, "linuxpreinstall", "__init__.py")):
+    sys.path.insert(0, REPO_DIR)
+
+from linuxpreinstall import (
     USER_DIR_NAME,
     echo0,
     echo1,
@@ -63,6 +67,7 @@ if not os.path.isfile(src_txt):
             src_txt = try_txt
             HOME = try_home
             PROFILES, USER_DIR_NAME = os.path.split(HOME)
+            # ^ Override ones from the linuxpreinstall module
             echo0("* detected {}".format(try_txt))
             break
 echo0('PROFILES="{}"'.format(PROFILES))

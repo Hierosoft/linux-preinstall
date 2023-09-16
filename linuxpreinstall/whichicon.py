@@ -53,11 +53,6 @@ from linuxpreinstall import (
     echo0,  # formerly prerr as error
     write0,  # formerly errorf
     echo1,  # formerly debug
-)
-
-from linuxpreinstall.find_hierosoft import hierosoft
-
-from hierosoft.ggrep import (
     is_like_any,
     any_contains,
 )
