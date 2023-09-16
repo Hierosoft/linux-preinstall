@@ -1,0 +1,64 @@
+#!/bin/bash
+path="$1"
+name="`basename "$path"`"
+mkdir -p /tmp/stl-as-thumb
+path_ts=`stat -c '%Y' "${path}"`
+redo=false
+MY_TMP=/tmp/stl-as-thumb
+mkdir -p "$MY_TMP"
+dest="$MY_TMP/$name.png"
+
+echo "NOTE: This script uses the thumbnail generator stl-thumb as an STL viewer. To view files live (where you can rotate etc.), consider installing F3D and opening with the f3d command."
+
+show_message(){
+    msg="$1"
+    >&2 echo "[stl-as-thumb] Error: $1"
+    if [ -f "`command -v xmessage`" ]; then
+        xmessage "$1"
+    elif [ -f "`command -v notify-send`" ]; then
+        notify-send "$1"
+    else
+        >&2 echo "[stl-as-thumb] An error occurred during the error above: There is no xmessage nor notify-send."
+    fi
+}
+
+if [ ! -f "`command -v stl-thumb`" ]; then
+    show_message "stl-thumb is not installed."
+    exit 1
+fi
+
+if [ -f "$dest" ]; then
+    dest_ts=`stat -c '%Y' "${path}"`
+    if [ $path_ts -ne $dest_ts ]; then
+        redo=true
+    fi
+else
+    redo=true
+fi
+if [ "x$redo" = "xtrue" ]; then
+    if [ -f "$MY_TMP/out.txt" ]; then rm "$MY_TMP/out.txt"; fi;
+    if [ -f "$MY_TMP/err.txt" ]; then rm "$MY_TMP/err.txt"; fi;
+    stl-thumb "$path" "$dest" --size 256 1>$MY_TMP/out.txt 2>$MY_TMP/err.txt
+    code=$?
+    if [ $code -ne 0 ]; then
+        err="`cat $MY_TMP/err.txt`"
+        rm $MY_TMP/out.txt
+        rm $MY_TMP/err.txt
+        show_message "stl-thumb \"$path\" \"$dest\" error $code. $result"
+        exit $code
+    fi
+    if [ ! -f "$dest" ]; then
+        show_message "[stl-as-thumb] Error: stl-thumb returned success but didn't produce \"$dest\"."
+        exit 1
+    fi
+fi
+if [ -f "$MY_TMP/out.txt" ]; then rm "$MY_TMP/out.txt"; fi;
+if [ -f "$MY_TMP/err.txt" ]; then rm "$MY_TMP/err.txt"; fi;
+xdg-open "$dest"
+code=$?
+if [ $code -ne 0 ]; then
+    err="`cat $MY_TMP/err.txt`"
+    if [ -f "$MY_TMP/out.txt" ]; then rm "$MY_TMP/out.txt"; fi;
+    if [ -f "$MY_TMP/err.txt" ]; then rm "$MY_TMP/err.txt"; fi;
+    show_message "xdg-open \"$dest\" error $code. $result"
+fi
