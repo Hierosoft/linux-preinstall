@@ -14,7 +14,7 @@ import sys
 #      how-to-get-an-utc-date-string-in-python>
 # from datetime import datetime, timezone
 # datetime.now(timezone.utc).strftime("%Y%m%d")
-from datetime import datetime
+# from datetime import datetime
 
 if sys.version_info.major >= 3:
     import urllib.request
@@ -25,16 +25,16 @@ else:
     request = urllib
 
 if sys.version_info.major >= 3:
-    from urllib.parse import urlparse
+    # from urllib.parse import urlparse
     from urllib.parse import urlencode
-    from urllib.parse import quote
-    from urllib.parse import unquote
+    # from urllib.parse import quote
+    # from urllib.parse import unquote
 else:
     # Python 2
-    from urlparse import urlparse
+    # from urlparse import urlparse
     from urllib import urlencode
-    from urllib import quote
-    from urllib import unquote
+    # from urllib import quote
+    # from urllib import unquote
 
 
 ping_url = "http://expertmultimedia.com/ping.php"

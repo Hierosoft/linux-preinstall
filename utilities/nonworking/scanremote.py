@@ -1,14 +1,40 @@
 #!/usr/bin/env python
+"""
+scanremote
+----------
+Scan a document on a remote machine.
+Run this script on the CLIENT! It will use scp.
 
-# Run this file on the CLIENT! It will use scp.
+USAGE:
+  {me} <filename> [<remote_host>] [--<option>]
+where [<remote_host>] is the server that has the scanner.
+(You don't have to specify [] options, but remote_host is
+only optional if you specified it before--or if it
+is in {settings_path} for some other reason.
 
+OPTIONS:
+--<option>      changes ANY option in {settings_path}
+                Therefore, remote_host is the same as having
+                filename followed by another unnamed parameter.
+--scanner_name  specifies the remote scanner name
+                (otherwise, the first scanner available from
+                "ssh <remote_host> 'scanimage -L'" will be used.
+--rotate        specifies rotation: 90, 180, or 270")
+                (only works if remote CLIENT has jpegtran
+                such as from the libjpeg-turbo-utils package
+
+Each option must be followed by a space then a value.")
+"""
 import os
 import sys
 import subprocess
 import platform
 import json
+import shutil
 
-print("============================= SCAN REMOTE =============================")
+print(
+    "============================= SCAN REMOTE ============================="
+)
 
 
 if platform.system() == "Windows":
@@ -25,27 +51,13 @@ settings_path = os.path.join(config_path, "settings.json")
 
 
 def usage():
-    print("")
-    print("USAGE:")
-    print("  {} <filename> [<remote_host>] [--<option>]".format(sys.argv[0]))
-    print("where [<remote_host>] is the server that has the scanner.")
-    print("(You don't have to specify [] options, but remote_host is\n"
-          " only optional if you specified it before--or if it\n"
-          " is in {} for some other reason.)".format(settings_path))
-    print("")
-    print("--<option>      changes ANY option in {}".format(settings_path))
-    print("                Therefore, remote_host is the same as having\n"
-          "                filename followed by another unnamed parameter.")
-    print("--scanner_name  specifies the remote scanner name\n"
-          "                (otherwise, the first scanner available from \n"
-          "                \"ssh <remote_host> 'scanimage -L'\" will be used.")
-    print("--rotate        specifies rotation: 90, 180, or 270")
-    print("                (only works if remote CLIENT has jpegtran \n"
-          "                such as from the libjpeg-turbo-utils package)")
-    print("")
-    print("Each option must be followed by a space then a value.")
-    print("")
-    print("")
+    print(
+        __doc__.format(
+            me=sys.argv[0],
+            settings_path=settings_path,
+        ),
+        file=sys.stderr
+    )
 
 
 if len(sys.argv) < 2:
@@ -79,11 +91,9 @@ if os.path.isfile(settings_path):
 
 for n, v in config.items():
     print("* using {} for *default* {}".format(n, v))
-'''
-if len(sys.argv) >= 3:
-    if sys.argv[2][0:2] != "--":
-        config["remote_host"] = sys.argv[2]
-'''
+# if len(sys.argv) >= 3:
+#     if sys.argv[2][0:2] != "--":
+#         config["remote_host"] = sys.argv[2]
 o_name = None
 unnamed_count = 0
 for i in range(1, len(sys.argv)):
@@ -163,7 +173,7 @@ try:
         ['ssh', "{}@{}".format(config["remote_user"],
          config["remote_host"]), "'{}'".format(remote_rm)]
     )
-    rm_output = output_bytes.decode('utf-8').strip()
+    rm_output = rm_output_bytes.decode('utf-8').strip()
     # print(rm_output)
     print("* removed temp file (unexpected)")
 except subprocess.CalledProcessError as e:
@@ -236,7 +246,8 @@ if rotate != 0:
         rotate_output = subprocess.check_output(rotate_cmd.split(" "))
         # such as: jpegtran -rotate 270 FlowChart-1a-handmade.jpg \
         #            -outfile MyJpegRotated.jpg
-        # or: jpegtran -rotate 270 FlowChart-1a-handmade.jpg > MyJpegRotated.jpg
+        # or: jpegtran -rotate 270 FlowChart-1a-handmade.jpg \
+        #   > MyJpegRotated.jpg
         print(rotate_output.decode('utf-8'))
         if os.path.isfile(out_path):
             os.remove(scanned_path)
