@@ -211,10 +211,16 @@ def set_verbosity(verbosity_level):
 
 # region from hierosoft and relicensed by author for linux-preinstall
 def run_and_get_lists(cmd_parts, collect_stderr=True):
-    '''
+    '''Run a command and check the output.
+
+    Args:
+        collect_stderr (bool): Collect stderr output for the err return
+            list Defaults to True.
+
     Returns:
-    a tuple of (out, err, returncode) where out and err are each a list
-    of 0 or more lines.
+        tuple[list[str], list[str], int]: (out, err, returncode) where
+            out and err are each a list of 0 or more lines, and return
+            code is the code returned by the process (0 if ok).
     '''
     # See <https://stackabuse.com/executing-shell-commands-with-python>:
     # called = subprocess.run(list_installed_parts,
@@ -281,6 +287,11 @@ def run_and_get_lists(cmd_parts, collect_stderr=True):
 
 
 def is_exe(path):
+    """Check if the path exists and is executable.
+
+    Returns:
+        bool: Is an executable file.
+    """
     # Jay, & Mar77i. (2017, November 10). Path-Test if executable exists in
     #     Python? [Answer]. Stack Overflow.
     #     https://stackoverflow.com/questions/377017/
@@ -408,12 +419,11 @@ def contains(haystack, needle, allow_blank=False, quiet=False):
 
 def any_contains(haystacks, needle, allow_blank=False, quiet=False,
                  case_sensitive=True):
-    '''
-    Check whether any haystack contains the needle.
+    '''Check whether any haystack contains the needle.
     For documentation of keyword arguments, see the "contains" function.
 
     Returns:
-    bool -- The needle is in any haystack.
+        bool: The needle is in any haystack.
     '''
     if not case_sensitive:
         needle = needle.lower()
@@ -431,12 +441,12 @@ def any_contains(haystacks, needle, allow_blank=False, quiet=False,
 
 def contains_any(haystack, needles, allow_blank=False, quiet=False,
                  case_sensitive=True):
-    '''
-    Check whether the haystack contains any of the needles.
+    '''Check whether the haystack contains any of the needles.
+
     For documentation of keyword arguments, see the "contains" function.
 
     Returns:
-    bool -- Any needle is in the haystack.
+        bool: Any needle is in the haystack.
     '''
     if not case_sensitive:
         needle = haystack.lower()

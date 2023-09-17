@@ -15,7 +15,7 @@ Installing the linuxpreinstall python module also adds some useful commands (See
   reasonable.
   - [ ] A major feature that would have to be ported is selecting the
     correct package name depending on the distro (See the bash-based [api.rc](api.rc) and the python-based
-    [linuxpreinstall/package_names.csv](linuxpreinstall/package_names.csv) (WIP)).
+    [linuxpreinstall/static/package_names.csv](linuxpreinstall/static/package_names.csv) (WIP)).
 
 ## Design Choices
 - Flatpaks are installed as root. In edge cases, that fixes small issues related to permissions and accessibility of binary paths, shortcuts, etc.
