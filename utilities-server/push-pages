@@ -322,7 +322,10 @@ def main():
         echo0()
 
     message = config.get('message')
-    echo0(message)
+    if message:
+        echo0(message)
+    else:
+        echo0("Done (use the --message option to customize this message)")
 
     return 0
 
