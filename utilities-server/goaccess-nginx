@@ -108,7 +108,6 @@ fi
 UNCOMMENTED_LINES=`grep log_format /etc/nginx/nginx.conf | grep -v "\s*#.*log_format"`
 # if grep -q log_format /etc/nginx/nginx.conf
 if [ ! -z "$UNCOMMENTED_LINES" ]; then
-then
     echo "* log_format detected (assuming OldCoder format):"
     cat <<END
 $UNCOMMENTED_LINES
