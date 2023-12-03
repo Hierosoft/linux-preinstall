@@ -148,7 +148,12 @@ fi
 
 
 source /etc/os-release
-geo_option="--geoip-database=/opt/goaccess/GeoLiteCity.dat"
+
+geo_option="--geoip-database=/opt/goaccess/GeoLite2-City.mmdb"
+# ^ See /opt/goaccess-1.8.1/config/goaccess.conf for details on how to obtain
+#   (copy to $GA_CONF, then change geoip-database option to that path,
+#   BUT it is overridden by the --geoip-database option if enabled here!)
+
 dst_options="--anonymize-ip --anonymize-level=3"
 GA_VERSION="`goaccess --version | grep "GoAccess -" | cut -d" " -f3`"
 # ^ has a dot at the end, unfortunately, so:
