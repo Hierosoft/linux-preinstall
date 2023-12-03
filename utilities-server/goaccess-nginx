@@ -1,9 +1,4 @@
 #!/bin/bash
-if [ "x$SITE" = "x" ]; then
-    if [ -f "/var/log/nginx/iosite_access.log" ]; then
-        SITE=iosite
-    fi
-fi
 GA_DATA=/opt/goaccess
 if [ -f "$GA_DATA/out.txt" ]; then rm -f "$GA_DATA/out.txt"; fi
 if [ -f "$GA_DATA/err.txt" ]; then rm -f "$GA_DATA/err.txt"; fi
@@ -50,6 +45,13 @@ else
 fi
 # ^ changed after processing CLI arguments further down.
 
+if [ "x$SITE" = "x" ]; then
+    if [ -f "/var/log/nginx/iosite_access.log" ]; then
+        SITE=iosite
+    fi
+fi
+
+
 if [ "x$WRITE_HTML" = "x" ]; then
     WRITE_HTML=false
 fi
@@ -63,19 +65,32 @@ goaccess-nginx.sh
 Read uncompressed (along with compressed if present) NGINX logs into goaccess to analyze traffic from the CLI (or output html).
 
 Options:
---site <site>    Show a specific site (default is $SITE or the SITE environment variable). NGINX must be configured to save an access log of the site at a location such as $src (and if using the --html option, store the private html file as $dst; override the destination using the PUBLISH_DIR environment variable, otherwise it will be /var/www/ then the value of SITE).
+--site <site>    Show a specific site (default is $SITE or the SITE
+                 environment variable). NGINX must be configured to
+                 save an access log of the site at a location such as
+                 $src (and if using the --html option, store the
+                 private html file as $dst; override the destination
+                 using the PUBLISH_DIR environment variable, otherwise
+                 it will be /var/www/ then the value of SITE).
+
 --html           Write an html file (for location, see the --site help entry above).
+
 --help           Show this screen and exit.
 
 END
 }
 
 prev_var=""
+SITE_LOG_PREFIX="$SITE"
 
 for var in "$@"
 do
     if [ "x$prev_var" = "xsite" ]; then
         SITE="$var"
+        SITE_LOG_PREFIX=${SITE%%.*}
+        if [ -f "/var/log/nginx/${SITE}_access.log" ]; then
+            SITE_LOG_PREFIX="$SITE"
+        fi
         prev_var=""
     elif [ "x$prev_var" = "xlog-format" ]; then
         LOG_FORMAT="$var"
@@ -123,7 +138,7 @@ if [ "x$SITE" = "x" ]; then
         PUBLISH_DIR=/var/www/html
     fi
 else
-    src="/var/log/nginx/${SITE}_access.log"
+    src="/var/log/nginx/${SITE_LOG_PREFIX}_access.log"
     if [ "x$PUBLISH_DIR" = "x" ]; then
         PUBLISH_DIR=/var/www/$SITE
     fi
