@@ -5,7 +5,7 @@
 ## ModuleNotFoundError
 If a module is installed via `pip`, Spyder may not recognize it. I thought the problem was that I installed the missing module using the "--user" option, but that was a misdiagnosis. The best way to handle the issue is to use the same python executable that was used to install the package. A secondary way (D below) is to add the directory that contains your development module that isn't installed. The reason Spyder forbids adding a directory named site-packages is to prevent version mismatches (According to a Spyder maintainer's answer on <https://stackoverflow.com/questions/63385123/issue-adding-site-packages-directory-to-pythonpath-in-spyder>).
 
-You will have to do one of the following:
+You will have to do one of the following (Note that `python3 -m venv` can be used in Python 3 rather than requiring the `virtualenv` package per se):
 
 A. Create a virtualenv for every application (preferable since that is a reproducible set of requirements for your user).
 
