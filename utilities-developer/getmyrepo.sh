@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #region settings
-MY_GITHUB_USERNAME="poikilos"
+MY_GITHUB_USERNAME="Poikilos"
 # ^ Changed further down if not present there.
 FORCE_GIT_DIR=~/git  # if this is blank, the repo will clone to the current directory.
 #endregion settings
