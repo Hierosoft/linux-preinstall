@@ -145,14 +145,17 @@ if [ ! -e /run/php/php{new_version}-fpm.sock ]; then echo "Error: missing /run/p
 #     php7.4-redis
 
 sury_commands = '''
-# NOTE: As of 2022-10-30, Debian buster only goes up to PHP 7.3, so use sury.
-# Get new key and run dist-upgrade as per <https://i-mscp.net/thread/20595-packages-sury-org-new-signing-key/>:
-apt-key del 95BD4743
-echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" | sudo tee /etc/apt/sources.list.d/php.list
-wget -O /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg
+For versions not available on your distro, try the following for Ubuntu:
+sudo add-apt-repository ppa:ondrej/php
+# or for Debian:
+# - NOTE: As of 2022-10-30, Debian buster only goes up to PHP 7.3, so use sury.
+# - Get new key and run dist-upgrade as per <https://i-mscp.net/thread/20595-packages-sury-org-new-signing-key/>:
+# apt-key del 95BD4743
+# echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" | sudo tee /etc/apt/sources.list.d/php.list
+# wget -O /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg
+
 apt update
 apt-get dist-upgrade -y
-
 '''
 
 # apt on Debian buster says (on trying to install php8.1-json--but
@@ -233,7 +236,7 @@ def main():
         if parts[1] != new_version:
             # Only uninstall packages not for new_version.
             remove_modules.append(name)
-    del name
+    # del name
     if len(remove_modules) > 0:
         print(" ".join(remove_parts)+" "+" ".join(remove_modules))
     else:
@@ -257,7 +260,7 @@ def main():
                        " if you plan to use Nextcloud.")
         new_versioned_modules.append(new_name)
     install_cmd = " ".join(install_parts)
-    del name
+    # del name
 
     if install_cmd.startswith("apt"):
         print(sury_commands)
@@ -265,13 +268,14 @@ def main():
     print(install_cmd+" php"+new_version)
     print(install_cmd+" "+" ".join(new_versioned_modules))
     print(install_cmd+" "+" ".join(groups['unversioned_modules']))
+    print("# ^ HOWEVER: If your distro has versioned packages for these such as 7.4 on Ubuntu 22.04 via sury, install the versioned ones (with php version number in package name) instead!")
     remove_versions = []
     for name in groups['versions']:
         parts = split_package_parts(name)
         if parts[1] != new_version:
             # Only remove php versions other than new_version.
             remove_versions.append(name)
-    del name
+    # del name
     if "apache2" in services:
         print(apache_pre_commands.format(
             old_version_names=" ".join(remove_versions),
