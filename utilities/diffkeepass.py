@@ -10,7 +10,8 @@ diffkeypass.py <file2.kdbx>
 #   (one that is at least 4 characters [plus ".kdbx"] is preferred)
 
 Options:
---quiet            Do not show warnings.
+--quiet                    Do not show warnings.
+--min_date YYYY-MM-DD      Only show files modified *on or after* this date.
 
 The program will use meld if present in your PATH.
 """
@@ -23,6 +24,7 @@ import sys
 import tempfile
 
 from collections import OrderedDict
+from datetime import datetime
 from getpass import getpass
 from pykeepass import PyKeePass
 
@@ -53,9 +55,15 @@ def echo0(*args, **kwargs):
 
 def compare_keepass(file1, file2, pwd1=None, pwd2=None, options=None,
                     tmp1=None, tmp2=None):
+    prefix = "[compare_keepass] "
     if options is None:
         options = {}
     quiet = options.get('quiet')
+    min_date_s = options.get('min_date')
+    min_date = None
+    if min_date_s:
+        min_date = datetime.strptime(min_date_s, "%Y-%m-%d")
+    echo0("min_date: {}".format(min_date))
     def pushm(*args):
         pass
     if not quiet:
@@ -89,6 +97,31 @@ def compare_keepass(file1, file2, pwd1=None, pwd2=None, options=None,
         return 1
 
     for entry2 in kp2.entries:
+        # print("dir(entry2)={}".format(dir(entry2))):
+        # 'add_attachment', 'atime', 'attachments', 'autotype_enabled',
+        # 'autotype_sequence', 'ctime', 'custom_properties', 'delete',
+        # 'delete_attachment', 'delete_custom_property',
+        # 'delete_history', 'deref', 'dump_xml', 'expired', 'expires',
+        # 'expiry_time', 'get_custom_property', 'group', 'history',
+        # 'icon', 'is_a_history_entry', 'is_custom_property_protected',
+        # 'mtime', 'notes', 'otp', 'parentgroup', 'password', 'path',
+        # 'ref', 'save_history', 'set_custom_property', 'tags', 'title',
+        # 'touch', 'url', 'username', 'uuid'
+
+        if min_date:
+            # INFO: Documentation of datetime says the following is offset-aware:
+            #   d.tzinfo is not None and d.tzinfo.utcoffset(d) is not None
+            #   and following is naive:
+            #   d.tzinfo is None or d.tzinfo.utcoffset(d) is None
+            if min_date.tzinfo is None or min_date.tzinfo.utcoffset(min_date) is None:
+                d = entry2.mtime
+                if d.tzinfo is not None and d.tzinfo.utcoffset(d) is not None:
+                    # assume the user-specified date was the same time zone
+                    #   as the keepass file:
+                    min_date = min_date.replace(tzinfo=d.tzinfo)
+            if entry2.mtime < min_date:
+                continue
+        # NOTE: atime, ctime, & mtime are datetime objects.
         differences = {
             "file1": OrderedDict(),
             "file2": OrderedDict(),
@@ -116,8 +149,8 @@ def compare_keepass(file1, file2, pwd1=None, pwd2=None, options=None,
             print('- "{}" (URL="{}") is not in "{}"'
                   ''.format(entry2.title, entry2.url, file1name))
             if tmp1:
-                tmp1.write('TITLE={}'.format(entry2.title))
-                tmp1.write('URL={}'.format(entry2.url))
+                tmp1.write('TITLE={}\n'.format(entry2.title))
+                tmp1.write('URL={}\n'.format(entry2.url))
             continue
         if entry1.username != entry2.username:
             differences['file1']['username'] = entry1.username
@@ -139,17 +172,19 @@ def compare_keepass(file1, file2, pwd1=None, pwd2=None, options=None,
 
         if differences['file1'] or differences['file2']:
             if tmp1:
-                tmp1.write('TITLE={}'.format(entry1.title))
-                tmp1.write('URL={}'.format(entry1.url))
+                print("+WRITE tmp1: " + 'TITLE={}\n'.format(entry1.title))
+                tmp1.write('TITLE={}\n'.format(entry1.title))
+                tmp1.write('URL={}\n'.format(entry1.url))
                 for k, v in differences['file1'].items():
-                    tmp1.write('{}="{}"'.format(k, v))
+                    tmp1.write('{}="{}"\n'.format(k, v))
             if tmp2:
-                tmp2.write('TITLE={}'.format(entry2.title))
-                tmp2.write('URL={}'.format(entry2.url))
+                print("+WRITE tmp2: " + 'TITLE={}\n'.format(entry1.title))
+                tmp2.write('TITLE={}\n'.format(entry2.title))
+                tmp2.write('URL={}\n'.format(entry2.url))
                 for k, v in differences['file2'].items():
-                    tmp2.write('{}="{}"'.format(k, v))
+                    tmp2.write('{}="{}"\n'.format(k, v))
 
-    echo0("Done")
+    echo0(prefix+"Done checking entries.")
 
 
 def get_names_and_default(folder, min_len=None, ending=".kdbx"):
@@ -204,15 +239,37 @@ def main():
     file1 = None
     file2 = None
     options = {}
+    keys = ["min_date"]
+    key_args = ["--"+key for key in keys]
     files = []
+    key = None
     for argi in range(1, len(sys.argv)):
         arg = sys.argv[argi]
-        if arg.startswith("--"):
+        # print("arg[{}]={}".format(argi, arg))
+        if key:
+            options[key] = arg
+            key = None
+        elif arg.startswith("--"):
             if arg == "--quiet":
                 options['quiet'] = True
+            elif arg in key_args:
+                key = arg[2:].strip()
+                if not key.strip():
+                    usage()
+                    echo0("-- should be followed by an option (no space)")
+                    return 1
+                elif key not in keys:
+                    usage()
+                    echo0("Error: Invalid option: {}".format(arg))
+                    return 1
+                elif key in options:
+                    usage()
+                    echo0("Error: {} was specified twice.".format(arg))
+                    return 1
             else:
                 usage()
-                echo0('Error: Invalid argument: {}')
+                echo0("{} is not in {}".format(key, keys))
+                echo0('Error: Invalid argument: {}'.format(arg))
                 return 1
         else:
             if len(files) >= 2:
@@ -221,7 +278,9 @@ def main():
                       ''.format(arg))
                 return 1
             files.append(arg)
-    echo0("files: {}".format(files))
+    if key:
+        echo0("Error: {} must be followed by a value.".format(key))
+        return 1
     if len(files) > 0:
         file1 = files[0]
     if len(files) > 1:
@@ -248,6 +307,9 @@ def main():
                 file2 = try_path
                 file2_m = this_m
 
+    echo0("files:")
+    echo0('- "{}"'.format(file1))
+    echo0('- "{}"'.format(file2))
     pwd = getpass("Password: ")
     tmp_names = []
     with tempfile.NamedTemporaryFile(mode='w') as tmp1:
@@ -276,11 +338,14 @@ def main():
                 echo0("Warning: meld is not present,"
                       " so the files {} will not be compared."
                       "".format(tmp_names))
+                return 0
             elif not os.path.isfile(MELD_PATH):
                 # This problem indicates which is faulty
                 #   if that touched MELD_PATH last!
                 raise FileNotFoundError('MELD_PATH was wrong: "{}"'
                                         ''.format(MELD_PATH))
+            tmp1.flush()
+            tmp2.flush()
             cmd_parts = [
                 MELD_PATH,
                 tmp1.name,
@@ -292,6 +357,10 @@ def main():
         echo0("Deleted temp files:")
         for tmp_name in tmp_names:
             echo0('- "{}"'.format(tmp_name))
+    echo0("Done comparing:")
+    echo0('- "{}"'.format(file1))
+    echo0('- "{}"'.format(file2))
+    return 0
 
 
 if __name__ == "__main__":
