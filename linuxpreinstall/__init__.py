@@ -191,6 +191,60 @@ def echo3(*args, **kwargs):
     return True
 
 
+KIBI = 1024
+MEBI = 1024 * 1024
+GIBI = 1024 * 1024 * 1024
+TEBI = 1024 * 1024 * 1024 * 1024
+PEBI = 1024 * 1024 * 1024 * 1024 * 1024
+
+
+
+
+def human_readable(byte_count, places=2):
+    """Make a human-readable file size.
+    Examples: 1024 becomes "1K".  1024*1024 becomes "1M". 1000000
+    actually becomes "976.56K", since computers generally deal in
+    Kibibytes, Mebibytes, etc actually, which are multiples of 1024, not
+    1000 like when buying drives :(.
+
+    A removed 5 rounds *down*--kept digit doesn't change: using banker's
+    rounding as Python does by default, which should usually be used
+    since it is demonstrably more numerically stable
+    (<https://stackoverflow.com/a/45245802/4541104>) than:
+
+    from decimal import Decimal, ROUND_HALF_UP
+    Decimal(1.5).quantize(0, ROUND_HALF_UP)
+    # This also works for rounding to the integer part:
+    Decimal(1.5).to_integral_value(rounding=ROUND_HALF_UP)
+
+    Args:
+        byte_count (int): Number of bytes.
+        places (int, optional): Number of places to keep for rounding.
+            Defaults to 2.
+
+    Returns:
+        str: A human-readable size.
+    """
+    suffix = ""
+    count = byte_count
+    if byte_count > PEBI:
+        count = byte_count / PEBI
+        suffix = "P"
+    elif byte_count > TEBI:
+        count = byte_count / TEBI
+        suffix = "T"
+    elif byte_count > GIBI:
+        count = byte_count / GIBI
+        suffix = "G"
+    elif byte_count > MEBI:
+        count = byte_count / MEBI
+        suffix = "M"
+    elif byte_count > KIBI:
+        count = byte_count / KIBI
+        suffix = "K"
+    return "{}{}".format(round(count, places), suffix)
+
+
 def get_verbosity():
     return verbosity
 
