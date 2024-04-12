@@ -5,6 +5,8 @@
 		}
 	],
 	"settings": {
+		"files.trimFinalNewlines": true,
+		"editor.wordWrapColumn": 79,
 		"rewrap.wrappingColumn": 72
 	}
 }
