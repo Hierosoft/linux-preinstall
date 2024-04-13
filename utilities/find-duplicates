@@ -25,6 +25,8 @@ def main():
     paths.append(sys.argv[1])
     if len(sys.argv) > 2:
         paths.append(sys.argv[2])
+    if len(sys.argv) > 3:
+        raise ValueError("Expected only 1 or 2 paths.")
     dupset = DupSet()
     for path in paths:
         dupset.check(path)
