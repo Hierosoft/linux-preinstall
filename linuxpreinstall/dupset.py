@@ -10,6 +10,7 @@ if not hasattr(shlex, "join"):
             if " " in parts[i]:
                 parts[i] = parts[i].replace("'", "\\'")
                 parts[i] = "'{}'".format(parts[i])
+        return " ".join(parts)
 
     shlex.join = shlex_join
 # else:
