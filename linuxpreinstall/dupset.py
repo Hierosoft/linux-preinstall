@@ -45,12 +45,16 @@ class DupSet():
         self.dup_paths = {}
         self.memory_count = 0
         self.dup_count = 0
+        self.dup_size = 0
 
     def print_summary(self, prefix="# "):
         echo0(prefix+'memory use: {}'
               .format(human_readable(self.memory_count)))
         echo0(prefix+'duplicate count: {}'
               .format(self.dup_count))
+        if self.dup_size:
+            echo0(prefix+'duplicate data total: {}'
+                  .format(human_readable(self.dup_size)))
 
     def check(self, parent, follow_symlinks=False, match_fn=None,
               prefix="# "):
@@ -114,6 +118,7 @@ class DupSet():
                         rel_sub = os.path.join(rel, sub)
                         self.dup_paths[root].add(rel_sub)
                         self.dup_count += 1
+                        self.dup_size += size
                         self.memory_count += sys.getsizeof(rel_sub)
                         print(shlex.join([sub_path, base]))
                         break
