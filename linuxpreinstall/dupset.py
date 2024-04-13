@@ -6,6 +6,8 @@ if not hasattr(shlex, "join"):
     # NOTE: shlex.join requires Python 3.8,
     #   so polyfill that.
     def shlex_join(parts):
+        if isinstance(parts, tuple):
+            parts = list(parts)  # allow item assignment
         for i in range(len(parts)):
             if " " in parts[i]:
                 parts[i] = parts[i].replace("'", "\\'")
