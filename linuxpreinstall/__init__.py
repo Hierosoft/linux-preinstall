@@ -1063,6 +1063,8 @@ def _init_osrelease():
                 comI = find_unquoted(line, "#")
                 if comI > -1:
                     line = line[:comI].strip()
+                if not line:
+                    continue
                 parts = line.split("=")
                 if len(parts) == 2:
                     key = parts[0]
