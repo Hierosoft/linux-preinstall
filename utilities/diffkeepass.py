@@ -35,7 +35,7 @@ else:
     HOME = os.environ['HOME']
 
 if sys.version_info.major < 3:
-    input = raw_input
+    input = raw_input  # noqa F821 # type: ignore
 
 
 if __name__ == "__main__":
@@ -44,7 +44,7 @@ if __name__ == "__main__":
     sys.path.insert(0, REPO_PATH)
 
 
-from linuxpreinstall import which
+from linuxpreinstall import which  # noqa: E402
 
 MELD_PATH = which("meld")
 
@@ -134,7 +134,7 @@ def compare_keepass(file1, file2, pwd1=None, pwd2=None, options=None,
                 continue
         else:
             try:
-                entry1 = kp1.find_entries(title=entry2.title, first=True)
+                entry1 = kp1.find_entries_by_uuid(entry2.uuid, first=True)
             except lxml.etree.XPathEvalError:
                 if entry2.url:
                     pushm('Warning: XPathEvalError in entry "{}" (URL={})'
@@ -143,15 +143,27 @@ def compare_keepass(file1, file2, pwd1=None, pwd2=None, options=None,
                     pushm('Warning: XPathEvalError in entry "{}" (group={})'
                         ''.format(entry1.title, entry2.group))
                 continue
+        if not entry1 and entry2.title:
+            # ^ and entry2.title avoids "Invalid predicate" lxml error
+            #   (See issue #37)
+            entry1 = kp1.find_entries(title=entry2.title, first=True)
         if not entry1 and entry2.url:
             entry1 = kp1.find_entries(url=entry2.url, first=True)
         if not entry1:
             print('- "{}" (URL="{}") is not in "{}"'
+                  ' (tried uuid, title, and url)'
                   ''.format(entry2.title, entry2.url, file1name))
             if tmp1:
                 tmp1.write('TITLE={}\n'.format(entry2.title))
                 tmp1.write('URL={}\n'.format(entry2.url))
             continue
+
+        if entry1.title != entry2.title:
+            differences['file1']['title'] = entry1.username
+            differences['file2']['title'] = entry2.username
+            print('* title "{}" != "{}" (URL="{}")'
+                  ''.format(entry1.title, entry2.title, entry2.group))
+
         if entry1.username != entry2.username:
             differences['file1']['username'] = entry1.username
             differences['file2']['username'] = entry2.username

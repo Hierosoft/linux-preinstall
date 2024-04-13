@@ -1,5 +1,8 @@
 import os
+import shlex
 import sys
+
+from collections import OrderedDict
 
 from linuxpreinstall import (
     echo0,
@@ -20,7 +23,7 @@ class DupSet():
         self._mode = None
         self._last_memory_s = None
         self._last_memory_count = 0
-        self.names = set()
+        self.names = OrderedDict()
         self.sizes = {}
         self.dup_paths = {}
         self.memory_count = 0
@@ -95,7 +98,7 @@ class DupSet():
                         self.dup_paths[root].add(rel_sub)
                         self.dup_count += 1
                         self.memory_count += sys.getsizeof(rel_sub)
-                        print(sub_path)
+                        print(shlex.join([sub_path, base]))
                         break
                 self.sizes[size].append(sub_path)  # *after* check all
                 self.memory_count += sys.getsizeof(sub_path)
@@ -112,7 +115,7 @@ class DupSet():
                 self.sizes[size] = []
                 self.sizes[size].append(sub_path)
                 self.memory_count += sys.getsizeof(sub_path)
-                # self.names.add(sub)
+                # self.names[sub] = sub_path
                 # self.memory_count += sys.getsizeof(sub)
 
             memory_s = human_readable(self.memory_count, places=1)
@@ -173,9 +176,9 @@ class DupSet():
                 self.dup_count += 1
                 # self.memory_count += sys.getsizeof(rel_sub)
                 # echo0(prefix+'memory use: {}'.format(human_readable(self.memory_count)))
-                print(sub_path)
+                print(shlex.join([sub_path, self.names[sub]]))
             else:
-                self.names.add(sub)
+                self.names[sub] = sub_path
                 self.memory_count += sys.getsizeof(sub)
 
             memory_s = human_readable(self.memory_count, places=1)
