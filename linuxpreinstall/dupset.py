@@ -26,6 +26,12 @@ class DupSet():
         self.memory_count = 0
         self.dup_count = 0
 
+    def print_summary(self, prefix="# "):
+        echo0(prefix+'memory use: {}'
+              .format(human_readable(self.memory_count)))
+        echo0(prefix+'duplicate count: {}'
+              .format(self.dup_count))
+
     def check(self, parent, follow_symlinks=False, match_fn=None,
               prefix="# "):
         """Resursively check parent for filenames
@@ -46,12 +52,6 @@ class DupSet():
                     follow_symlinks=follow_symlinks,
                     match_fn=match_fn,
                     prefix=prefix)
-
-    def print_summary(self, prefix="# "):
-        echo0(prefix+'memory use: {}'
-              .format(human_readable(self.memory_count)))
-        echo0(prefix+'duplicate count: {}'
-              .format(self.dup_count))
 
     def _check(self, root, rel, follow_symlinks=False, match_fn=None,
                prefix=None):
