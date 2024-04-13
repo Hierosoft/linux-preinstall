@@ -17,6 +17,7 @@ class DupSet():
         dup_paths (dict[set[str]]): Key is parent, and set contains duplicate relative paths.
     """
     def __init__(self):
+        self._mode = None
         self._last_memory_s = None
         self._last_memory_count = 0
         self.names = set()
@@ -55,6 +56,12 @@ class DupSet():
     def _check(self, root, rel, follow_symlinks=False, match_fn=None,
                prefix=None):
         # ^ pass *all* args to recursion (but some will be new)!
+        if self._mode and (self._mode != "content"):
+            raise RuntimeError(
+                "\"content\" mode can't be run on a \"{}\" mode DupSet."
+                .format(self._mode)
+            )
+        self._mode = "content"
         # Folders:
         if rel:
             parent = os.path.join(root, rel)
@@ -107,6 +114,69 @@ class DupSet():
                 self.memory_count += sys.getsizeof(sub_path)
                 # self.names.add(sub)
                 # self.memory_count += sys.getsizeof(sub)
+
+            memory_s = human_readable(self.memory_count, places=1)
+            # if memory_s != self._last_memory_s:
+            if self.memory_count - self._last_memory_count > 1000000:
+                echo0(prefix+'memory use: {}'.format(memory_s))
+                self._last_memory_s = memory_s
+                self._last_memory_count = self.memory_count
+
+
+    def check_names(self, parent, follow_symlinks=False, prefix="# "):
+        """Resursively check parent for *filenames*
+        and output relative paths of files with same *filenames* as
+        standard output.
+        """
+
+        self.dup_paths[parent] = set()
+        self._check_names(parent, "",
+                    follow_symlinks=follow_symlinks,
+                    prefix=prefix)
+
+    def _check_names(self, root, rel, follow_symlinks=False, prefix=None):
+        # ^ pass *all* args to recursion (but some will be new)!
+        if self._mode and (self._mode != "name"):
+            raise RuntimeError(
+                "\"name\" mode can't be run on a \"{}\" mode DupSet."
+                .format(self._mode)
+            )
+        self._mode = "name"
+
+        # Folders:
+        if rel:
+            parent = os.path.join(root, rel)
+        else:
+            # avoid adding extra trailing slash
+            parent = root
+        for sub in os.listdir(parent):
+            sub_path = os.path.join(parent, sub)
+            if not follow_symlinks and os.path.islink(sub_path):
+                continue
+            if os.path.isfile(sub_path):
+                continue
+            # join doesn't add extra slash if *1st* is blank, so:
+            self._check_names(root, os.path.join(rel, sub),
+                              follow_symlinks=follow_symlinks,
+                              prefix=prefix)
+        # Files (shallow last, so less organized ones are listed dups):
+        for sub in os.listdir(parent):
+            sub_path = os.path.join(parent, sub)
+            if not follow_symlinks and os.path.islink(sub_path):
+                continue
+            if os.path.isdir(sub_path):
+                continue
+            if sub in self.names:
+                # found duplicate
+                # rel_sub = os.path.join(rel, sub)
+                # self.dup_paths[root].add(rel_sub)
+                self.dup_count += 1
+                # self.memory_count += sys.getsizeof(rel_sub)
+                # echo0(prefix+'memory use: {}'.format(human_readable(self.memory_count)))
+                print(sub_path)
+            else:
+                self.names.add(sub)
+                self.memory_count += sys.getsizeof(sub)
 
             memory_s = human_readable(self.memory_count, places=1)
             # if memory_s != self._last_memory_s:
