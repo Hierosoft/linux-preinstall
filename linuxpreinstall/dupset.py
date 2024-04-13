@@ -2,6 +2,20 @@ import os
 import shlex
 import sys
 
+if not hasattr(shlex, "join"):
+    # NOTE: shlex.join requires Python 3.8,
+    #   so polyfill that.
+    def shlex_join(parts):
+        for i in range(len(parts)):
+            if " " in parts[i]:
+                parts[i] = parts[i].replace("'", "\\'")
+                parts[i] = "'{}'".format(parts[i])
+
+    shlex.join = shlex_join
+# else:
+#     from shlex import join as shlex_join
+
+
 from collections import OrderedDict
 
 from linuxpreinstall import (
