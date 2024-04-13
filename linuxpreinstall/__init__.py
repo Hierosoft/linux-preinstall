@@ -1072,7 +1072,7 @@ def _init_osrelease():
                             v = v[1:-1]
                     osrelease[key] = v
                 else:
-                    signRawI = rawL.find_unquoted("=")
+                    signRawI = find_unquoted(rawL, "=")
                     raise SyntaxError("{}:{}:{}: misplaced '='"
                                       "".format(osrelease_path, lineN,
                                                 signRawI))
