@@ -140,3 +140,54 @@ def get_bash_values(path, only_exported=False,
 def get_bash_value(path, name):
     d = get_bash_values(path)
     return d.get(name)
+
+
+def run_cmp(filename1, filename2):
+    """Run the cmp command on two files.
+
+    Returns:
+        bool: True if the files' contents are the same.
+
+    Raises:
+        RuntimeError: If subprocess returns a code other than 0
+            (matching) or 1 (different).
+    """
+    # Based on https://stackoverflow.com/a/42634247/4541104 but updated
+    #   for Python 3 (command module is deprecated) using
+    #   subprocess: <https://stackoverflow.com/a/5631819/4541104>.
+    #   - and reversed output (True is match).
+    cmd_parts = ("cmp", filename1, filename2)
+    cmd = shlex.join(cmd_parts)
+    #  "--verbose",
+    child = subprocess.Popen(cmd_parts, stdout=subprocess.PIPE)
+    streamdata = child.communicate()[0]
+    rc = child.returncode
+    if rc > 1:
+        raise RuntimeError(
+            'cmp returned with error (returncode={}, '
+            'cmd=\"{}\", output=\n\"{}\n\")'
+            .format(rc, cmd, streamdata)
+        )
+    elif rc == 1:
+        same = False
+    elif rc == 0:
+        same = True
+    else:
+        raise RuntimeError('invalid exit code {} detected'.format(rc))
+    if not isinstance(rc, int):
+        raise RuntimeError('invalid exit code {}({}) detected'
+                           .format(type(rc).__name__, rc))
+    return same  # , streamdata
+
+
+def compare_files(path1, path2):
+    """Run the cmp command on two files.
+
+    Returns:
+        bool: Whether files match.
+
+    Raises:
+        RuntimeError: If subprocess returns a code other than 0
+            (matching) or 1 (different).
+    """
+    return run_cmp(path1, path2)

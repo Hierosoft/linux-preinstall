@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from __future__ import print_function
+from __future__ import division
 import os
 import sys
 import subprocess
@@ -9,6 +10,9 @@ import json
 
 from collections import OrderedDict
 from csv import reader
+
+MODULE_DIR = os.path.dirname(os.path.realpath(__file__))
+REPO_DIR = os.path.dirname(MODULE_DIR)
 
 HOME = None
 if platform.system() == "Windows":
@@ -196,8 +200,6 @@ MEBI = 1024 * 1024
 GIBI = 1024 * 1024 * 1024
 TEBI = 1024 * 1024 * 1024 * 1024
 PEBI = 1024 * 1024 * 1024 * 1024 * 1024
-
-
 
 
 def human_readable(byte_count, places=2):
