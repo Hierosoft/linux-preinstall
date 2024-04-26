@@ -1,0 +1,200 @@
+#!/usr/bin/env python
+"""
+Sometimes ODT files get slow after pasting many things from the internet
+and no matter where else you paste the document's contents, even
+AbiWord, the file takes minutes to load (or paste). This program uses
+pandoc which so far is the only program I've discovered that can remove
+the invisible junk and make the file fast again.
+
+NOTE: It will potentially lose the margins and fonts, make the entire 
+document italicized, and make the entire document a bullet in a 
+bulleted list. However, that was only known to happen with one of the 
+slow documents so maybe it will not happen in every case.
+"""
+from __future__ import print_function
+
+import os
+import platform
+import subprocess
+import sys
+
+if platform.system() == "Windows":
+    HOME = os.environ['USERPROFILE']
+else:
+    HOME = os.environ['HOME']
+    
+PANDOC = "pandoc"
+
+tkdephelp = "sudo apt-get install python3-tk"
+dephelp = "sudo apt-get install python3-pil python3-pil.imagetk"
+if sys.version_info.major >= 3:
+    try:
+        import tkinter as tk
+        from tkinter import ttk
+        from tkinter import messagebox
+        from tkinter import filedialog
+    except ImportError:
+        for sitepackages in site.getsitepackages():
+            try_sub = os.path.join(sitepackages, "tkinter")
+            if os.path.isdir(try_sub):
+                print(venv_error_fmt % try_sub,
+                      file=sys.stderr)
+            elif os.path.exists(try_sub):
+                print("Error: %s exists but is not a directory"
+                      "" % pformat(try_sub),
+                      file=sys.stderr)
+            else:
+                print("Error: %s is not present" % pformat(try_sub),
+                      file=sys.stderr)
+        raise
+else:  # Python 2
+    import Tkinter as tk  # type: ignore
+    import ttk  # type: ignore
+    import tkMessageBox as messagebox
+    import tkFileDialog as filedialog
+    tkdephelp = "sudo apt-get install python-tk"
+    dephelp = "sudo apt-get install python-imaging python-pil.imagetk"
+
+
+class Tkclass(tk.Tk):
+    def __init__(self):
+        tk.Tk.__init__(self)
+        root = self
+        app = Application(self)
+        app.master.title("Document Optimizer")
+        root.after(1, self.loaded)
+        app.mainloop()
+
+    def loaded(self):
+        root = self
+        # Hide hidden "." folders as per
+        # <https://stackoverflow.com/a/54068050>
+        # call a dummy dialog with an impossible option to initialize the file
+        # dialog without really getting a dialog window; this will throw a
+        # TclError, so we need a try...except :
+        try:
+            root.tk.call('tk_getOpenFile', '-foobarbaz')
+        except tk.TclError:
+            # _tkinter.TclError: can't invoke "image" command: application has been destroyed
+            pass
+        # now set the magic variables accordingly
+        root.tk.call('set', '::tk::dialog::file::showHiddenBtn', '1')
+        root.tk.call('set', '::tk::dialog::file::showHiddenVar', '0')
+        screen_w = root.winfo_screenwidth()
+        screen_h = root.winfo_screenheight()
+        root.geometry("{}x{}".format(int(screen_w/4), int(screen_h/12)))
+
+
+class Application(tk.Frame):    
+
+    def __init__(self, parent):
+        self.root = parent
+        tk.Frame.__init__(self, parent)
+        self.grid(sticky=tk.N+tk.S+tk.E+tk.W)
+        self.statusSV = tk.StringVar(master=parent)
+        self.pathSV = tk.StringVar(master=parent)
+        self.statusSV.set("Choose a file to convert.")
+        self.createWidgets()
+
+    def createWidgets(self):
+        top = self.winfo_toplevel()                
+        top.rowconfigure(0, weight=1)            
+        top.columnconfigure(0, weight=1)         
+        self.rowconfigure(0, weight=1)           
+        self.columnconfigure(0, weight=6)
+        self.columnconfigure(1, weight=1) 
+        self.columnconfigure(2, weight=1)
+        self.columnconfigure(3, weight=1) 
+        self.fileEntry = tk.Entry(self, textvariable=self.pathSV)
+        self.fileEntry.grid(row=0, column=0, sticky=tk.W+tk.E)
+
+        self.browseButton = tk.Button(self, text='Open...',
+                                      command=self.choose_file)
+        self.browseButton.grid(row=0, column=1, sticky=tk.W+tk.E)
+        self.convertButton = tk.Button(self, text='Convert',
+                                       command=self.convert_selected)
+        self.convertButton.grid(row=1, column=0,  # sticky=tk.W+tk.E,
+                                columnspan=2)
+        self.statusLabel = tk.Label(self)
+        self.statusLabel.configure(textvariable=self.statusSV)
+        self.statusLabel.grid(row=2, column=0, columnspan=2)
+        # self.quit = tk.Button(self, text='Quit',command=self.QuitApp)
+        # self.quit.grid(row=0, column=3)
+
+    def choose_file(self):
+        self.statusSV.set("Choose a file...")
+        self.cmd_parts = None
+        name = filedialog.askopenfilename(
+            parent=self,
+            initialdir=HOME,
+            filetypes=(('CSV files', '*.odt'),),  # ('all files', '*.*')),
+        )
+        if not name:
+            self.statusSV.set("")
+            return
+        self.pathSV.set(name)
+            
+        # self.statusSV.set(name)
+        self.statusSV.set("")
+
+    def convert_selected(self):
+        self.statusSV.set("")
+        self.cmd_parts = None
+        path = self.pathSV.get()
+        if not path:
+            self.statusSV.set("You must select a file first.")
+        if not os.path.isfile(path):
+            self.statusSV.set("The selected file doesn't exist.")
+        no_ext, dot_ext = os.path.splitext(path)
+        self.dst = no_ext + ".docx"
+        # working example:
+        # pandoc 16\ Links\ slow\ Apr\ 1-\ 2024.odt -f odt -t docx -s \
+        #   -o 16\ Links\ slow\ Apr\ 1-\ 2024.docx
+        # ^ as per Amanda on <https://stackoverflow.com/a/34299311>
+        dst_dir, dst_name = os.path.split(self.dst)
+        if os.path.isfile(self.dst):
+            answer = messagebox.askyesno(
+                title="Confirm Overwrite",
+                message=("Already converted.\nDo you want to overwrite\n\"{}\"?"
+                         .format(dst_name)),
+            )
+            if answer != tk.YES:
+                self.statusSV.set("Cancelled.")
+                return
+            os.remove(self.dst)
+
+        self.cmd_parts = [
+            PANDOC,
+            path,
+            "-f",
+            "odt",
+            "-t",
+            "docx",
+            "-s",
+            "-o",
+            self.dst,
+        ]
+
+        self.statusSV.set("Please wait...")
+        self.root.after(1, self.run_job)
+    
+    def run_job(self):
+        if not self.cmd_parts:
+            self.statusSV.set("The command was interrupted.")
+            return
+        result = subprocess.Popen(self.cmd_parts)
+        text = result.communicate()[0]
+        return_code = result.returncode
+
+        dst_dir, dst_name = os.path.split(self.dst)
+        if return_code == 0:
+            self.statusSV.set("Done (saved \"{}\")".format(dst_name))
+        else:
+            self.statusSV.set("Failed ({})".format(dst_name))
+
+    def QuitApp(self):
+        top=self.winfo_toplevel()
+        top.quit()
+
+
+main = Tkclass() 
