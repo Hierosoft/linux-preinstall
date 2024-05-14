@@ -3,7 +3,8 @@ colemak_x_dst="/usr/local/bin/colemak_x.sh"
 if [ -f "$colemak_x_dst" ]; then
     sh $colemak_x_dst
 else
-    echo "* ERROR: missing $colemak_x_dst - run colemak.sh first"
+    echo "* ERROR: missing $colemak_x_dst - run colemak.sh as root first"
+    exit 1
 fi
 if [ -f "`command -v gsettings`" ]; then
     printf "* setting Gnome to Colemak..."
