@@ -1,0 +1,6 @@
+#!/bin/bash
+sudo apt install --install-recommends wine-stable-i386=8.0.2~jammy-1 -y
+sudo apt install --install-recommends wine-stable-amd64=8.0.2~jammy-1 -y --allow-downgrades
+sudo apt install --install-recommends wine-stable=8.0.2~jammy-1 -y
+sudo apt install --install-recommends winehq-stable=8.0.2~jammy-1 -y
+sudo apt autoremove
