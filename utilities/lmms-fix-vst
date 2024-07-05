@@ -1,6 +1,19 @@
 #!/bin/bash
+# See <https://wiki.winehq.org/Ubuntu>:
+sudo dpkg --add-architecture i386
+sudo mkdir -pm755 /etc/apt/keyrings
+sudo wget -O /etc/apt/keyrings/winehq-archive.key https://dl.winehq.org/wine-builds/winehq.key
+sudo wget -NP /etc/apt/sources.list.d/ https://dl.winehq.org/wine-builds/ubuntu/dists/jammy/winehq-jammy.sources
+sudo apt update
+
 sudo apt install --install-recommends wine-stable-i386=8.0.2~jammy-1 -y
 sudo apt install --install-recommends wine-stable-amd64=8.0.2~jammy-1 -y --allow-downgrades
 sudo apt install --install-recommends wine-stable=8.0.2~jammy-1 -y
 sudo apt install --install-recommends winehq-stable=8.0.2~jammy-1 -y
-sudo apt autoremove
+sudo apt autoremove -y
+
+cat <<END
+Remember to turn off:
+- Synchronize plugin with host playback
+- Plugin embedding
+END
