@@ -12,9 +12,12 @@ def echo0(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
     return True
 
+def usage():
+    echo0(__doc__)
 
 if len(sys.argv) < 3:
-    echo0("You must specify two files.")
+    usage()
+    echo0("Error: You must specify two files.")
     exit(1)
 
 # NOTE: sys.argv[0] is this script.
