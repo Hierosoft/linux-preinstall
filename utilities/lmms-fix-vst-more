@@ -12,4 +12,13 @@ wget https://launchpad.net/~kxstudio-debian/+archive/kxstudio/+files/kxstudio-re
 sudo dpkg -i kxstudio-repos_11.1.0_all.deb
 
 
-sudo apt install carla
+sudo apt install -y carla
+
+sudo apt install -y carla-bridge-linux64 carla-bridge-wine64 carla-lv2 carla-vst carla-vst-wine
+sudo apt install -y fluidsynth
+sudo apt install -y calf-plugins
+
+echo "Remember, if you purchased Ardour, login and download your installer *not* a packaged version."
+if [ -f `/usr/bin/ardour` ]; then
+    echo "- A packaged version is currently installed."
+fi
