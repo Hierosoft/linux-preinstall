@@ -29,6 +29,13 @@ Other features:
 For further rsnapshot notes and a setup specific to Poikilos machines
 and scripts such as linux-preinstall, see
 linux-preinstall/doc/rsnapshot.md.
+
+Options:
+--user              Only generate the {exclude_from_backup}
+                    (combined user excludes) temp file. It is still
+                    generated anyway, but exit afterward in this case.
+
+--help              Show this help screen then exit.
 '''
 import sys
 import os
@@ -49,8 +56,32 @@ from linuxpreinstall import (
     PROFILES,
 )
 
+src_parts = [
+    "exclude_less_from_backup.txt",  # maybe keep large downloads etc
+    "exclude_more_from_backup.txt",  # exclude any reproducible & history etc
+]
+# ^ formerly there was only /home/owner/exclude_from_backup.txt
+
 src_txt_name = "exclude_from_backup.txt"
-src_txt = os.path.join(HOME, src_txt_name)
+# src_txt = os.path.join(HOME, src_txt_name)
+src_txt = os.path.join("/tmp", src_txt_name)
+
+def usage():
+    echo0(__doc__.format(
+        exclude_from_backup=src_txt,
+    ))
+
+def generate_user_exclude():
+    with open(src_txt, "w") as outs:
+        for in_name in src_parts:
+            in_path = os.path.join(HOME, in_name)
+            with open(in_path, "r") as ins:
+                for line in ins:
+                    if not line.strip():
+                        continue
+                    outs.write(line)
+    return 0
+
 dst_confs = os.path.join("/opt", "rsnapshot")
 dst_txt = os.path.join(dst_confs, "exclude_from_backup-absolute-generated.txt")
 
@@ -76,6 +107,20 @@ echo0('HOME="{}"'.format(HOME))
 echo0('src_txt="{}"'.format(src_txt))
 
 def main():
+    user_only = False
+
+    for argi in range(1, len(sys.argv)):
+        arg = sys.argv[argi]
+        if arg == "--user":
+            user_only = True
+        elif arg == "--help":
+            usage()
+            return 0
+
+    generate_user_exclude()
+
+    if user_only:
+        return 0
 
     if not os.path.isdir(dst_confs):
         try:
