@@ -1,5 +1,8 @@
 #!/bin/bash
-
+if [ ! -f "`command -v git`" ]; then
+    echo "Error: git is not installed."
+    exit 1
+fi
 #region settings
 MY_GITHUB_USERNAME="Poikilos"
 # ^ Changed further down if not present there.
