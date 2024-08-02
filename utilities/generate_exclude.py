@@ -131,12 +131,23 @@ class ExcludeMaker:
 
         self.found_src_txt_name = False
 
-        if not os.path.isfile(ExcludeMaker.src_txt):
-            for try_home in try_homes:
-                self.enable_chown = True
-                try_txt = os.path.join(try_home, self.src_txt_name)
+        # if not os.path.isfile(ExcludeMaker.src_txt):
+        for try_home in try_homes:
+            self.enable_chown = True
+            # FIXME: Do not check self.src_parts. Instead, solve the
+            #   actual problem by making --user mode generate a
+            #   json file in /tmp/ that says HOME for who made the
+            #   file in tmp (issue #39).
+            tries = [os.path.join(try_home, x) for x in self.src_parts + [self.src_txt_name]]
+            echo0('tries="{}"'.format(tries))
+            for try_txt in tries:
                 if os.path.isfile(try_txt):
-                    ExcludeMaker.src_txt = try_txt
+                    if not os.path.isfile(ExcludeMaker.src_txt):
+                        # TODO: handle this better in --user mode
+                        #   and handle other users (error out if
+                        #   more than one user with a flag file,
+                        #   and/or add arg to specify)
+                        ExcludeMaker.src_txt = try_txt
                     self.found_src_txt_name = True
                     HOME = try_home
                     PROFILES, USER_DIR_NAME = os.path.split(HOME)
@@ -258,15 +269,15 @@ class ExcludeMaker:
                 #   (the check makes no difference):
                 path = os.path.join(PROFILES, "*", path)
             outs.write(path + "\n")
-        return results['src_count']
+        return results
 
     def generate_absolute_paths(self):
         results = {}
         try:
             with open(ExcludeMaker.src_txt, 'r') as ins:
                 with open(self.dst_txt, 'w') as outs:
-                    gen_res = self._generate_absolute_paths(ins, outs)
-                    results.update(gen_res)
+                    gen_result = self._generate_absolute_paths(ins, outs)
+                    results.update(gen_result)
 
         except PermissionError as ex:
             if self.dst_txt in str(ex):
