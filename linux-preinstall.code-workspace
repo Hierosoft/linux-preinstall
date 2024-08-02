@@ -7,6 +7,17 @@
 	"settings": {
 		"files.trimFinalNewlines": true,
 		"editor.wordWrapColumn": 79,
-		"rewrap.wrappingColumn": 72
+		"rewrap.wrappingColumn": 72,
+		"cSpell.words": [
+			"argi",
+			"confs",
+			"getlogin",
+			"Gustafson",
+			"linuxpreinstall",
+			"mypath",
+			"Poikilos",
+			"preinstall",
+			"rsnapshot"
+		]
 	}
 }
