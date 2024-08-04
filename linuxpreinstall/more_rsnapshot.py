@@ -4,6 +4,8 @@ import platform
 import shutil
 import sys
 
+from collections import OrderedDict
+
 from linuxpreinstall.sysdirs import (
     sysdirs,
     SystemPaths,
@@ -62,6 +64,25 @@ settings_file = os.path.join(
 )
 
 
+def vars_from_rsnapshot_conf(path):
+    vars = OrderedDict()
+    line_n = 0
+    with open(path, 'r') as stream:
+        for _raw in stream:
+            line_n += 1
+            line = _raw.strip()
+            if line.startswith("#"):
+                continue
+            tabI = line.find("\t")
+            if tabI <= 0:
+                print("{}, line {}: Warning: no tab after var name"
+                      .format(path, line_n))
+                continue
+            k = line[:tabI].strip()
+            v = line[tabI:].strip()
+            vars[k] = v
+
+
 def get_user_settings_path(user):
     this_settings_dir = settings_dir
     if (user in SYS_USERS) or (platform.system() == "Windows"):
@@ -97,6 +118,31 @@ def get_user_settings(user):
     for k, v in default_settings.items():
         if k not in settings:
             settings[k] = v
+
+    try_real_file = "/opt/etc/rsnapshot.conf"
+    if os.path.isfile(try_real_file):
+        vars = vars_from_rsnapshot_conf(try_real_file)
+        if 'snapshot_root' not in vars:
+            print("Warning: No snapshot_root in \"{}\""
+                  .format(try_real_file))
+        else:
+            if vars['snapshot_root'] != settings['snapshot_root']:
+                print(
+                    "Warning: changing snapshot_root=\"{}\" (from \"{}\")"
+                    " to match snapshot_root=\"{}\" (from \"{}\")"
+                    .format(settings['snapshot_root'], this_settings_file,
+                            vars['snapshot_root'], try_real_file)
+                )
+
+                settings['snapshot_root'] = vars['snapshot_root']
+    else:
+        print("Warning: no {}".format(try_real_file))
+
+    try_drive = os.dirname(settings['snapshot_root'])
+    if settings['backup_drive'] != try_drive:
+        print("Warning: got backup_drive=\"{}\""
+              " but expected a parent of \"{}\""
+              .format(settings['backup_drive'], settings['snapshot_root']))
 
     _userspace_comment = (
         "This file will only be used for a user-space backup of {}."
