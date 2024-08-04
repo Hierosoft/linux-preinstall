@@ -11,7 +11,7 @@ $USERPROFILE/exclude_from_backup.txt.
 This script must run as the user that has that file.
 
 For use with rsnapshot, uncomment and change the exclude_file line in
-/etc/rsnapshot.conf (or /opt/rsnapshot.conf used by Poikilos machines or
+/etc/rsnapshot.conf (or /opt/etc/rsnapshot.conf used by Poikilos machines or
 scripts) as follows:
 
 exclude_file	/opt/etc/exclude_from_backup-absolute-generated.txt
