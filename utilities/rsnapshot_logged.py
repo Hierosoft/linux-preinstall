@@ -24,6 +24,7 @@ _, me = os.path.split(__file__)
 
 def run_command(command):
     """Run a command and return the returncode of the process."""
+    print("[{}] Running: {}".format(command, me))
     try:
         subprocess.check_call(command, shell=True)
         return 0  # Success

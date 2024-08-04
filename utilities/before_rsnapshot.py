@@ -31,10 +31,13 @@ from linuxpreinstall.sysdirs import (
     sysdirs,
 )
 
+_, me = os.path.split(__file__)
+
 
 def run_command(command, log=None):
     """Run a command and optionally log the output. Returns the
     returncode of the process."""
+    print("[{}] Running: {}".format(command, me))
     try:
         output = subprocess.check_output(command, shell=True,
                                          stderr=subprocess.STDOUT)
