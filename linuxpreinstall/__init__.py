@@ -14,16 +14,15 @@ from csv import reader
 MODULE_DIR = os.path.dirname(os.path.realpath(__file__))
 REPO_DIR = os.path.dirname(MODULE_DIR)
 
-HOME = None
-if platform.system() == "Windows":
-    HOME = os.environ['USERPROFILE']
-else:
-    HOME = os.environ['HOME']
+from linuxpreinstall.sysdirs import (
+    sysdirs,
+)
 
-PROFILES, USER_DIR_NAME = os.path.split(HOME)
-# ^ Also done by generate_exclude.py
+HOME = sysdirs['HOME']
 
-# region hierosoft.morelogging relicensed by author for linux-preinstall
+PROFILES = sysdirs['PROFILES']
+USER_DIR_NAME = sysdirs['USER_DIR_NAME']
+# region hierosoft.morelogging relicensed by same author for linux-preinstall
 
 to_log_level = {
     3: 10,
