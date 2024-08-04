@@ -148,7 +148,10 @@ def get_user_settings(user):
             print("Warning: No snapshot_root in \"{}\""
                   .format(try_real_file))
         else:
-            if vars['snapshot_root'] != settings['snapshot_root']:
+            settings['snapshot_root'] = \
+                settings['snapshot_root'].rstrip(os.path.sep)
+            if (vars['snapshot_root']
+                    != settings['snapshot_root']):
                 print(
                     "Warning: changing snapshot_root=\"{}\" (from \"{}\")"
                     " to match snapshot_root=\"{}\" (from \"{}\")"
