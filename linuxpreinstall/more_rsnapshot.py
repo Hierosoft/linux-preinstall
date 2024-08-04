@@ -154,6 +154,20 @@ def get_user_settings(user):
     try_real_file = "/opt/etc/rsnapshot.conf"
     if os.path.isfile(try_real_file):
         vars = vars_from_rsnapshot_conf(try_real_file)
+        no_create_root_msg = None
+
+        if 'no_create_root' not in vars:
+            no_create_root_msg = "(currently not set)"
+        elif vars['no_create_root'] != "1":
+            no_create_root_msg = ("(currently {})"
+                                  .format(vars['no_create_root']))
+        if no_create_root_msg:
+            print("Warning: `no_create_root\t1` should be used"
+                  " {} in \"{}\" for removable drives"
+                  " to ensure they are mounted"
+                  " and that the mountpoint isn't made unusable"
+                  " by containing files from '/'!"
+                  .format(no_create_root_msg, try_real_file))
         if 'snapshot_root' not in vars:
             print("Warning: No snapshot_root in \"{}\""
                   .format(try_real_file))
