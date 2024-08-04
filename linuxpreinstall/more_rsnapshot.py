@@ -6,6 +6,11 @@ import sys
 
 from collections import OrderedDict
 
+if __name__ == "__main__":
+    MODULE_DIR = os.path.dirname(os.path.realpath(__file__))
+    REPO_DIR = os.path.dirname(MODULE_DIR)
+    sys.path.insert(0, REPO_DIR)
+
 from linuxpreinstall.sysdirs import (
     sysdirs,
     SystemPaths,
@@ -60,6 +65,12 @@ ROOT_SETTINGS_FILE = os.path.join(
     SETTINGS_JSON_NAME
 )
 
+BAD_DESTINATIONS = ("/", "c:", "c:\\")
+BAD_DESTINATION_STARTS = ("/bin", "/etc", "/lib", "/lib.usr-is-merged",
+                          "/opt", "/bin.usr-is-merged", "/cdrom", "/lib64",
+                          "/proc", "/sbin", "/dev", "/boot", "/sys",
+                          "/var", "/usr", "c:\\", "c:")
+
 settings_file = os.path.join(
     settings_dir,
     SETTINGS_JSON_NAME
@@ -68,17 +79,25 @@ settings_file = os.path.join(
 
 def vars_from_rsnapshot_conf(path):
     vars = OrderedDict()
-    line_n = 0
+    line_n = -1
     with open(path, 'r') as stream:
         for _raw in stream:
             line_n += 1
             line = _raw.strip()
             if line.startswith("#"):
+                # Comment
+                continue
+            if not line.strip():
+                # Blank line
                 continue
             tabI = line.find("\t")
-            if tabI <= 0:
-                print("{}, line {}: Warning: no tab after var name"
-                      .format(path, line_n))
+            if tabI == 0:
+                print("{}, line {}: Warning: tab before var name in `{}`"
+                      .format(path, line_n, line))
+                continue
+            elif tabI < 0:
+                print("{}, line {}: Warning: no tab after var name in `{}`"
+                      .format(path, line_n, line))
                 continue
             k = line[:tabI].strip()
             v = line[tabI:].strip()
@@ -137,15 +156,34 @@ def get_user_settings(user):
                             vars['snapshot_root'], try_real_file)
                 )
 
-                settings['snapshot_root'] = vars['snapshot_root']
+                settings['snapshot_root'] = \
+                    vars['snapshot_root'].rstrip(os.path.sep)
+                # ^ Remove trailing slash, or os.path.dirname
+                #   will only remove that!
+                bad_start = None
+                if settings['snapshot_root']:
+                    for _bad_start in BAD_DESTINATION_STARTS:
+                        lower = settings['snapshot_root'].lower()
+                        if lower.startswith(_bad_start):
+                            bad_start = _bad_start
+                if ((not settings['snapshot_root']) or bad_start
+                        or (settings['snapshot_root'] in BAD_DESTINATIONS)):
+                    suffix = ""
+                    if bad_start:
+                        suffix = (" should not start with \"{}\""
+                                  .format(bad_start))
+                    raise ValueError("Bad snapshot setting=\"{}\"{}"
+                                     .format(settings['snapshot_root'],
+                                             suffix))
     else:
         print("Warning: no {}".format(try_real_file))
 
-    try_drive = os.dirname(settings['snapshot_root'])
+    try_drive = os.path.dirname(settings['snapshot_root'])
     if settings['backup_drive'] != try_drive:
         print("Warning: got backup_drive=\"{}\""
-              " but expected a parent of \"{}\""
-              .format(settings['backup_drive'], settings['snapshot_root']))
+              " but expected a parent of \"{}\" such as {}"
+              .format(settings['backup_drive'], settings['snapshot_root'],
+                      try_drive))
 
     _userspace_comment = (
         "This file will only be used for a user-space backup of {}."
