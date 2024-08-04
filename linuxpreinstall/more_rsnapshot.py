@@ -83,6 +83,7 @@ def vars_from_rsnapshot_conf(path):
             k = line[:tabI].strip()
             v = line[tabI:].strip()
             vars[k] = v
+    return vars
 
 
 def get_user_settings_path(user):
