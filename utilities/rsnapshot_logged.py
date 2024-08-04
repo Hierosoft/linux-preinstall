@@ -1,5 +1,4 @@
-"""
-"""
+#!/usr/bin/env python3
 # formerly rsnapshot-logged.sh
 import os
 import shutil
