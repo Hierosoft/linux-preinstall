@@ -141,6 +141,16 @@ def get_user_settings(user):
         if k not in settings:
             settings[k] = v
 
+    if settings['snapshot_root'].endswith(os.path.sep):
+        print(
+            "Warning: snapshot_root=\"{}\" (from \"{}\")"
+            " ends with \"{}\" which will be removed."
+            .format(settings['snapshot_root'], this_settings_file,
+                    os.path.sep)
+        )
+        settings['snapshot_root'] = \
+            settings['snapshot_root'].rstrip(os.path.sep)
+
     try_real_file = "/opt/etc/rsnapshot.conf"
     if os.path.isfile(try_real_file):
         vars = vars_from_rsnapshot_conf(try_real_file)
@@ -148,8 +158,8 @@ def get_user_settings(user):
             print("Warning: No snapshot_root in \"{}\""
                   .format(try_real_file))
         else:
-            settings['snapshot_root'] = \
-                settings['snapshot_root'].rstrip(os.path.sep)
+            vars['snapshot_root'] = \
+                vars['snapshot_root'].rstrip(os.path.sep)
             if (vars['snapshot_root']
                     != settings['snapshot_root']):
                 print(
