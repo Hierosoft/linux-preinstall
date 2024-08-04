@@ -10,14 +10,28 @@
 		"rewrap.wrappingColumn": 72,
 		"cSpell.words": [
 			"argi",
+			"backupnow",
+			"blnk",
 			"confs",
+			"endregion",
+			"eventsentry",
 			"getlogin",
 			"Gustafson",
+			"hierosoft",
 			"linuxpreinstall",
+			"LOCALAPPDATA",
+			"morelogging",
+			"mountpoint",
 			"mypath",
 			"Poikilos",
 			"preinstall",
-			"rsnapshot"
+			"readonlydict",
+			"rsnapshot",
+			"rsyslog",
+			"sysdirs",
+			"sysfiles",
+			"taskmanager",
+			"userspace"
 		]
 	}
 }
