@@ -35,6 +35,8 @@ settings_dir = os.path.join(
 )
 
 IS_ROOT_MODE = False
+RSNAPSHOT_LOG_NAME = 'rsnapshot.log'
+RSNAPSHOT_LOG = os.path.join('/var/log', RSNAPSHOT_LOG_NAME)
 
 if platform.system() == "Windows":
     USER = os.environ['USERNAME']

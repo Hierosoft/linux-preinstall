@@ -10,19 +10,16 @@ if __name__ == "__main__":
     REPO_DIR = os.path.dirname(SCRIPTS_DIR)
     sys.path.insert(0, REPO_DIR)
 
-from generate_exclude import (
-    backup_drive,
-    snapshot_root,
-    backup_unused_fuse_mountpoint,
-    rsnapshot_flag_dir,
-)
 
 from linuxpreinstall.more_rsnapshot import (
-    TMTimer,
+    # TMTimer,
     LOG,
+    LOG_NAME,
+    settings,
+    RSNAPSHOT_LOG,
+    RSNAPSHOT_LOG_NAME,
 )
 _, me = os.path.split(__file__)
-rsnapshot_log = '/var/log/rsnapshot.log'
 
 
 def run_command(command):
@@ -59,18 +56,20 @@ def main(backup_type):
             logfile.write('status="OK"\n')
 
     # Check and copy logs
-    if os.path.isdir(snapshot_root):
-        dst_logs = backup_drive
+    if os.path.isdir(settings['snapshot_root']):
+        dst_logs = settings['backup_drive']
         if not os.path.isdir(dst_logs):
-            # makedirs *only* when has snapshot_root not just mountpoint:
+            # makedirs *only* when has settings['snapshot_root']
+            #   not just mountpoint:
             os.makedirs(dst_logs)
         with open(LOG, 'a') as logfile:
             logfile.write("# endregion after backup\n")
-        shutil.copy(LOG, dst_logs)
-        shutil.copy(rsnapshot_log, dst_logs)
+        shutil.copy(LOG, os.path.join(dst_logs, LOG_NAME))
+        shutil.copy(RSNAPSHOT_LOG, os.path.join(dst_logs, RSNAPSHOT_LOG_NAME))
     else:
         error = ("[{}] Error: {} is no longer mounted (no {})"
-                 .format(me, backup_drive, rsnapshot_flag_dir))
+                 .format(me, settings['backup_drive'],
+                         settings['rsnapshot_flag_dir']))
         with open(LOG, 'a') as logfile:
             logfile.write(error + "\n")
         print(error, file=sys.stderr)
