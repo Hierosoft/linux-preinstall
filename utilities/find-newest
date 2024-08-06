@@ -10,6 +10,7 @@ cat >&2 <<END
 Options:
 -type f: only files
 -type d: only directories
+(For other options type: find --help)
 
 Examples:
 find-newest -type f -not -path "`pwd`/.git/*"
