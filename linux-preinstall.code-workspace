@@ -17,22 +17,32 @@
 			"endregion",
 			"eventsentry",
 			"getlogin",
+			"getpid",
 			"Gustafson",
+			"hicolor",
 			"hierosoft",
+			"laptopconnected",
 			"linuxpreinstall",
 			"LOCALAPPDATA",
 			"morelogging",
 			"mountpoint",
 			"mypath",
+			"Nextcloud",
+			"Papirus",
+			"pcloud",
+			"PIDS",
 			"Poikilos",
 			"preinstall",
+			"processwrapper",
+			"psutil",
 			"readonlydict",
 			"rsnapshot",
 			"rsyslog",
 			"sysdirs",
 			"sysfiles",
 			"taskmanager",
-			"userspace"
+			"userspace",
+			"xmessage"
 		]
 	}
 }
