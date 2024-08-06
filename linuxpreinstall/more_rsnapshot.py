@@ -275,6 +275,10 @@ def state_path(home):
     return rsnapshot_json
 
 
+GENERATED_USER_EXCLUDES_NAME = 'more_rsnapshot.generated_excludes.txt'
+GENERATED_ABS_EXCLUDES_NAME = 'more_rsnapshot.generated_absolute_excludes.txt'
+
+
 def excludes_path(home, IS_ROOT=False, IS_ABSOLUTE=False):
     if home:
         user_sysdirs = SystemPaths()
@@ -286,9 +290,9 @@ def excludes_path(home, IS_ROOT=False, IS_ABSOLUTE=False):
     if IS_ROOT:
         if platform.system() != "Windows":
             rsnapshot_cache_dir = "/opt/etc"
-    name = 'more_rsnapshot.generated_excludes.txt'
+    name = GENERATED_USER_EXCLUDES_NAME
     if IS_ABSOLUTE:
-        name = 'more_rsnapshot.generated_absolute_excludes.txt'
+        name = GENERATED_ABS_EXCLUDES_NAME
     rsnapshot_cache = os.path.join(rsnapshot_cache_dir, name)
     return rsnapshot_cache
 

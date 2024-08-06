@@ -14,7 +14,8 @@ For use with rsnapshot, uncomment and change the exclude_file line in
 /etc/rsnapshot.conf (or /opt/etc/rsnapshot.conf used by Poikilos machines or
 scripts) as follows:
 
-exclude_file	/opt/etc/exclude_from_backup-absolute-generated.txt
+exclude_file	/opt/etc/more_rsnapshot.generated_absolute_excludes.txt
+# (linuxpreinstall.more_rsnapshot.GENERATED_ABS_EXCLUDES_NAME)
 
 Other features:
 - generates a 1.list_of_zips.txt in each directory where "*.zip" is
@@ -332,6 +333,8 @@ class ExcludeMaker:
             old_dst_txt = os.path.join(
                 old_dst_confs,
                 "exclude_from_backup-absolute-generated.txt")
+            # NOTE: new one is GENERATED_ABS_EXCLUDES_NAME
+            #   in linuxpreinstall.more_rsnapshot
             if os.path.isfile(old_dst_txt):
                 if not os.path.isdir(gen_excludes_dir):
                     os.makedirs(gen_excludes_dir)
