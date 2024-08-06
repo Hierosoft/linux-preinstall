@@ -1,6 +1,17 @@
 #!/bin/bash
 # See <https://www.fosslinux.com/46761/recursively-find-list-the-files-by-dat-linux.htm>
 # find "`pwd`" -type f -printf '%T@ %t %p\n' | sort -k 1 -n | cut -d ' ' -f2-
-# ^ type f: only files
-# ^ type d: only directories
+
+>&2 echo find "`pwd`" "$@"
 find "`pwd`" "$@" -printf '%T@ %t %p\n' | sort -k 1 -n | cut -d' ' -f2-
+
+
+cat >&2 <<END
+Options:
+-type f: only files
+-type d: only directories
+
+Examples:
+find-newest -type f -not -path "`pwd`/.git/*"
+find-newest -type f: only files -not -path "*/.git/*" -not -path "*/__pycache__/*"
+END
