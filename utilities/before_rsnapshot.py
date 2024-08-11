@@ -2,9 +2,14 @@
 """
 Install using a Terminal:
 1. Make sure you are in the linux-preinstall/utilities folder then:
-    ls before_snapshot.py && sudo mkdir -p /opt/bin && sudo ln -s before_snapshot.py /opt/bin/before_snapshot.ty
+    ls before_snapshot.py && sudo mkdir -p /opt/bin \
+    && sudo ln -s `pwd`/before_rsnapshot.py /opt/bin/before_rsnapshot.py \
+    && sudo ln -s `pwd`/before_rsnapshot.sh /opt/bin/before_rsnapshot.sh \
+    && sudo ln -s `pwd`/generate_exclude.py /opt/bin/generate_exclude.py \
+    && sudo ln -s `pwd`/rsnapshot_logged.py /opt/bin/rsnapshot_logged.py \
+    && sudo ln -s `pwd`/rsnapshot_logged.sh /opt/bin/rsnapshot_logged.sh
 2. Add the following to rsnapshot.conf (comment any existing cmd_preexec line first then):
-    cmd_preexec	/opt/bin/before_rsnapshot.py
+    cmd_preexec	/opt/bin/before_rsnapshot.sh
     # (rsnapshot requires a tab character between the setting name and value)
 """
 # formerly before-backup.sh

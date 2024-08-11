@@ -67,6 +67,11 @@ def main(backup_type):
             logfile.write("# endregion after backup\n")
         shutil.copy(LOG, os.path.join(dst_logs, LOG_NAME))
         shutil.copy(RSNAPSHOT_LOG, os.path.join(dst_logs, RSNAPSHOT_LOG_NAME))
+        if not os.path.isdir("/opt/etc"):
+            os.makedirs("/opt/etc")
+        with open("/opt/etc/last_settings.rc") as stream:
+            for k, v in settings.items():
+                stream.write("{}=\"{}\"\n".format(k, v))
     else:
         error = ("[{}] Error: {} is no longer mounted (no {})"
                  .format(me, settings['backup_drive'],
