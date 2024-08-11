@@ -8,6 +8,7 @@ Install using a Terminal:
     && sudo ln -s `pwd`/generate_exclude.py /opt/bin/generate_exclude.py \
     && sudo ln -s `pwd`/rsnapshot_logged.py /opt/bin/rsnapshot_logged.py \
     && sudo ln -s `pwd`/rsnapshot_logged.sh /opt/bin/rsnapshot_logged.sh
+    - OR run linux-preinstall/everyone/linuxpreinstall-rsnapshot.py
 2. Add the following to rsnapshot.conf (comment any existing cmd_preexec line first then):
     cmd_preexec	/opt/bin/before_rsnapshot.sh
     # (rsnapshot requires a tab character between the setting name and value)
