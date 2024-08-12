@@ -1,3 +1,6 @@
+"""
+Install linux-preinstall's rsnapshot exclude generator and wrappers for extra logging.
+"""
 from __future__ import print_function
 import os
 import sys
@@ -24,6 +27,14 @@ def install_rsnapshot_scripts():
     Raises:
         Exception: If an unexpected exception occurs during symlink creation.
     """
+    # alternative to:
+    # cd EnlivenMinetest/utilities && sudo mkdir -p /opt/bin \
+    #   && sudo ln -s `pwd`/before_rsnapshot.py /opt/bin/before_rsnapshot.py \
+    #   && sudo ln -s `pwd`/before_rsnapshot.sh /opt/bin/before_rsnapshot.sh \
+    #   && sudo ln -s `pwd`/generate_exclude.py /opt/bin/generate_exclude.py \
+    #   && sudo ln -s `pwd`/rsnapshot_logged.py /opt/bin/rsnapshot_logged.py \
+    #   && sudo ln -s `pwd`/rsnapshot_logged.sh /opt/bin/rsnapshot_logged.sh
+
     scripts_dir = os.path.join(REPO_DIR, "utilities")
 
     # Ensure the /opt/bin directory exists

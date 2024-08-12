@@ -2,7 +2,7 @@
 # cd "$(dirname "$0")";
 # CWD="$(pwd)"
 # echo $CWD
-python3 /opt/bin/rsnapshot_logged.py alpha 1>/var/log/linuxpreinstall.rsnapshot_logged.sh.out 2>/var/log/linuxpreinstall.rsnapshot_logged.sh.err
+python3 /opt/bin/rsnapshot_logged.py $1 1>/var/log/linuxpreinstall.rsnapshot_logged.sh.out 2>/var/log/linuxpreinstall.rsnapshot_logged.sh.err
 if [ -f /opt/etc/last_settings.rc ]; then
     . /opt/etc/last_settings.rc
     if [ -z "$snapshot_root" ]; then
