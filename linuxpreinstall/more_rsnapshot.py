@@ -314,9 +314,10 @@ rel_install_paths = [
 ]
 for rel in rel_install_paths:
     install_files = []
+    src = os.path.join(MODULE_DIR, "static", "more_rsnapshot", rel)
+    dst = "/" + rel
     install_files.append(
-        os.path.join(MODULE_DIR, rel),
-        "/" + rel,
+        (src, dst)
     )
 
 DEST_CRON_D = "/etc/cron.d"
@@ -328,6 +329,15 @@ def install_rsnapshot_scripts():
     Ensure /opt/bin directory exists, then attempt to
     create symbolic links to linux-preinstall's rsnapshot scripts.
 
+    Troubleshooting:
+    > Can cron run your job?
+    > Check /var/log/cron.log or /var/log/messages for errors.
+    > Ubuntu: grep CRON /var/log/syslog
+    > Redhat: /var/log/cron
+    > . . .
+    > service cron restart
+    -<https://stackoverflow.com/a/22744360>
+
     Returns:
         int: Returns 0 if all symlinks are created successfully. Returns 1
             if a PermissionError occurs, or if there is an issue creating
@@ -337,13 +347,20 @@ def install_rsnapshot_scripts():
         Exception: If an unexpected exception occurs during symlink creation.
     """
     # alternative to:
-    # cd EnlivenMinetest/utilities && sudo mkdir -p /opt/bin \
-    #   && sudo ln -s `pwd`/before_rsnapshot.py /opt/bin/before_rsnapshot.py \
-    #   && sudo ln -s `pwd`/before_rsnapshot.sh /opt/bin/before_rsnapshot.sh \
-    #   && sudo ln -s `pwd`/generate_exclude.py /opt/bin/generate_exclude.py \
-    #   && sudo ln -s `pwd`/rsnapshot_logged.py /opt/bin/rsnapshot_logged.py \
-    #   && sudo ln -s `pwd`/rsnapshot_logged.sh /opt/bin/rsnapshot_logged.sh
-
+    # cd linux-preinstall/utilities && sudo mkdir -p /opt/bin \
+    #  && sudo ln -s `pwd`/before_rsnapshot.py /opt/bin/before_rsnapshot.py \
+    #  && sudo ln -s `pwd`/before_rsnapshot.sh /opt/bin/before_rsnapshot.sh \
+    #  && sudo ln -s `pwd`/generate_exclude.py /opt/bin/generate_exclude.py \
+    #  && sudo ln -s `pwd`/rsnapshot_logged.py /opt/bin/rsnapshot_logged.py \
+    #  && sudo ln -s `pwd`/rsnapshot_logged.sh /opt/bin/rsnapshot_logged.sh
+    # cd ../linuxpreinstall \
+    #  && sudo cp static/more_rsnapshot/etc/cron.d/rsnapshot-linux-preinstall \
+    #   /etc/cron.d/
+    #  && sudo chown 0:0 /etc/cron.d/rsnapshot-linux-preinstall
+    if platform.system() == "Windows":
+        raise OSError("{} is not supported by linux-preinstall's rsnapshot"
+                      " scripts."
+                      .format(platform.system()))
     scripts_dir = os.path.join(REPO_DIR, "utilities")
 
     # Ensure the /opt/bin directory exists
@@ -387,6 +404,12 @@ def install_rsnapshot_scripts():
         print("There is no \"{}\"".format(DEST_CRON_D), file=sys.stderr)
         return 1
     for src, dst in install_files:
-        shutil.copy(src, dst)
+        shutil.copy(src, dst)  # does overwrite
+        if dst.startswith("/etc/cron."):
+            os.chown(dst, 0, 0)  # required for cron scripts
+            # ^ (prevents "2024-08-12T13:15:01.269357-04:00 pgs
+            #   cron[536868]: (*system*rsnapshot-linux-preinstall) WRONG
+            #   FILE OWNER (/etc/cron.d/rsnapshot-linux-preinstall)"
+            #   in /var/log/syslog)!
 
     return 0

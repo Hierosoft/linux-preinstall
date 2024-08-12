@@ -32,7 +32,7 @@ def run_command(command):
         return e.returncode  # Return the error code
 
 
-def main(backup_type):
+def rsnapshot_logged(backup_type):
     if not backup_type:
         print(
             "[{}] Error: expected argument: backup type"
@@ -88,9 +88,13 @@ def main(backup_type):
     return 0
 
 
-if __name__ == "__main__":
+def main():
     if len(sys.argv) != 2:
         print("Usage: {} <backup_type>".format(sys.argv[0]), file=sys.stderr)
         sys.exit(1)
     backup_type = sys.argv[1]
-    sys.exit(main(backup_type))
+    rsnapshot_logged(backup_type)
+
+
+if __name__ == "__main__":
+    sys.exit(main())
