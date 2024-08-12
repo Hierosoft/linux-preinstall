@@ -1,5 +1,11 @@
 """
-Install linux-preinstall's rsnapshot exclude generator and wrappers for extra logging.
+Install linux-preinstall's rsnapshot exclude generator and wrappers for
+extra logging.
+
+Don't forget:
+If you use the recommended rsnapshot.conf and uncomment parts:
+- change script from rsnapshot to /opt/bin/rsnapshot_logged.sh
+- sudo systemctl daemon-reload
 """
 from __future__ import print_function
 import os
