@@ -53,7 +53,7 @@ from linuxpreinstall import (
     which,
     endsWithAny,
     get_verbosity,
-    echo0,  # formerly prerr as error
+    echo0, as error
     write0,  # formerly errorf
     echo1,  # formerly debug
     is_like_any,

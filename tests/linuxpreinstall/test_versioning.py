@@ -2,7 +2,7 @@ import unittest
 import sys
 
 from linuxpreinstall import (
-    echo0,  # formerly prerr
+    echo0,
     set_verbosity,
 )
 

@@ -168,7 +168,7 @@ def write3(arg):
     return True
 
 
-def echo0(*args, **kwargs):  # formerly prerr
+def echo0(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
     return True
 

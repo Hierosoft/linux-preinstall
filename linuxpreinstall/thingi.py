@@ -25,13 +25,13 @@ import shutil
 import shlex
 
 verbosity = 0
-verbosities = [True, False, 0, 1, 2]
+verbosity_levels = [True, False, 0, 1, 2]
 
 
 def set_verbosity(level):
     global verbosity
-    if level not in verbosities:
-        raise ValueError("level must be one of {}".format(verbosities))
+    if level not in verbosity_levels:
+        raise ValueError("level must be one of {}".format(verbosity_levels))
     verbosity = level
 
 
