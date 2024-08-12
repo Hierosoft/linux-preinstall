@@ -180,9 +180,10 @@ def get_user_settings(user):
             if (conf['snapshot_root']
                     != settings['snapshot_root']):
                 print(
-                    "Warning: changing snapshot_root=\"{}\" (from \"{}\")"
+                    "[{}] Warning: changing snapshot_root=\"{}\" (from \"{}\")"
                     " to match snapshot_root=\"{}\" (from \"{}\")"
-                    .format(settings['snapshot_root'], this_settings_file,
+                    .format(os.path.realpath(__file__),
+                            settings['snapshot_root'], this_settings_file,
                             conf['snapshot_root'], try_real_file)
                 )
 
