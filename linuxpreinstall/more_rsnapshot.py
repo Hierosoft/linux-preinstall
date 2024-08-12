@@ -81,7 +81,7 @@ settings_file = os.path.join(
 
 
 def vars_from_rsnapshot_conf(path):
-    vars = OrderedDict()
+    meta = OrderedDict()
     line_n = -1
     with open(path, 'r') as stream:
         for _raw in stream:
@@ -104,8 +104,8 @@ def vars_from_rsnapshot_conf(path):
                 continue
             k = line[:tabI].strip()
             v = line[tabI:].strip()
-            vars[k] = v
-    return vars
+            meta[k] = v
+    return meta
 
 
 def get_user_settings_path(user):
@@ -156,14 +156,14 @@ def get_user_settings(user):
 
     try_real_file = "/opt/etc/rsnapshot.conf"
     if os.path.isfile(try_real_file):
-        vars = vars_from_rsnapshot_conf(try_real_file)
+        conf = vars_from_rsnapshot_conf(try_real_file)
         no_create_root_msg = None
 
-        if 'no_create_root' not in vars:
+        if 'no_create_root' not in conf:
             no_create_root_msg = "(currently not set)"
-        elif vars['no_create_root'] != "1":
+        elif conf['no_create_root'] != "1":
             no_create_root_msg = ("(currently {})"
-                                  .format(vars['no_create_root']))
+                                  .format(conf['no_create_root']))
         if no_create_root_msg:
             print("Warning: `no_create_root\t1` should be used"
                   " {} in \"{}\" for removable drives"
@@ -171,23 +171,23 @@ def get_user_settings(user):
                   " and that the mountpoint isn't made unusable"
                   " by containing files from '/'!"
                   .format(no_create_root_msg, try_real_file))
-        if 'snapshot_root' not in vars:
+        if 'snapshot_root' not in conf:
             print("Warning: No snapshot_root in \"{}\""
                   .format(try_real_file))
         else:
-            vars['snapshot_root'] = \
-                vars['snapshot_root'].rstrip(os.path.sep)
-            if (vars['snapshot_root']
+            conf['snapshot_root'] = \
+                conf['snapshot_root'].rstrip(os.path.sep)
+            if (conf['snapshot_root']
                     != settings['snapshot_root']):
                 print(
                     "Warning: changing snapshot_root=\"{}\" (from \"{}\")"
                     " to match snapshot_root=\"{}\" (from \"{}\")"
                     .format(settings['snapshot_root'], this_settings_file,
-                            vars['snapshot_root'], try_real_file)
+                            conf['snapshot_root'], try_real_file)
                 )
 
                 settings['snapshot_root'] = \
-                    vars['snapshot_root'].rstrip(os.path.sep)
+                    conf['snapshot_root'].rstrip(os.path.sep)
                 # ^ Remove trailing slash, or os.path.dirname
                 #   will only remove that!
                 bad_start = None
