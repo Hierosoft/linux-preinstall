@@ -54,7 +54,7 @@ else:
     # USER = os.getlogin()  returns unpriv. GUI user in root terminal window!
     USER = os.environ.get('USER')
     # NOTE: USER is not set when run by cron!
-    if USER in SYS_USERS + [None, ""]:
+    if USER in list(SYS_USERS) + [None, ""]:
         settings_dir = ROOT_SETTINGS_DIR
         IS_ROOT_MODE = True
     else:
