@@ -22,8 +22,9 @@ if platform.system() == "Windows":
     HOME = os.environ['USERPROFILE']
     USER = os.environ['USERNAME']
 else:
-    HOME = os.environ['HOME']
-    USER = os.environ['USER']
+    HOME = os.environ.get('HOME')
+    USER = os.environ.get('USER')
+    # NOTE: USER is not set when run by cron!
 
 
 def echo0(*args):
