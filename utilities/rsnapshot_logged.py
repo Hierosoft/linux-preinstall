@@ -58,7 +58,8 @@ def rsnapshot_logged(backup_type):
 
     # Check and copy logs
     if os.path.isdir(settings['snapshot_root']):
-        dst_logs = settings['backup_drive']
+        dst_logs = os.path.join(settings['backup_drive'], "var", "log")
+        settings["dst_logs"] = dst_logs
         if not os.path.isdir(dst_logs):
             # makedirs *only* when has settings['snapshot_root']
             #   not just mountpoint:
