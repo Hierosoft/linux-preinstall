@@ -2,6 +2,10 @@
 # cd "$(dirname "$0")";
 # CWD="$(pwd)"
 # echo $CWD
+
+# TODO: Copy then delete mail messages: cron uses the "mail" command to record any stderr output produced.
+# See also `grep rsnapshot /var/log/syslog`
+
 OUTFILE=/var/log/linuxpreinstall.rsnapshot_logged.sh.out
 TMPFILE=/var/log/linuxpreinstall.rsnapshot_logged.sh.tmp
 LOG=/var/log/linuxpreinstall.rsnapshot_logged.sh.log
