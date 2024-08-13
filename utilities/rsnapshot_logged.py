@@ -69,7 +69,7 @@ def rsnapshot_logged(backup_type):
         shutil.copy(RSNAPSHOT_LOG, os.path.join(dst_logs, RSNAPSHOT_LOG_NAME))
         if not os.path.isdir("/opt/etc"):
             os.makedirs("/opt/etc")
-        with open("/opt/etc/last_settings.rc") as stream:
+        with open("/opt/etc/rsnapshot-generated.rc") as stream:
             for k, v in settings.items():
                 stream.write("{}=\"{}\"\n".format(k, v))
     else:
