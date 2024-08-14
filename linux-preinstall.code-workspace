@@ -30,13 +30,16 @@
 			"KIBI",
 			"laptopconnected",
 			"linuxpreinstall",
+			"listvariable",
 			"LOCALAPPDATA",
+			"mainwindow",
 			"MEBI",
 			"morelogging",
 			"mountpoint",
 			"mypath",
 			"Nextcloud",
 			"nopackage",
+			"outputinspector",
 			"Papirus",
 			"pcloud",
 			"PEBI",
@@ -52,9 +55,11 @@
 			"sysfiles",
 			"taskmanager",
 			"TEBI",
+			"textvariable",
 			"userspace",
 			"vinfo",
-			"xmessage"
+			"xmessage",
+			"yscrollcommand"
 		]
 	}
 }
