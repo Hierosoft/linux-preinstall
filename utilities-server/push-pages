@@ -61,6 +61,9 @@ from linuxpreinstall.logging2 import (
 )
 
 logger = getLogger(__name__)
+config_name = "push_config.json"
+config_path = config_name  # fixed in load_config for use in errors
+# See also: config_file in require_json
 
 DATE = datetime.today().strftime('%Y%m%d')
 # DATE = "`date +%Y%m%d`"  # such as 20230114
@@ -99,9 +102,9 @@ def to_bool(value):
 def require(key, tip=None):
     if config.get(key) is None:
         msg = (
-            'This script requires "{}" in {} or the environment'
+            'This script requires {} in {} or the environment'
             ' for scripting purposes'
-            ''.format(key, push_config)
+            ''.format(repr(key), repr(config_path))
         )
         if tip is not None:
             msg += " " + tip + "."
@@ -150,17 +153,17 @@ def resolve_local_dir(this_config):
 
 
 def load_config():
-    config_name = "push_config.json"
-    config_file = os.path.realpath(config_name)
+    global config_path
+    config_path = os.path.realpath(config_name)
     if not os.path.isfile(config_name):
         echo0("{} is required in {}."
-              "".format(config_name, os.path.dirname(config_file)))
+              "".format(config_name, os.path.dirname(config_path)))
         return None
-    this_config = require_json(config_file)
+    this_config = require_json(config_path)
     if this_config is None:
         return None
 
-    echo0("Using {}".format(repr(config_file)))
+    echo0("Using {}".format(repr(config_path)))
     resolve_local_dir(this_config)
     return this_config
 
