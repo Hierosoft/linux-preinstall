@@ -217,15 +217,15 @@ def main():
     remote_dir = require('remote_dir')
     local_dir = require('local_dir')
     image_extensions = ["png", "jpg", "gif"]  # "mp4"
-    image_dotexts = ["." + ext for ext in image_extensions]
+    image_dot_exts = ["." + ext for ext in image_extensions]
     if to_bool(config.get("images")):
         for rel_dir in require("image_dirs"):  # DIRNAME
             echo0("* processing \"/{}\"...".format(rel_dir))
             local_sub_path = os.path.join(local_dir, rel_dir)
             for sub_sub in os.listdir(local_sub_path):
                 sub_sub_path = os.path.join(local_sub_path, sub_sub)
-                sub_sub_noext, sub_sub_dotext = os.path.splitext(sub_sub)
-                if sub_sub_dotext not in image_dotexts:
+                sub_sub_no_ext, sub_sub_dot_ext = os.path.splitext(sub_sub)
+                if sub_sub_dot_ext not in image_dot_exts:
                     logger.warning(
                         'skipping image type not in filter set: "{}"'
                         .format(sub_sub_path))
