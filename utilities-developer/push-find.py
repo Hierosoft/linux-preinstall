@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
+from __future__ import print_function
 import os
 import sys
 import shutil
 # Importing difflib
 import difflib
 
+if sys.version_info.major < 3:
+    input = raw_input
 
 def echo0(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
@@ -50,22 +53,25 @@ if sys.version_info.major < 3:
 
 
 def shinra_tensei(source_paths, grandparent, subdirectories=None):
-    '''
-    "Almighty Push" sends the source paths to all subdirectories,
-    OVERWRITING them in EVERY REPO from grandma.
+    '''"Almighty Push" sends the source paths to all subdirectories
+    ...OVERWRITING them in EVERY REPO from grandma.
 
-    Sequential arguments:
-    source_paths -- which files to copy.
-    grandparent -- The directory containing multiple repos, each of
-        which may contain one or more subdirectories.
-
-    Keyword arguments:
-    subdirectories -- A list of subdirectory names (*not* paths) that
-        may be in grandparent and that may contain files with the same
-        name (os.path.split(source_paths[i])[1]) as any in source_paths
-        to be overwritten by them. If None, ALL subdirectories will be
-        checked.
+    Args:
+        source_paths (list[str]): which files to copy.
+        grandparent (str): The directory containing multiple repos, each
+            of which may contain one or more subdirectories.
+        subdirectories (list[str], optional): A list of subdirectory
+            names (*not* paths) that may be in grandparent and that may
+            contain files with the same name
+            (os.path.split(source_paths[i])[1]) as any in source_paths
+            to be overwritten by them. If None, ALL subdirectories will
+            be checked.
     '''
+    print(shinra_tensei.__doc__)
+    answer = input("\nAre you sure [y/N]? ")
+    if answer != "y":
+        echo0("Operation canceled: Kawarimi no Jutsu (Substitution Jutsu)")
+        return
     force = False
     if subdirectories is not None:
         if len(subdirectories) < 1:
@@ -132,7 +138,10 @@ def main():
         print("[{}] collected {}".format(me, sub))
     sub = "push-find.py"
     if not os.path.isfile(sub):
-        raise RuntimeError('"{}" is missing.'.format(sub))
+        raise RuntimeError(
+            "{} is missing. Push using the local one"
+            " so it itself gets pushed as well.".format(repr(sub))
+        )
     files_here.append(sub)
     print("[{}] collected {}".format(me, sub))
     return shinra_tensei(
