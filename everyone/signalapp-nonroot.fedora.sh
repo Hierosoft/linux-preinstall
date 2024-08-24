@@ -4,7 +4,7 @@
 install_cmd=install_any.py
 try_cmd="$HOME/git/linux-preinstall/utilities/install_any.py"
 try2_cmd="$HOME/Downloads/git/linux-preinstall/utilities/install_any.py"
-try3_cmd="$HOME/Downloads/git/poikilos/linux-preinstall/utilities/install_any.py"
+try3_cmd="$HOME/Downloads/git/Hierosoft/linux-preinstall/utilities/install_any.py"
 install_cmd_path="`command -v $install_cmd`"
 if [ ! -f "`command -v $install_cmd`" ]; then
     if [ -f "$try2_cmd" ]; then

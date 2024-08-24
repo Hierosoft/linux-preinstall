@@ -13,7 +13,7 @@ download-add
 Add a file to a server's temporary downloads folder, then signal the
 server to change it to the correct location (actual downloads folder),
 user, and group that the server (that has download-move from
-https://github.com/poikilos/linux-preinstall is installed) is
+https://github.com/Hierosoft/linux-preinstall is installed) is
 configured to use.
 
 download-add should only run on the client, and download-move should

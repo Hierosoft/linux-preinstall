@@ -1,15 +1,18 @@
 #!/usr/bin/env python3
 """
-This file sends computer info to <http://expertmultimedia/ping.php>.
+Send computer info to <http://expertmultimedia/ping.php>
+to receive technical support.
 
 Instead of this file, you can manually enter a hostname into
 <http://expertmultimedia/whoami.php>.
 """
 from __future__ import print_function
-import socket
-import urllib
+
 import json
+import os
+import socket
 import sys
+import urllib
 # See <https://stackoverflow.com/questions/17822158/
 #      how-to-get-an-utc-date-string-in-python>
 # from datetime import datetime, timezone
@@ -21,7 +24,7 @@ if sys.version_info.major >= 3:
     request = urllib.request
 else:
     # Python 2
-    import urllib2 as urllib
+    import urllib2 as urllib  # type: ignore
     request = urllib
 
 if sys.version_info.major >= 3:
@@ -36,6 +39,23 @@ else:
     # from urllib import quote
     # from urllib import unquote
 
+if __name__ == "__main__":
+    MODULE_DIR = os.path.dirname(os.path.realpath(__file__))
+    sys.path.insert(0, os.path.dirname(MODULE_DIR))
+
+from linuxpreinstall.logging2 import (
+    getLogger,
+)
+
+from linuxpreinstall import (
+    echo0,
+)
+
+logger = getLogger(__name__)
+
+logger.warning(
+    "Only use {} if you are a customer and want to share your IP!"
+    .format(__name__))
 
 ping_url = "http://expertmultimedia.com/ping.php"
 
@@ -74,8 +94,8 @@ def main():
     try:
         response = request.urlopen(query_s)
     except urllib.error.HTTPError as e:
-        print("The URL \"{}\" is not accessible.".format(query_s))
-        print(str(e))
+        logger.error("The URL \"{}\" is not accessible.".format(query_s))
+        logger.exception("")  # arg is custom msg for first line
         return None
 
     response_s = decode_safe(response.read())
@@ -84,8 +104,8 @@ def main():
         results = json.loads(response_s)
         print(results)
     except json.decoder.JSONDecodeError:
-        print("The server sent invalid JSON:")
-        print(response_s)
+        logger.error("The server sent invalid JSON:")
+        echo0(response_s)
     return 0
 
 

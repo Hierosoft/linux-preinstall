@@ -102,18 +102,22 @@ def booklet_order(n):
                 p += 1
         offset += 2
     if n % 4 != 0:
-        print()
-        print("WARNING: You'll have to cut the page printed last in"
-              " half, throw away the incorrect half, then flip it"
-              " properly since page counts not divisible by 4 are not"
-              " fully implemented.")
+        print(file=sys.stderr)
+        print(
+            "WARNING: You'll have to cut the page printed last in"
+            " half, throw away the incorrect half, then flip it"
+            " properly since page counts not divisible by 4 are not"
+            " fully implemented.",
+            file=sys.stderr)
     return ret
 
 
 def main():
     if len(sys.argv) < 2:  # 0 is script
-        print("You must provide a page count to create booklet"
-              " page order.")
+        print(
+            "You must provide a page count to create booklet"
+            " page order.",
+            file=sys.stderr)
         exit(1)
     print(booklet_order(sys.argv[1]))
     pass

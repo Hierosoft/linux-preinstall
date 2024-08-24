@@ -9,7 +9,7 @@ to restore the database.
 Usage:
 - Linux:
   python3 dxinstall-backup-validator.py 1>redo-rows.sql
-  
+
 - Windows:
   python3 dxinstall-backup-validator.py 1>redo-rows.sql 2>screen_output.txt
 - from the console into mysql:
@@ -22,6 +22,13 @@ source redo-rows.sql
 - where NAME is the database name.
 
 """
+from __future__ import division
+from __future__ import print_function
+
+import os
+import sys
+
+from collections import OrderedDict
 
 # Additional issues
 ## Output of source redo-tables.sql is:
@@ -48,7 +55,7 @@ ERROR 1067 (42000): Invalid default value for 'date_created'
 ERROR 1067 (42000): Invalid default value for 'access_granted'
 """
 # SOLVED: Added the following to the beginning of the SQL file as per <https://stackoverflow.com/a/69987301>:
-# SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO"; 
+# SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 # SET time_zone = "+00:00";
 
 ## "There has been a critical error on this website."
@@ -75,12 +82,6 @@ Stack trace:
 # Add the following to wp-config.php: define('RELOCATE',true);
 
 
-from __future__ import division
-from __future__ import print_function
-import os
-import sys
-
-from collections import OrderedDict
 
 BACKUP = "/var/www/dxinstalls.com/xcloner-44bc6/database-backup.sql"
 
@@ -189,16 +190,17 @@ redo = (  # This list can be regenerated using this program, if restored_tables 
 
 def echo0(*args, **kwargs):
     """Print to stderr
-    
+
     Only INSERT statements should go to stdout in this program,
     so redirecting output to a new SQL file (to redo missed insertions)
     is possible.
     """
-    print(*args, file=sys.stderr, **kwargs)
+    kwargs['file'] = sys.stderr
+    print(*args, **kwargs)
 
 
 def percent_str(ratio):
-    return "{}%".format(round(ratio))    
+    return "{}%".format(round(ratio))
 
 
 def percent_int_str(index, size):
@@ -300,7 +302,7 @@ def collect_info(backup_sql_path):
                         echo0('File "{}" line {}: Warning:'
                               ' table {} was used before created'
                               ''.format(backup_sql_path, line_n, table))
-                        
+
                         raise NotImplementedError(
                             "Table wasn't detected in: {}".format(create_table)
                         )
@@ -318,7 +320,7 @@ def main():
     echo0("used_tables:")
     for table in results['used_tables']:
         echo0("- {}".format(table))
-    
+
     echo0("")
     echo0("Used tables not actually restored"
           " according to SHOW TABLE; results saved in restored_tables:")

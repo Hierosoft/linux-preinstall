@@ -58,8 +58,6 @@ if os.path.isfile(os.path.join(REPO_DIR, "linuxpreinstall", "__init__.py")):
 
 from linuxpreinstall import (  # noqa: F401, E402
     echo0,
-    echo1,
-    echo2,
 )
 from linuxpreinstall.sysdirs import (  # noqa: F401, E402
     sysdirs,

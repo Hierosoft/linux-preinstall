@@ -49,7 +49,8 @@ from linuxpreinstall import which  # noqa: E402
 MELD_PATH = which("meld")
 
 def echo0(*args, **kwargs):
-    print(*args, file=sys.stderr, **kwargs)
+    kwargs['file'] = sys.stderr
+    print(*args, **kwargs)
     return True
 
 

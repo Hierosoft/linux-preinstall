@@ -23,7 +23,6 @@ if __name__ == "__main__":
     REPO_DIR = os.path.dirname(SCRIPTS_DIR)
     sys.path.insert(0, REPO_DIR)
 
-
 from linuxpreinstall.more_rsnapshot import (
     # TMTimer,
     LOG,
@@ -32,12 +31,22 @@ from linuxpreinstall.more_rsnapshot import (
     RSNAPSHOT_LOG,
     RSNAPSHOT_LOG_NAME,
 )
+from linuxpreinstall.logging2 import (
+    getLogger,
+)
+from linuxpreinstall import (
+    echo0,
+)
+
+logger = getLogger(__name__)
+
 _, me = os.path.split(__file__)
 
 
 def run_command(command):
     """Run a command and return the returncode of the process."""
     print("[{}] Running: {}".format(command, me))
+    # ^ Only use stderr on error, since may be running as cron
     try:
         subprocess.check_call(command, shell=True)
         return 0  # Success
@@ -47,11 +56,10 @@ def run_command(command):
 
 def rsnapshot_logged(backup_type):
     if not backup_type:
-        print(
-            "[{}] Error: expected argument: backup type"
+        logger.error(
+            "[{}] expected argument: backup type"
             " (such as alpha, beta, gamma, or delta)"
-            .format(me),
-            file=sys.stderr,
+            .format(__name__),
         )
         return 1
 
@@ -116,19 +124,20 @@ def rsnapshot_logged(backup_type):
                          settings['rsnapshot_flag_dir']))
         with open(LOG, 'a') as logfile:
             logfile.write(error + "\n")
-        print(error, file=sys.stderr)
+        logger.error(error)
         with open(LOG, 'a') as logfile:
             logfile.write("# endregion after backup\n")
-        print("Finished writing \"{}\"".format(LOG), file=sys.stderr)
+        echo0("Finished writing \"{}\"".format(LOG))
         return 1
 
-    print("Finished writing \"{}\"".format(LOG), file=sys.stderr)
+    print("Finished writing \"{}\"".format(LOG))
+    # ^ Only use stderr on error, since may be running as cron
     return 0
 
 
 def main():
     if len(sys.argv) != 2:
-        print("Usage: {} <backup_type>".format(sys.argv[0]), file=sys.stderr)
+        echo0("Usage: {} <backup_type>".format(sys.argv[0]))
         sys.exit(1)
     backup_type = sys.argv[1]
     rsnapshot_logged(backup_type)

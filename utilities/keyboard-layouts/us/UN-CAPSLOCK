@@ -2,6 +2,7 @@
 import fcntl
 import os
 import subprocess
+import sys
 
 KDSETLED = 0x4B32
 
@@ -34,12 +35,11 @@ except ImportError as ex:
     # X11.XCloseDisplay(display)
     # exit(0)
     try:
-        subprocess.call(["xdotool", "key", "Caps_Lock"])
-        exit(0)
+        sys.exit(subprocess.call(["xdotool", "key", "Caps_Lock"]))
     except OSError as ex:
         if "No such file or directory" in str(ex):
-            print("Error: You must first install xdotool.")
+            print("Error: You must first install xdotool.",
+                  file=sys.stderr)
         else:
-            raise ex
-        exit(1)
-
+            raise
+        sys.exit(1)

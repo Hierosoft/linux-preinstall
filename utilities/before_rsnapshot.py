@@ -21,6 +21,12 @@ if __name__ == "__main__":
 
 from generate_exclude import main as generate_exclude_main
 
+from linuxpreinstall import (
+    echo0,
+)
+
+from linuxpreinstall.logging2 import getLogger
+
 from linuxpreinstall.more_rsnapshot import (
     LOG,
     settings,
@@ -31,6 +37,8 @@ from linuxpreinstall.sysdirs import (
     sysdirs,
 )
 
+logger = getLogger(__name__)
+
 _, me = os.path.split(__file__)
 
 
@@ -38,6 +46,7 @@ def run_command(command, log=None):
     """Run a command and optionally log the output. Returns the
     returncode of the process."""
     print("[{}] Running: {}".format(command, me))
+    # ^ Only use stderr on error, since may be running as cron
     try:
         output = subprocess.check_output(command, shell=True,
                                          stderr=subprocess.STDOUT)
@@ -118,9 +127,9 @@ def main():
 
     # Verify rsnapshot directory
     if not os.path.isdir(settings['snapshot_root']):
-        print("[before-backup.sh] Error: {} is missing."
-              .format(settings['snapshot_root']),
-              file=sys.stderr)
+        logger.error(
+            "{} is missing."
+            .format(settings['snapshot_root']))
         return 1
 
     # Run generate_exclude.py scripts
@@ -129,15 +138,17 @@ def main():
     usr_cmd = 'sudo -u owner python3 /opt/bin/generate_exclude.py --user'
     code = run_command(usr_cmd, log=LOG)
     if code != 0:
-        print("Failed with code {}: {}".format(code, usr_cmd))
-        print("See \"{}\"".format(LOG))
+        logger.error("Failed with code {}: {}".format(code, usr_cmd))
+        echo0("See \"{}\"".format(LOG))
         return code
     print("OK: {}".format(usr_cmd))
+    # ^ Only use stderr on error, since may be running as cron
 
     # run_command('sudo python3 /opt/bin/generate_exclude.py', log=LOG)
     sys.argv = ['generate_exclude.py']
     generate_exclude_main()
     print("OK: generate_exclude_main")
+    # ^ Only use stderr on error, since may be running as cron
 
     return 0
 

@@ -19,6 +19,18 @@ import os
 # from datetime import datetime
 import time
 
+if __name__ == "__main__":
+    SUBMODULE_DIR = os.path.dirname(os.path.realpath(__file__))
+    MODULE_DIR = os.path.dirname(os.path.dirname(SUBMODULE_DIR))
+    sys.path.insert(0, os.path.dirname(MODULE_DIR))
+
+from linuxpreinstall import (
+    echo0,
+)
+from linuxpreinstall.logging2 import getLogger
+
+logger = getLogger(__name__)
+
 LC_ALL = os.environ.get('LC_ALL')
 if LC_ALL is not None:
     locale.setlocale(locale.LC_ALL, LC_ALL)
@@ -38,8 +50,9 @@ date_s = time.strftime("%c", time.localtime(time.time()))
 
 EUID = os.geteuid()
 if EUID != 0:
-    print("Error: You must be root to run {} but EUID is {}."
-          "".format(sys.argv[0], EUID))
+    logger.error(
+        "You must be root to run {} but EUID is {}."
+        .format(sys.argv[0], EUID))
     sys.exit(1)
 
 LP_BACKUPS = os.environ.get("/opt")
@@ -115,7 +128,7 @@ def main():
             else:
                 outs.write('# skipping "ln -s" for real file "{}"\n'
                            ''.format(subPath))
-        print("{} is complete {}.".format(restore_path, date_s))
+        echo0("{} is complete {}.".format(restore_path, date_s))
         outs.write("echo \"got nginx symlinks from {}\"\n"
                    "".format(date_s))
         outs.write("exit $code\n")

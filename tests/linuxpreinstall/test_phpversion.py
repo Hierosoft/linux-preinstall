@@ -4,18 +4,19 @@ import sys
 
 from linuxpreinstall import (
     echo0,
-    set_verbosity,
     find_not_decimal,
     rfind_not_decimal,
     split_package_parts,
 )
+
+from linuxpreinstall.logging2 import logging
 
 # from linuxpreinstall.phpversion import (
 # )
 
 # TODO: Require nopackage and use the version feature from it instead?
 
-set_verbosity(True)
+logging.basicConfig(logging.INFO)
 
 
 class TestPackageStringMethods(unittest.TestCase):

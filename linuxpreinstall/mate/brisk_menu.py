@@ -18,13 +18,23 @@ from gi.repository import (
 )
 from subprocess import Popen
 # See <https://www.micahcarrick.com/gsettings-python-gnome-3.html>
+
+if __name__ == "__main__":
+    SUBMODULE_DIR = os.path.dirname(os.path.realpath(__file__))
+    MODULE_DIR = os.path.dirname(os.path.dirname(SUBMODULE_DIR))
+    sys.path.insert(0, os.path.dirname(MODULE_DIR))
+
+from linuxpreinstall import (
+    echo0,
+)
+
 digits = "1234567890"
 
 
 def my_func(instance, param):
     # See
     # <https://pygobject.readthedocs.io/en/latest/guide/api/properties.html>
-    print("New value %r" % instance.get_property(param.name))
+    echo0("New value %r" % instance.get_property(param.name))
 
 
 def sc_fn_to_name(sc_fn, to_lowercase=True):
@@ -67,7 +77,7 @@ def sc_fn_to_name(sc_fn, to_lowercase=True):
             #   "blender-2.92"
     if to_lowercase:
         sc_fn = sc_fn.lower()
-    # print("got {} from {}".format(sc_fn, sc_fn_raw))
+    # echo0("got {} from {}".format(sc_fn, sc_fn_raw))
     return sc_fn
 
 
@@ -133,8 +143,8 @@ def main():
     # print("favs: {}".format(favs))
     fav_names = [sc_fn_to_name(a) for a in favs]
     print("fav_names: {}".format(fav_names))
-    print("Restarting mate-panel to complete the process...")
-    p = Popen(['mate-panel', '--replace'])
+    echo0("Restarting mate-panel to complete the process...")
+    _ = Popen(['mate-panel', '--replace'])
     return 0
 
 

@@ -15,8 +15,8 @@ gsettings_set('com.canonical.Unity.Launcher', 'launcher-position',
 '''
 
 from __future__ import print_function
+
 import sys
-import os
 # if sys.version_info.major >= 3:
 #     import functools  # Python 3
 # import sys
@@ -31,7 +31,8 @@ from gi.repository import (
 
 
 def echo0(*args, **kwargs):
-    print(*args, file=sys.stderr, **kwargs)
+    kwargs['file'] = sys.stderr
+    print(*args, **kwargs)
     return True
 
 
@@ -59,7 +60,7 @@ class GSettings:
     def get_has_unapplied(self, path, key):
         self._init_settings(path)
         # if self.settings is None:
-        #     print("Error: settings is not initialized. GSettings is"
+        #     logger.error("settings is not initialized. GSettings is"
         #           " not a subclass of Gio.Settings")
         #     return False
         return self.settings.get_has_unapplied()

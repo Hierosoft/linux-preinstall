@@ -20,6 +20,16 @@ from linuxpreinstall.sysdirs import (
 
 from linuxpreinstall.readonlydict import ReadOnlyDict
 
+from linuxpreinstall.logging2 import (
+    getLogger,
+)
+
+from linuxpreinstall import (
+    echo0,
+)
+
+logger = getLogger(__name__)
+
 _, me = os.path.split(__file__)
 
 default_settings = ReadOnlyDict()
@@ -58,9 +68,9 @@ else:
         settings_dir = ROOT_SETTINGS_DIR
         IS_ROOT_MODE = True
     else:
-        print("Warning: Running as {} but expected one among {}"
-              .format(USER, SYS_USERS),
-              file=sys.stderr)
+        logger.warning(
+            "Running as {} but expected one among {}"
+            .format(USER, SYS_USERS))
 
 SETTINGS_JSON_NAME = "more_rsnapshot.json"  # *Not* the generated json
 
@@ -96,11 +106,11 @@ def vars_from_rsnapshot_conf(path):
                 continue
             tabI = line.find("\t")
             if tabI == 0:
-                print("{}, line {}: Warning: tab before var name in `{}`"
+                echo0("{}, line {}: Warning: tab before var name in `{}`"
                       .format(path, line_n, line))
                 continue
             elif tabI < 0:
-                print("{}, line {}: Warning: no tab after var name in `{}`"
+                echo0("{}, line {}: Warning: no tab after var name in `{}`"
                       .format(path, line_n, line))
                 continue
             k = line[:tabI].strip()
@@ -136,18 +146,17 @@ def get_user_settings(user):
             if os.path.isfile(_settings_file_bad):
                 os.remove(_settings_file_bad)
             shutil.move(this_settings_file, _settings_file_bad)
-            print(
+            echo0(
                 "[{} \"{}\"] {}: {}"
-                .format(me, this_settings_file, type(ex).__name__, ex),
-                file=sys.stderr)
+                .format(me, this_settings_file, type(ex).__name__, ex))
 
     for k, v in default_settings.items():
         if k not in settings:
             settings[k] = v
 
     if settings['snapshot_root'].endswith(os.path.sep):
-        print(
-            "Warning: snapshot_root=\"{}\" (from \"{}\")"
+        logger.warning(
+            "snapshot_root=\"{}\" (from \"{}\")"
             " ends with \"{}\" which will be removed."
             .format(settings['snapshot_root'], this_settings_file,
                     os.path.sep)
@@ -166,21 +175,23 @@ def get_user_settings(user):
             no_create_root_msg = ("(currently {})"
                                   .format(conf['no_create_root']))
         if no_create_root_msg:
-            print("Warning: `no_create_root\t1` should be used"
-                  " {} in \"{}\" for removable drives"
-                  " to ensure they are mounted"
-                  " and that the mountpoint isn't made unusable"
-                  " by containing files from '/'!"
-                  .format(no_create_root_msg, try_real_file))
+            logger.warning(
+                "`no_create_root\t1` should be used"
+                " {} in \"{}\" for removable drives"
+                " to ensure they are mounted"
+                " and that the mountpoint isn't made unusable"
+                " by containing files from '/'!"
+                .format(no_create_root_msg, try_real_file))
         if 'snapshot_root' not in conf:
-            print("Warning: No snapshot_root in \"{}\""
-                  .format(try_real_file))
+            logger.warning(
+                "No snapshot_root in \"{}\""
+                .format(try_real_file))
         else:
             conf['snapshot_root'] = \
                 conf['snapshot_root'].rstrip(os.path.sep)
             if (conf['snapshot_root']
                     != settings['snapshot_root']):
-                print(
+                echo0(
                     "[{}] Warning: changing snapshot_root=\"{}\" (from \"{}\")"
                     " to match snapshot_root=\"{}\" (from \"{}\")"
                     .format(os.path.realpath(__file__),
@@ -208,14 +219,15 @@ def get_user_settings(user):
                                      .format(settings['snapshot_root'],
                                              suffix))
     else:
-        print("Warning: no {}".format(try_real_file))
+        logger.warning("no {}".format(try_real_file))
 
     try_drive = os.path.dirname(settings['snapshot_root'])
     if settings['backup_drive'] != try_drive:
-        print("Warning: got backup_drive=\"{}\""
-              " but expected a parent of \"{}\" such as {}"
-              .format(settings['backup_drive'], settings['snapshot_root'],
-                      try_drive))
+        logger.warning(
+            "Warning: got backup_drive=\"{}\""
+            " but expected a parent of \"{}\" such as {}"
+            .format(settings['backup_drive'], settings['snapshot_root'],
+                    try_drive))
 
     _userspace_comment = (
         "This file will only be used for a user-space backup of {}."
@@ -246,7 +258,7 @@ if not os.path.isfile(settings_file):
 
     with open(settings_file, 'w') as stream:
         json.dump(settings, stream)
-    print("[{}] Created a new \"{}\"".format(me, settings_file))
+    echo0("[{}] Created a new \"{}\"".format(me, settings_file))
 
 if sys.version_info.major < 3:
     FileNotFoundError = IOError
@@ -382,27 +394,30 @@ def install_rsnapshot_scripts():
 
         try:
             if os.path.isfile(dst) and not os.path.islink(dst):
-                print("Error: {} exists as a regular file.".format(dst),
-                      file=sys.stderr)
+                logger.error("{} exists as a regular file.".format(repr(dst)))
                 return 1
 
             if os.path.islink(dst):
                 existing_target = os.readlink(dst)
                 if existing_target != target:
-                    print("Error: {} exists but points to {} instead of {}."
-                          .format(dst, existing_target, target),
-                          file=sys.stderr)
+                    logger.error(
+                        "{} exists but points to {} instead of {}."
+                        .format(repr(dst), repr(existing_target),
+                                repr(target)))
                     return 1
 
             os.symlink(target, dst)
 
         except PermissionError:
-            print("Permission denied: unable to create symlink at {}."
-                  .format(dst), file=sys.stderr)
+            logger.error(
+                "Permission denied: unable to create symlink at {}."
+                .format(repr(dst)))
             return 1
 
     if not os.path.isdir(DEST_CRON_D):
-        print("There is no \"{}\"".format(DEST_CRON_D), file=sys.stderr)
+        logger.error(
+            "{} is only implemented for systems with \"{}\"."
+            .format(__name__, DEST_CRON_D))
         return 1
     for src, dst in install_files:
         shutil.copy(src, dst)  # does overwrite

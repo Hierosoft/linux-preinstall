@@ -4,6 +4,9 @@ import sys
 import subprocess
 # os.system("php -m > /tmp/php-m.txt")
 requested_ver = None
+
+# ok to use print() since this can't be imported (has hyphen) so can't
+#   interfere with stdout for any other code in the same python process.
 if len(sys.argv) < 2:
     requested_ver = os.environ.get("requested_ver")
     if requested_ver is None:

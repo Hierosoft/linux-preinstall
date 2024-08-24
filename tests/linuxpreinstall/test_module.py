@@ -1,20 +1,11 @@
 from __future__ import print_function
 import unittest
 
-from linuxpreinstall import (
-    echo0,
-    set_verbosity,
-    find_not_decimal,
-    rfind_not_decimal,
-    split_package_parts,
-)
-
-# from linuxpreinstall.phpversion import (
-# )
-
 # TODO: Require nopackage and use the version feature from it instead?
 from linuxpreinstall import human_readable
-set_verbosity(True)
+import linuxpreinstall.logging2 as logging
+
+logging.basicConfig(logging.DEBUG)
 
 
 class TestLinuxPreinstall(unittest.TestCase):

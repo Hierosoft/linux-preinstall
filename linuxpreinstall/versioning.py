@@ -6,10 +6,7 @@ import select
 import json
 
 from linuxpreinstall import (  # noqa F401
-    write0,  # noqa F401
-    write1,
     echo0,
-    echo1,  # noqa F401
     get_verbosity,
 )
 

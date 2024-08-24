@@ -32,6 +32,19 @@ import platform
 import json
 import shutil
 
+if __name__ == "__main__":
+    SUBMODULE_DIR = os.path.dirname(os.path.realpath(__file__))
+    if os.path.isfile(os.path.join(SUBMODULE_DIR, "linuxpreinstall", "__init__.py")):
+        sys.path.insert(0, os.path.dirname(SUBMODULE_DIR))
+    else:
+        MODULE_DIR = os.path.dirname(os.path.dirname(SUBMODULE_DIR))
+        if os.path.isfile(os.path.join(MODULE_DIR, "linuxpreinstall", "__init__.py")):
+            sys.path.insert(0, os.path.dirname(MODULE_DIR))
+        else:
+            REPO_DIR = os.path.dirname(MODULE_DIR)
+            if os.path.isfile(os.path.join(REPO_DIR, "linuxpreinstall", "__init__.py")):
+                sys.path.insert(0, os.path.dirname(REPO_DIR))
+
 print(
     "============================= SCAN REMOTE ============================="
 )

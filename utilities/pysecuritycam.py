@@ -27,7 +27,7 @@ else:
     # # Hide the exception, since invalid URL may contain password after
     # # colon instead of port.
     # print("The URL is incorrect (colon must be followed by port#)")
-    # exit(1)
+    # sys.exit(1)
 # - urlopen is only possible if no authentication (the url must have a
 #   port not a password after ":" if any ":")
 
@@ -65,7 +65,7 @@ screen = pg.display.set_mode(resolution_pair,  pg.RESIZABLE)
 
 
 def show_error(msg, color=red):
-    # print(msg)
+    # print(msg, file=sys.stderr)
     font = pg.font.Font('freesansbold.ttf', 16)
     # render(text, antialias, color, background=None) -> Surface
     lines = msg.split("\n")

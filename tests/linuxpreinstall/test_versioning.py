@@ -3,8 +3,10 @@ import sys
 
 from linuxpreinstall import (
     echo0,
-    set_verbosity,
 )
+
+import linuxpreinstall.logging2 as logging
+
 
 from linuxpreinstall.versioning import (
     splitVersion,
@@ -13,7 +15,8 @@ from linuxpreinstall.versioning import (
 
 # TODO: Require nopackage and use the version feature from it instead?
 
-set_verbosity(True)
+
+logging.basicConfig(logging.INFO)
 
 
 class TestStringMethods(unittest.TestCase):

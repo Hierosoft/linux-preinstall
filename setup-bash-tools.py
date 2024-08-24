@@ -6,15 +6,26 @@ import os
 # import shlex
 # import subprocess
 import json
+
+if __name__ == "__main__":
+    REPO_DIR = os.path.dirname(os.path.realpath(__file__))
+    sys.path.insert(0, REPO_DIR)
+
 from linuxpreinstall import (
     echo0,
-    echo1,
-    echo2,
-    set_verbosity,
     profile,
 )
 
-from linuxpreinstall.bash import (
+import linuxpreinstall.logging2 as logging
+
+from linuxpreinstall.logging2 import (
+    getLogger,
+)
+
+logger = getLogger(__name__)
+
+
+from linuxpreinstall.bash import (  # noqa: E402
     get_bash_value,
 )
 
@@ -110,7 +121,7 @@ def get_line(path, needle, comment_mark="#", indent="  "):
             if needle in line:
                 return line
             else:
-                echo2(indent+"- {} is not in {}".format(needle, line))
+                logger.debug(indent+"- {} is not in {}".format(needle, line))
     return None
 
 
@@ -131,8 +142,9 @@ def appendFileLine(path, line):
     mode = 'a'
     if not os.path.isfile(path):
         mode = 'w'
-        echo2("  - creating {} since doesn't exist for append"
-              "".format(json.dumps(path)))
+        logger.debug(
+            "  - creating {} since doesn't exist for append"
+            .format(json.dumps(path)))
     with open(path, mode) as outs:
         outs.write(line + "\n")
 
@@ -155,9 +167,9 @@ def main():
         arg = sys.argv[argI]
         if arg.startswith("--"):
             if arg == "--verbose":
-                set_verbosity(1)
+                logging.basicConfig(logging.INFO)
             elif arg == "--debug":
-                set_verbosity(2)
+                logging.basicConfig(logging.DEBUG)
             elif arg == "--server":
                 enable_server = True
             elif arg == "--developer":
@@ -191,7 +203,7 @@ def main():
     else:
         echo0('* checking "{}"'.format(globalsPath))
         old_lp = get_bash_value(globalsPath, 'LINUX_PREINSTALL')
-        echo2("* old LINUX_PREINSTALL={}".format(old_lp))
+        logger.debug("* old LINUX_PREINSTALL={}".format(old_lp))
 
         gotLine = get_line_startswith(globalsPath, "LINUX_PREINSTALL=")
         if gotLine is None:
@@ -236,18 +248,18 @@ def main():
                           " utilities-developer folder to your path in"
                           " {}."
                           "".format(sh_env_path))
-    echo2(indent+"* reading {}:".format(json.dumps(sh_env_path)))
+    logger.debug(indent+"* reading {}:".format(json.dumps(sh_env_path)))
     for line, flag in line_flags.items():
         got_sh_line = get_line(sh_env_path, flag)
         if got_sh_line is None:
-            echo2("  - {} is not in {}".format(flag, sh_env_path))
+            logger.debug("  - {} is not in {}".format(flag, sh_env_path))
             alt_flag = flag.replace("$HOME", "~")
             if alt_flag != flag:
                 got_sh_line = get_line(sh_env_path, alt_flag)
                 if got_sh_line is not None:
-                    echo2("    - {} is.".format(alt_flag))
+                    logger.debug("    - {} is.".format(alt_flag))
                 else:
-                    echo2("    - neither is {}.".format(alt_flag))
+                    logger.debug("    - neither is {}.".format(alt_flag))
         if got_sh_line is None:
             appendFileLine(sh_env_path, line)
             print("* added {} to {}"
@@ -256,7 +268,7 @@ def main():
             print("* {} already has {}"
                   "".format(sh_env_path, got_sh_line))
 
-    echo2(indent+"* reading {}:".format(json.dumps(sh_rc_path)))
+    logger.debug(indent+"* reading {}:".format(json.dumps(sh_rc_path)))
     tmp_got_chm_lines = []
     for i in range(len(chm_lines)):
         tmp_got_chm_lines.append(get_line(sh_rc_path, chm_lines[i]))
@@ -272,11 +284,11 @@ def main():
     got_old_lines = []
 
     bad_lines = []
-    echo2(indent+"* reading {}:".format(json.dumps(sh_env_path)))
+    logger.debug(indent+"* reading {}:".format(json.dumps(sh_env_path)))
     odd_add_line = 'PROMPT_COMMAND="history -a;$PROMPT_COMMAND"'
     odd_chm_lines = [old_add_line, old_set_line, odd_add_line]
     for chm_line in chm_lines + odd_chm_lines:
-        echo1("  - checking for misplaced: {}".format(chm_line))
+        logger.info("  - checking for misplaced: {}".format(chm_line))
         bad_line = get_line(sh_env_path, chm_line, indent="    ")
         # ^ check if in sh_env_path instead of correct sh_rc_path
         if bad_line is not None:
@@ -291,32 +303,34 @@ def main():
     remove_existing_lines = None
     edit_path = sh_rc_path
     if len(bad_lines) > 0:
-        echo0("Error: lines are in {} but should be in {}."
-              "".format(sh_env_path, sh_rc_path))
+        logger.error(
+            "lines are in {} but should be in {}."
+            .format(sh_env_path, sh_rc_path))
         remove_existing_lines = bad_lines
         edit_path = sh_env_path
     elif len(got_old_lines) > 0:
         remove_existing_lines = got_old_lines
-        echo0("Error: Bash has a legacy history configuration.")
+        logger.error("Bash has a legacy history configuration.")
     else:
         if len(got_chm_lines) == 0:
             appendFileLine(sh_rc_path, cmd_history_multisession_sh)
             echo0("* wrote multi-session bash history saving to {}"
-                  "".format(sh_rc_path))
+                  .format(sh_rc_path))
         elif len(got_chm_lines) == 3:
             echo0("* {} already has multi-session bash history saving."
-                  "".format(sh_rc_path))
+                  .format(sh_rc_path))
         else:
-            echo0("Error: the bash history setup is not recognized."
-                  " Line(s) present but not {}"
-                  "".format(missing_chm_lines))
+            logger.error(
+                "the bash history setup is not recognized."
+                " Line(s) present but not {}"
+                .format(missing_chm_lines))
             remove_existing_lines = got_chm_lines
     if remove_existing_lines is not None:
-        echo0("- To install the improved multi-session bash history"
-              " code, remove/comment the following {} line(s) from {}"
-              " then run {} again:"
-              "".format(len(remove_existing_lines),
-                        json.dumps(edit_path), me))
+        logger.error(
+            "- To install the improved multi-session bash history"
+            " code, remove/comment the following {} line(s) from {}"
+            " then run {} again:"
+            .format(len(remove_existing_lines), json.dumps(edit_path), me))
         for old_line in remove_existing_lines:
             echo0(old_line)
         echo0("")

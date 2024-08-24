@@ -27,10 +27,19 @@ import os
 __author__ = 'Jake "Poikilos" Gustafson'
 
 
+# if __name__ == "__main__":
+#     MODULE_DIR = os.path.dirname(os.path.realpath(__file__))
+#     sys.path.insert(0, os.path.dirname(MODULE_DIR))
+
+# from linuxpreinstall import (
+#     echo0,
+# )
+# ^ commented for optimization
+
+
 def echo0(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
     return True
-
 
 defaults = {}
 defaults['counts'] = [90, 92]

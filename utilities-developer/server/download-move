@@ -9,7 +9,7 @@ download-move
 Move a file to the configured downloads folder and set the configured
 owner and group.
 
-download-move is part of https://github.com/poikilos/linux-preinstall.
+download-move is part of https://github.com/Hierosoft/linux-preinstall.
 Place the script in the home directory of the remote server or whatever
 directory is specified as REMOTE_DL_TMP in the client. It places a
 file in a downloads folder and sets the permissons. Normally, this
@@ -85,11 +85,11 @@ if [ ! -f "$DL_TMP/$FILE_NAME" ]; then
     exit 1
 fi
 if [ "@$FILE_NAME" = "@download-add" ]; then
-    echo "Error: download-add should only be installed on the client, but was specified as the FILE_NAME parameter. See <https://github.com/poikilos/linux-preinstall>."
+    echo "Error: download-add should only be installed on the client, but was specified as the FILE_NAME parameter. See <https://github.com/Hierosoft/linux-preinstall>."
     exit 1
 fi
 if [ "@$FILE_NAME" = "@download-move" ]; then
-    echo "Error: download-move is already installed, but was specified as the FILE_NAME parameter. See <https://github.com/poikilos/linux-preinstall>."
+    echo "Error: download-move is already installed, but was specified as the FILE_NAME parameter. See <https://github.com/Hierosoft/linux-preinstall>."
     exit 1
 fi
 echo "[remote command] sudo mv \"$DL_TMP/$FILE_NAME\" \"$DL_DIR/\""

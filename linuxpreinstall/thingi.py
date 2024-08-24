@@ -24,34 +24,21 @@ import tempfile
 import shutil
 import shlex
 
-verbosity = 0
-verbosity_levels = [True, False, 0, 1, 2]
+if __name__ == "__main__":
+    MODULE_PATH = os.path.dirname(os.path.realpath(__file__))
+    sys.path.insert(0, os.path.dirname(MODULE_PATH))
 
+from linuxpreinstall import (
+    echo0,
+)
 
-def set_verbosity(level):
-    global verbosity
-    if level not in verbosity_levels:
-        raise ValueError("level must be one of {}".format(verbosity_levels))
-    verbosity = level
+import linuxpreinstall.logging2 as logging
 
+from linuxpreinstall.logging2 import (
+    getLogger,
+)
 
-def echo0(*args, **kwargs):
-    print(*args, file=sys.stderr, **kwargs)
-    return True
-
-
-def echo1(*args, **kwargs):
-    if verbosity < 1:
-        return False
-    print(*args, file=sys.stderr, **kwargs)
-    return True
-
-
-def echo2(*args, **kwargs):
-    if verbosity < 2:
-        return False
-    print(*args, file=sys.stderr, **kwargs)
-    return True
+logger = getLogger(__name__)
 
 
 def usage():
@@ -90,23 +77,28 @@ def unzip_unmess(src_path, dst_path):
         elif len(subs) == 1:
             dstName = subs[0]
             srcPath = os.path.join(tmpPath, subs[0])
-            echo1('* moving the sub "{}"'.format(srcPath))
+            logger.debug('* moving the sub "{}"'.format(srcPath))
         else:
             # Move the whole thing.
             dstName = os.path.splitext(os.path.split(src_path)[1])[0]
-            echo1('* moving the whole "{}" as "{}"'
-                  ' (The name may be processed further--see mv below)'
-                  ''.format(srcPath, dstName))
+            logger.debug(
+                '* moving the whole "{}" as "{}"'
+                ' (The name may be processed further--see mv below)'
+                .format(srcPath, dstName))
         uI = dstName.find("_")
         oldName = dstName
         if uI > -1:
             if dstName[:uI].isdigit():
-                echo1('removing "{}" from "{}"'.format(dstName[:uI],  dstName))
+                logger.debug(
+                    'removing "{}" from "{}"'
+                    .format(dstName[:uI],  dstName))
                 dstName = dstName[uI+1:]
             else:
-                echo1('isdigit({}): no'.format(shlex.join([dstName[:uI], ])))
+                logger.debug(
+                    'isdigit({}): no'
+                    .format(shlex.join([dstName[:uI], ])))
         else:
-            echo1('"_" in {}: no'.format(shlex.join([dstName, ])))
+            logger.debug('"_" in {}: no'.format(shlex.join([dstName, ])))
         dstName = dstName.strip(" _").strip()
         # ^ strip again in case of unusual/unicode whitespace characters
         if dstName != oldName:
@@ -124,9 +116,10 @@ def unzip_unmess(src_path, dst_path):
             # echo0('* extracted as "{}"'.format(dstSubPath))
         else:
             # shutil.move copies into it if it exists!
-            echo0('Error: "{}" already exists,'
-                  ' so extracted files will be ignored.'
-                  ''.format(dstSubPath))
+            logger.error(
+                'Error: "{}" already exists,'
+                ' so extracted files will be ignored.'
+                .format(dstSubPath))
             code = 1
     srcName = os.path.split(src_path)[1]
     foundReadme = None
@@ -172,7 +165,8 @@ def unzip_unmess(src_path, dst_path):
         shutil.move(foundReadme, dstReadmePath)
         print('mv "{}" "{}"'.format(foundReadme, dstReadmePath))
     else:
-        echo0('* there is no "{}" here to move.'.format(tryReadmeName))
+        logger.warning(
+            '* there is no "{}" here to move.'.format(tryReadmeName))
 
     return code
 
@@ -186,27 +180,27 @@ def main():
         arg = sys.argv[argI]
         if arg.startswith("--"):
             if arg == "--verbose":
-                set_verbosity(1)
+                logging.basicConfig(logging.INFO)
             elif arg == "--debug":
-                set_verbosity(2)
+                logging.basicConfig(logging.DEBUG)
             else:
-                echo0('The argument "{}" is invalid.'.format(arg))
+                logger.error('The argument "{}" is invalid.'.format(arg))
                 return 2
         elif os.path.isfile(arg):
             paths.append(arg)
         else:
-            echo0('Error: "{}" is not a file.'.format(arg))
+            logger.error('"{}" is not a file.'.format(arg))
             return 3
     if len(paths) < 1:
         usage()
-        echo0("Error: You must specify at least one zip file.")
+        logger.error("You must specify at least one zip file.")
         return 1
     for path in paths:
         dst_path = os.getcwd()
-        echo1('os.path.realpath(path): "{}"'.format(os.path.realpath(path)))
-        echo1('os.getcwd(): "{}"'.format(os.getcwd()))
-        echo1('os.path.join(os.getcwd(), path): "{}"'
-              ''.format(os.path.join(os.getcwd(), path)))
+        echo0('os.path.realpath(path): "{}"'.format(os.path.realpath(path)))
+        echo0('os.getcwd(): "{}"'.format(os.getcwd()))
+        echo0('os.path.join(os.getcwd(), path): "{}"'
+              .format(os.path.join(os.getcwd(), path)))
         if os.path.realpath(path) != os.path.join(os.getcwd(), path):
             dst_path = os.path.dirname(path)
         code = unzip_unmess(path, dst_path)

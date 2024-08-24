@@ -31,7 +31,7 @@ cd ~
 if [ ! -d git ]; then mkdir git; fi
 cd git
 if [ ! -d linux-preinstall ]; then
-  git clone https://github.com/poikilos/linux-preinstall.git
+  git clone https://github.com/Hierosoft/linux-preinstall.git
   cd linux-preinstall
 else
   cd linux-preinstall
@@ -135,7 +135,7 @@ The names of scripts specify the distro when necessary. See the "[Script Naming 
 After running install scripts, post-install instructions are often appended
 to a file called PostInstallInstructions.md (It should appear on the
 Desktop--See [issue
-#18](https://github.com/poikilos/linux-preinstall/issues/18) for more
+#18](https://github.com/Hierosoft/linux-preinstall/issues/18) for more
 feature status).
 
 If there is a program that is not available in a repo and not available

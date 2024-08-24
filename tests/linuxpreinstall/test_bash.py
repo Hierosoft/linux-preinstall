@@ -10,17 +10,12 @@ REPO_DIR = os.path.dirname(TESTS_DIR)
 if __name__ == "__main__":
     sys.path.insert(0, REPO_DIR)
 
-from linuxpreinstall import (  # noqa: E402
-    # echo0,
-    set_verbosity,
-    # REPO_DIR,
-)
-
-# from linuxpreinstall.phpversion import (
-# )
 
 from linuxpreinstall.bash import compare_files  # noqa: E402
-set_verbosity(True)
+import linuxpreinstall.logging2 as logging  # noqa: E402
+
+logging.basicConfig(logging.INFO)
+
 TESTS_DIR = os.path.join(REPO_DIR, "tests")
 TEST_DATA_DIR = os.path.join(TESTS_DIR, "data")
 COMPARE_DIR = os.path.join(TEST_DATA_DIR, "compare_files")
