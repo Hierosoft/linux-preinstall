@@ -10,7 +10,7 @@ The script also returns success (zero) only if it finds a matching
 desktop file.
 
 Install:
-pip install https://github.com/poikilos/linux-preinstall/archive/refs/heads/master.zip
+pip install https://github.com/Hierosoft/linux-preinstall/archive/refs/heads/master.zip
 
 Usage:
 whichicon <executable path substring or program name substring>
@@ -22,52 +22,48 @@ whichicon openscad
 OPENSCAD_PATH="`whichicon openscad`"
 '''
 from __future__ import print_function
-import os
-import sys
-import platform
+
 import json
+import os
+import platform
+import sys
 
+if __name__ == "__main__":
+    MODULE_DIR = os.path.dirname(os.path.realpath(__file__))
+    sys.path.insert(0, os.path.dirname(MODULE_DIR))
 
-verbosity = 0
+import linuxpreinstall.logging2 as logging
+from linuxpreinstall.logging2 import getLogger
+
 for argI in range(1, len(sys.argv)):
     arg = sys.argv[argI]
     if arg.startswith("--"):
         if arg == "--verbose":
-            verbosity = 1
+            logging.basicConfig(logging.INFO)
         elif arg == "--debug":
-            verbosity = 2
-
-if __name__ == "__main__":
-    myDir = os.path.dirname(os.path.abspath(__file__))
-    repoDir = os.path.dirname(myDir)
-    if verbosity > 1:
-        print("looking for module in repoDir last: {}".format(repoDir),
-              file=sys.stderr)
-    sys.path.append(repoDir)
-    # There is more code for the __name__ case at the bottom.
+            logging.basicConfig(logging.DEBUG)
 
 
-from linuxpreinstall import (
+from linuxpreinstall import (  # noqa: E402
     profile,
     AppData,
     which,
     endsWithAny,
-    get_verbosity,
-    echo0, as error
-    write0,  # formerly errorf
-    echo1,  # formerly debug
+    echo0,
     is_like_any,
     any_contains,
 )
 
 
 def usage():
-    print(__doc__)
+    echo0(__doc__)
     # ^ If you're reading this using a text editor/browser, note that you must
     #   not include the backslashes in the example(s).
 
+logger = getLogger(__name__)
 
-me = sys.argv[0]
+
+me = __name__
 
 icon_paths = [
     "/usr/local/share/applications",
@@ -122,8 +118,9 @@ if platform.system() == "Windows":
 def which_icon(BIN_PATH):
     if not os.path.isfile(BIN_PATH):
         # echo0()
-        write0("* Checking for \"{}\"...not a full path"
-               "".format(BIN_PATH))
+        sys.stderr.write(
+            "* Checking for \"{}\"...not a full path"
+            .format(BIN_PATH))
         TRY_CMD = which(BIN_PATH)
         if TRY_CMD is not None:
             echo0(". Unless you specify:")
@@ -135,7 +132,7 @@ def which_icon(BIN_PATH):
                   "".format(BIN_PATH, TRY_CMD))
             # exit 2
         else:
-            # complete the line started by write0:
+            # complete the line started by write:
             echo0(" and command \"{}\" is not in the environment's PATH"
                   " either.".format(TRY_CMD))
             #       " (which {}: {})."
@@ -147,7 +144,7 @@ def which_icon(BIN_PATH):
           "".format(me, BIN_PATH))
     exact_results = []
     fuzzy_results = []
-    echo1("BIN_PATH: {}".format(BIN_PATH))
+    logger.info("BIN_PATH: {}".format(BIN_PATH))
     for SC_PATH in icon_paths:
         if not os.path.isdir(SC_PATH):
             # echo0("{} does not exist.".format(SC_PATH))
@@ -236,14 +233,15 @@ def which_icon(BIN_PATH):
                     elif name == "#!":
                         pass
                     else:
-                        echo1("  * skipping ")
+                        logger.info("  * skipping ")
                         continue
-                    echo1('  * checking for {} in {} or in part of {} or {}'
-                          ''.format(BIN_PATH, value, json.dumps(launchCmd),
-                                    json.dumps(execSub)))
+                    logger.info(
+                        '  * checking for {} in {} or in part of {} or {}'
+                        .format(BIN_PATH, value, json.dumps(launchCmd),
+                                json.dumps(execSub)))
                     if BIN_PATH == execSub:
                         found = line
-                        echo0('    * matched name "{}"'.format(found))
+                        print('    * matched name "{}"'.format(found))
                         exact = True
                         break
                     elif check_all_parts and any_contains(execParts, BIN_PATH,
@@ -304,19 +302,19 @@ def which_icon(BIN_PATH):
         sub = os.path.split(subPath)[1]
         # if found is not None:
         if not endsWithAny(sub, icon_dot_extensions, CS=False):
-            echo0("  * skipping non-shortcut \"{}\""
+            print("  * skipping non-shortcut \"{}\""
                   "".format(subPath))
             continue
         if sub == "bamf-2.index":
-            echo0("  * skipping non-shortcut \"{}\""
+            print("  * skipping non-shortcut \"{}\""
                   "".format(subPath))
             continue
         if sub == "mimeinfo.cache":
-            echo0("  * skipping non-shortcut \"{}\""
+            print("  * skipping non-shortcut \"{}\""
                   "".format(subPath))
             continue
         if result != "":
-            echo0("  * skipping \"{}\""
+            print("  * skipping \"{}\""
                   " since already got a result!"
                   "".format(subPath))
             continue
@@ -328,7 +326,7 @@ def which_icon(BIN_PATH):
 def main():
     if len(sys.argv) < 2:
         usage()
-        echo0("Error: You must specify a path or a binary in the path.")
+        logger.error("You must specify a path or a binary in the path.")
         return 1
 
     BIN_PATH = sys.argv[1]
