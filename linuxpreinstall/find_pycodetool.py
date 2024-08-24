@@ -5,7 +5,7 @@ import sys
 import os
 import platform
 
-REPO_USER = "poikilos"
+REPO_USER = "Hierosoft"
 REPO_NAME = "pycodetool"
 MODULE_NAME = "pycodetool"  # See also import pycodetool statements
 
@@ -40,7 +40,7 @@ elif os.path.isdir(tryModule):
 else:
     pass
     # use the one in the python path (or fail)
-    # echo0("There is no {}".format(os.path.join(thisRepo, MODULE_NAME)))
+    # print("There is no {}".format(os.path.join(thisRepo, MODULE_NAME)))
 
 import pycodetool
 
@@ -48,12 +48,12 @@ try:
     import pycodetool
 except ImportError as ex:
     echo0("sys.path={}".format(sys.path))
-    echo0(str(ex))
+    echo0("{}: {}".format(type(ex).__name__, ex))
     echo0('"{}" is part of {}. You must install the repo:'
           ''.format(CALLER_NAME, REPO_NAME))
     echo0("# Clone it then:")
     echo0("python3 -m pip install {}".format(MODULE_NAME))
     echo0('# or just put it in a directory near here such as via:')
-    echo0('  git clone {}/{}/{}'
-          ' "{}"'.format(GIT_SERVER, REPO_USER, REPO_NAME, nearbyRepo))
+    echo0('  git clone {}/{}/{} "{}"'
+          .format(GIT_SERVER, REPO_USER, REPO_NAME, nearbyRepo))
     sys.exit(1)

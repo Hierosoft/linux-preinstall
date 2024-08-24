@@ -34,7 +34,7 @@ from linuxpreinstall import (
 )
 from linuxpreinstall.logging2 import getLogger
 
-# FIXME: move find_pycodetool to module & do: from linuxpreinstall.find_pycodetool import pycodetool
+from linuxpreinstall.find_pycodetool import pycodetool  # edits sys.path
 
 from pycodetool.parsing import (  # noqa: E401
     find_slice,
