@@ -1,19 +1,32 @@
 #!/usr/bin/env python
+from __future__ import print_function
 import requests
 import os
 import tarfile
 import sys
 
-my_dir = os.path.dirname(os.path.realpath(__file__))
-repo_dir = os.path.dirname(my_dir)
-utilities_dir = os.path.join(repo_dir, "utilities")
+SCRIPTS_DIR = os.path.dirname(os.path.realpath(__file__))
+REPO_DIR = os.path.dirname(SCRIPTS_DIR)
+
+if __name__ == "__main__":
+    sys.path.insert(0, REPO_DIR)
+
+from linuxpreinstall import (  # noqa: E402
+    echo0,
+)
+
+from linuxpreinstall.logging2 import getLogger  # noqa: E402
+
+logger = getLogger(__name__)
+
+utilities_dir = os.path.join(REPO_DIR, "utilities")
 
 # installer module:
 im_path = os.path.join(utilities_dir, "install_any.py")
 im_name = "install_any"
 
 if not os.path.isfile(im_path):
-    print("'{}' is missing.".format(im_path))
+    echo0("'{}' is missing.".format(im_path))
     sys.exit(1)
 
 
@@ -69,7 +82,7 @@ if not os.path.isdir(extracted_path):
         # See <https://stackoverflow.com/questions/15644964/
         #   python-progress-bar-and-downloads>
         with open(dl_path, "wb") as f:
-            print "Downloading %s" % dl_path
+            print("Downloading %s" % dl_path)
             response = requests.get(url, stream=True)
             total_length = response.headers.get('content-length')
 
@@ -92,8 +105,8 @@ if not os.path.isdir(extracted_path):
     tar.extractall(downloads)
     tar.close()
     if not os.path.isdir(extracted_path):
-        print(
-            "ERROR: extracting '{}' did not result in '{}'".format(
+        logger.error(
+            "extracting '{}' did not result in '{}'".format(
                 dl_path,
                 extracted_path
             )

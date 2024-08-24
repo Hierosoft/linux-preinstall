@@ -6,9 +6,9 @@ AbiWord, the file takes minutes to load (or paste). This program uses
 pandoc which so far is the only program I've discovered that can remove
 the invisible junk and make the file fast again.
 
-NOTE: It will potentially lose the margins and fonts, make the entire 
-document italicized, and make the entire document a bullet in a 
-bulleted list. However, that was only known to happen with one of the 
+NOTE: It will potentially lose the margins and fonts, make the entire
+document italicized, and make the entire document a bullet in a
+bulleted list. However, that was only known to happen with one of the
 slow documents so maybe it will not happen in every case.
 """
 from __future__ import print_function
@@ -22,7 +22,7 @@ if platform.system() == "Windows":
     HOME = os.environ['USERPROFILE']
 else:
     HOME = os.environ['HOME']
-    
+
 PANDOC = "pandoc"
 
 tkdephelp = "sudo apt-get install python3-tk"
@@ -41,10 +41,10 @@ if sys.version_info.major >= 3:
                       file=sys.stderr)
             elif os.path.exists(try_sub):
                 print("Error: %s exists but is not a directory"
-                      "" % pformat(try_sub),
+                      "" % repr(try_sub),
                       file=sys.stderr)
             else:
-                print("Error: %s is not present" % pformat(try_sub),
+                print("Error: %s is not present" % repr(try_sub),
                       file=sys.stderr)
         raise
 else:  # Python 2
@@ -85,7 +85,7 @@ class Tkclass(tk.Tk):
         root.geometry("{}x{}".format(int(screen_w/4), int(screen_h/12)))
 
 
-class Application(tk.Frame):    
+class Application(tk.Frame):
 
     def __init__(self, parent):
         self.root = parent
@@ -97,14 +97,14 @@ class Application(tk.Frame):
         self.createWidgets()
 
     def createWidgets(self):
-        top = self.winfo_toplevel()                
-        top.rowconfigure(0, weight=1)            
-        top.columnconfigure(0, weight=1)         
-        self.rowconfigure(0, weight=1)           
+        top = self.winfo_toplevel()
+        top.rowconfigure(0, weight=1)
+        top.columnconfigure(0, weight=1)
+        self.rowconfigure(0, weight=1)
         self.columnconfigure(0, weight=6)
-        self.columnconfigure(1, weight=1) 
+        self.columnconfigure(1, weight=1)
         self.columnconfigure(2, weight=1)
-        self.columnconfigure(3, weight=1) 
+        self.columnconfigure(3, weight=1)
         self.fileEntry = tk.Entry(self, textvariable=self.pathSV)
         self.fileEntry.grid(row=0, column=0, sticky=tk.W+tk.E)
 
@@ -133,7 +133,7 @@ class Application(tk.Frame):
             self.statusSV.set("")
             return
         self.pathSV.set(name)
-            
+
         # self.statusSV.set(name)
         self.statusSV.set("")
 
@@ -177,7 +177,7 @@ class Application(tk.Frame):
 
         self.statusSV.set("Please wait...")
         self.root.after(1, self.run_job)
-    
+
     def run_job(self):
         if not self.cmd_parts:
             self.statusSV.set("The command was interrupted.")
@@ -197,4 +197,4 @@ class Application(tk.Frame):
         top.quit()
 
 
-main = Tkclass() 
+main = Tkclass()

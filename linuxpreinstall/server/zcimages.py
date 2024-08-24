@@ -5,7 +5,7 @@ zcimages
 Convert images in projects/images/ to 3 sizes usable by ZenCart and
 place them in images/.
 
-This script is part of <https://github.com/poikilos/linux-preinstall>.
+This script is part of <https://github.com/Hierosoft/linux-preinstall>.
 
 Run this script in an offline Zen Cart directory (or online one where
 the projects directory is hidden from the public) containing both the
@@ -24,33 +24,23 @@ import os
 from PIL import Image
 # Image requires Pillow such as via: python3 -m pip install --user Pillow
 
-from find_pycodetool import pycodetool
+if __name__ == "__main__":
+    SUBMODULE_DIR = os.path.dirname(os.path.realpath(__file__))
+    MODULE_DIR = os.path.dirname(SUBMODULE_DIR)
+    sys.path.insert(0, os.path.dirname(MODULE_DIR))
 
-from pycodetool.parsing import (
+from linuxpreinstall import (
+    echo0,
+)
+from linuxpreinstall.logging2 import getLogger
+
+# FIXME: move find_pycodetool to module & do: from linuxpreinstall.find_pycodetool import pycodetool
+
+from pycodetool.parsing import (  # noqa: E401
     find_slice,
 )
 
-verbosity = 0
-
-
-def echo0(*args, **kwargs):
-    print(*args, file=sys.stderr, **kwargs)
-    return True
-
-
-def echo1(*args, **kwargs):
-    if verbosity < 1:
-        return False
-    print(*args, file=sys.stderr, **kwargs)
-    return True
-
-
-def echo1(*args, **kwargs):
-    if verbosity < 1:
-        return False
-    print(*args, file=sys.stderr, **kwargs)
-    return True
-
+logger = getLogger(__name__)
 
 src_dirs = []
 src_dirs.append(os.path.join("projects", "images"))
@@ -110,7 +100,7 @@ def zc_make_sized_images(src_path, dst_zen_cart, force=False,
     if not os.path.isdir(os.path.join(dst_zen_cart, "images")):
         raise ValueError('"images" doesn\'t exist in the destination {}'
                          ''.format(dst_zen_cart))
-    print('* input: "{}"'.format(src_path))
+    echo0('* input: "{}"'.format(src_path))
     for size_idx in range(len(dst_dirs)):
         dst_dir = os.path.join(dst_zen_cart, dst_dirs[size_idx])
         name = os.path.split(src_path)[1]
@@ -219,23 +209,24 @@ def zc_make_sized_images(src_path, dst_zen_cart, force=False,
             echo0(ok_msg)
             im.close()
         except IOError as ex:
-            echo0("    "+str(ex))
-            echo0("    cannot create thumbnail for '%s'" % src_path)
+            logger.error("Cannot create thumbnail for '%s'" % src_path)
+            logger.exception("")  # arg is custom msg
 
 
 def main():
-    global verbosity
-    sys.stderr.write('Looking for "{}"...'.format(src_dirs[0]))
+    sys.stdout.write('Looking for "{}"...'.format(src_dirs[0]))
     if not os.path.isdir(src_dirs[0]):
-        echo0('Error: You must run this script from an offline Zen Cart'
-              ' directory containing the source images directory.')
+        logger.error(
+            'You must run this script from an offline Zen Cart'
+            ' directory containing the source images directory.')
         return 1
     else:
         echo0("OK")
     sys.stderr.write('Looking for "{}"...'.format(src_dirs[0]))
     if not os.path.isdir(src_dirs[0]):
-        echo0('Error: You must run this script from an offline Zen Cart'
-              ' directory containing the destination images directory.')
+        logger.error(
+            'You must run this script from an offline Zen Cart'
+            ' directory containing the destination images directory.')
         return 1
     else:
         echo0("OK")
@@ -243,13 +234,13 @@ def main():
     for argI in range(1, len(sys.argv)):
         arg = sys.argv[argI]
         if arg == "--verbose":
-            verbosity = 1
+            logging.basicConfig(level=logging.INFO)
         elif arg == "--debug":
-            verbosity = 2
+            logging.basicConfig(level=logging.DEBUG)
         elif arg == "--force":
             force = True
         else:
-            echo0('Unknown argument: "{}"'.format(arg))
+            logger.error('Unknown argument: "{}"'.format(arg))
             return 1
     for sub in os.listdir(src_dirs[0]):
         subPath = os.path.join(src_dirs[0], sub)

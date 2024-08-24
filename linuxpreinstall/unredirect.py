@@ -41,7 +41,7 @@ if sys.version_info.major >= 3:  # try:
     request = urllib.request
 else:  # except ImportError:
     # Python 2
-    print("* detected Python " + str(sys.version_info.major))
+    echo0("* detected Python " + str(sys.version_info.major))
     import urllib2 as urllib
     request = urllib
 '''
@@ -91,18 +91,18 @@ no_redirects = "-no_redirects"
 
 
 def echo0(*args, **kwargs):
-    print(*args, file=sys.stderr, **kwargs)
+    kwargs['file'] = sys.stderr
+    print(*args, **kwargs)
     return True
 
 
 # Based on <https://stackoverflow.com/a/20475639/4541104>:
 def unredirect(url):
-    '''
-    Check for an explicit redirect (302 error) and return the real URL.
+    '''Check for an explicit redirect (302 error) and return real URL.
 
-    Sequential arguments:
-    url -- This URL may be direct (response 200) or a redirect (response
-        302).
+    Args:
+        url (str): This URL may be direct (response 200) or a redirect
+            (response 302).
     '''
     r = requests.get(url)
     return r.url

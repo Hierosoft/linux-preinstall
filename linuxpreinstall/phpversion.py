@@ -12,8 +12,6 @@ import sys
 
 from linuxpreinstall import (  # noqa F401
     echo0,
-    echo1,  # noqa F401
-    echo2,  # noqa F401
     get_installed,
     split_package_parts,
     is_decimal,

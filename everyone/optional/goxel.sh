@@ -35,7 +35,7 @@ if [ -z "$PKG_TYPE" ]; then
     fi
 fi
 END
-# ^ from https://github.com/poikilos/linux-preinstall/api.rc
+# ^ from https://github.com/Hierosoft/linux-preinstall/api.rc
 $INSTALL_CMD scons pkg-config $GTK3_DEV_PKG $GLFW_DEV_PKG
 MISSING=
 if [ -z "$GTK3_DEV_PKG" ]; then

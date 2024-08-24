@@ -8,13 +8,15 @@ import shutil
 
 
 def usage():
-    print("  {} <old_extension> <new_extension>".format(sys.argv[0]))
+    print(
+        "  {} <old_extension> <new_extension>".format(sys.argv[0]),
+        file=sys.stderr)
 
 
 if len(sys.argv) < 3:
-    print("You must specify an old and new extension.")
+    print("You must specify an old and new extension.", file=sys.stderr)
     usage()
-    exit(1)
+    sys.exit(1)
 
 old_ext = sys.argv[1]
 new_ext = sys.argv[2]

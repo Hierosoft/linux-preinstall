@@ -24,9 +24,9 @@
 ## Install
 
 ### Get the files (alternate steps)
-Right-click each file listed below, then right-click then "Save link as" or any similar save feature depending on your browser (If using the repo left-click the filename then right-click "Raw" then save). The files geany-openSCAD.sh and the configuration file are maintained in the "developer" folder at <https://github.com/poikilos/linux-preinstall> (See `geany-openscad.*`).
-- Download [geany-openSCAD.sh](https://github.com/poikilos/linux-preinstall/raw/master/developer/geany-openscad.sh) (not required for the "Install on Windows" steps).
-- Download [uploads_42_3c_3d_83_43_filetypes.OpenSCAD.conf](https://github.com/poikilos/linux-preinstall/raw/master/developer/uploads_42_3c_3d_83_43_filetypes.OpenSCAD.conf) to the same folder.
+Right-click each file listed below, then right-click then "Save link as" or any similar save feature depending on your browser (If using the repo left-click the filename then right-click "Raw" then save). The files geany-openSCAD.sh and the configuration file are maintained in the "developer" folder at <https://github.com/Hierosoft/linux-preinstall> (See `geany-openscad.*`).
+- Download [geany-openSCAD.sh](https://github.com/Hierosoft/linux-preinstall/raw/master/developer/geany-openscad.sh) (not required for the "Install on Windows" steps).
+- Download [uploads_42_3c_3d_83_43_filetypes.OpenSCAD.conf](https://github.com/Hierosoft/linux-preinstall/raw/master/developer/uploads_42_3c_3d_83_43_filetypes.OpenSCAD.conf) to the same folder.
 
 ### Get the files
 - uploads_42_3c_3d_83_43_filetypes.OpenSCAD.conf

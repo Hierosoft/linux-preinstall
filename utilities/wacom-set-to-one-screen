@@ -2,7 +2,7 @@
 '''
 wacom-set-to-one-screen
 -----------------------
-This script is part of <https://github.com/poikilos/linux-preinstall>
+This script is part of <https://github.com/Hierosoft/linux-preinstall>
 by Jake Gustafson.
 
 This module generates commands necessary to set a Wacom tablet to only
@@ -43,12 +43,13 @@ from find_linuxpreinstall import linuxpreinstall
 
 from linuxpreinstall import (
     echo0,
-    echo1,
-    echo2,
     which,
-    profile,
     run_and_get_lists,
 )
+
+from linuxpreinstall.logging2 import getLogger
+
+logger = getLogger(__name__)
 
 me = "wacom-set-to-one-screen"
 
@@ -114,31 +115,34 @@ def main():
                 return 0
             else:
                 usage()
-                echo0("The argument is not valid: {}".format(arg))
+                logger.error("The argument is not valid: {}".format(arg))
                 return 2
         elif selected is None:
             selected = arg
         else:
             usage()
-            echo0("The argument is not valid: {}".format(arg))
+            logger.error("The argument is not valid: {}".format(arg))
             return 3
     XRANDR = which("xrandr")
     if XRANDR is None:
-        echo0("Error: This linux-preinstall utility requires xrandr."
-              " You must install the package rst.")
+        logger.error(
+            "This linux-preinstall utility requires xrandr."
+            " You must install the package rst.")
         return 1
 
-    echo1('* using "{}"'.format(XRANDR))
+    logger.info('* using "{}"'.format(XRANDR))
     xrandr_cmd = XRANDR
     xrandr_out, xrandr_err, xrandr_code = run_and_get_lists(xrandr_cmd)
     XSETWACOM = which("xsetwacom")
     if XSETWACOM is None:
-        echo0("Error: This linux-preinstall utility requires xsetwacom."
-              " You must install the package rst.")
+        logger.error(
+            "This linux-preinstall utility requires xsetwacom."
+            " You must install the package rst.")
         return 1
     if xrandr_code != 0:
-        echo0('Error: "{}" returned code {}'
-              ''.format(xrandr_cmd, xrandr_code))
+        logger.error(
+            '"{}" returned code {}'
+            .format(xrandr_cmd, xrandr_code))
     # print(xrandr_out)
     c_outputs = []  # connected
     d_outputs = []  # disconnected
@@ -155,19 +159,19 @@ def main():
             c_outputs.append(line[:c_ender_i])
         elif d_ender_i > -1:
             d_outputs.append(line[:d_ender_i])
-    # echo0(xrandr_err)
-    echo1('* using "{}"'.format(XSETWACOM))
+    # logger.error(xrandr_err)
+    logger.info('* using "{}"'.format(XSETWACOM))
 
     cmd_parts = ["xsetwacom", "--list"]
     cmd = shlex.join(cmd_parts)
     list_out, list_err, list_code = run_and_get_lists(cmd_parts)
-    echo0()
+    echo0()  # ok since there is stderr below even if "OK"
     example_device = None
     input_devices = []
     if list_code != 0:
-        echo0(list_err)
+        logger.error(list_err)
     # else there yet may be 0. See `len(input_devices) < 1` further down
-        
+
     '''
     input_devices = [
         "Wacom Graphire2 4x5 Pen",
@@ -187,21 +191,23 @@ def main():
         ender = "id:"
         ender_i = line.find(ender)
         if ender_i < 2:
-            echo0('Error: "{}" is missing. The format is unrecognized'
-                  ' for the line "{}" in the output of `{}`'
-                  ''.format(ender, line, cmd))
+            logger.error(
+                '"{}" is missing. The format is unrecognized'
+                ' for the line "{}" in the output of `{}`'
+                .format(ender, line, cmd))
             return 1
         input_devices.append(line[:ender_i].strip())
 
     if len(input_devices) < 1:
         if len(list_out) > 0:
-            echo0("xsetwacom didn't detect any Wacom input devices"
-                  " with any: {}.".format(known_endings))
-            echo0("Only got:")
+            logger.error(
+                "xsetwacom didn't detect any Wacom input devices"
+                " with any: {}.".format(known_endings))
+            logger.error("Only got:")
             for rawL in list_out:
                 echo0("{}".format(rawL))
         else:
-            echo0("xsetwacom didn't detect any Wacom input devices.")
+            logger.error("xsetwacom didn't detect any Wacom input devices.")
         echo0(INSTALL_TIP)
         return 1
     else:
@@ -213,7 +219,7 @@ def main():
     elif len(c_outputs) > 0:
         output_device = c_outputs[0]
     else:
-        echo0('Error: xrandr did not list any " connected" monitors.')
+        logger.error('xrandr did not list any " connected" monitors.')
         echo0("* {} output line(s)".format(len(xrandr_out)))
         echo0(xrandr_out)
         echo0()

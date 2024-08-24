@@ -16,7 +16,7 @@ Install an archive (deb, zip, gz, bz2), binary (including appimage) or directory
 - If it is a binary (including appimage), that will be detected and handled properly!
 - If there is no icon, and the icon is in `iconLinks`, that will be downloaded and used!
 
-This software was formerly a script in https://github.com/poikilos/linux-preinstall/utilities.
+This software was formerly a script in https://github.com/Hierosoft/linux-preinstall/utilities.
 
 
 ## Author and license
@@ -35,7 +35,7 @@ install_any.py
 ```
 mkdir -p ~/git
 cd ~/git
-git clone https://github.com/poikilos/linux-preinstall.git ~/git/linux-preinstall
+git clone https://github.com/Hierosoft/linux-preinstall.git ~/git/linux-preinstall
 cd linux-preinstall/utilities
 ./install_ia-nonroot.sh
 ```

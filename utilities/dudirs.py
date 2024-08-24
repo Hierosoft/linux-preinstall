@@ -10,6 +10,13 @@ import sys
 units = ["bytes", "kb", "mb", "gb"]
 default_un = "mb"
 
+if __name__ == "__main__":
+    SCRIPTS_DIR = os.path.dirname(os.path.realpath(__file__))
+    sys.path.insert(0, os.path.dirname(SCRIPTS_DIR))
+
+from linuxpreinstall import (
+    echo0,
+)
 
 def bytes_to(size_bytes, unit):
     unit_upper = unit.upper()
@@ -44,21 +51,21 @@ def get_size(start_path='.', unit="bytes"):
 
 
 def usage():
-    print(__doc__)
-    print("USAGE")
-    print("-----")
+    echo0(__doc__)
+    echo0("USAGE")
+    echo0("-----")
     me = os.path.split(sys.argv[0])[-1]
-    print("")
-    print("{} <directory> [options]".format(me))
-    print("")
-    print("OPTIONS:")
-    print("")
+    echo0("")
+    echo0("{} <directory> [options]".format(me))
+    echo0("")
+    echo0("OPTIONS:")
+    echo0("")
     opt_fmt = "{:<14}     {}"
-    print(opt_fmt.format("--help", "Show this screen."))
-    print(opt_fmt.format("--sort", "Sort the results (ascending)."))
-    print(opt_fmt.format("--unit <unit>", "Show sizes in: "+str(units)))
-    print(opt_fmt.format("", "(default: {})".format(default_un)))
-    print("")
+    echo0(opt_fmt.format("--help", "Show this screen."))
+    echo0(opt_fmt.format("--sort", "Sort the results (ascending)."))
+    echo0(opt_fmt.format("--unit <unit>", "Show sizes in: "+str(units)))
+    echo0(opt_fmt.format("", "(default: {})".format(default_un)))
+    echo0("")
 
 
 def main():
@@ -84,7 +91,7 @@ def main():
     unit = default_un.upper()
     stats = []
     if enable_sort:
-        print("sorting...")
+        echo0("sorting...")
     for sub in os.listdir(root_path):
         sub_path = os.path.join(root_path, sub)
         if os.path.isdir(sub_path) and not sub.startswith("."):

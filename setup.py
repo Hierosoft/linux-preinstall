@@ -9,15 +9,11 @@ if sys.version_info.major < 3:
     versionedModule['urllib'] = 'urllib2'
 '''
 
-install_requires = []
-
-if os.path.isfile("requirements.txt"):
-    with open("requirements.txt", "r") as ins:
-        for rawL in ins:
-            line = rawL.strip()
-            if len(line) < 1:
-                continue
-            install_requires.append(line)
+install_requires = [
+    'pycodetool @ git+https://github.com/Hierosoft/pycodetool.git'
+    'Pillow',
+    'python-magic'
+]
 
 description = (
     "The linuxpreinstall module has useful features"
@@ -46,7 +42,7 @@ setuptools.setup(
     ],
     keywords=('python system management IT tools linux installation'
               ' package selection preloading preinstall'),
-    url="https://github.com/poikilos/linux-preinstall",
+    url="https://github.com/Hierosoft/linux-preinstall",
     author="Jake Gustafson",
     author_email='7557867+poikilos@users.noreply.github.com',
     license='GPLv3+',

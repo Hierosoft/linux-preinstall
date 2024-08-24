@@ -27,7 +27,8 @@ nearbyRepo = os.path.join(MY_REPOS, REPO_NAME)
 
 
 def echo0(*args, **kwargs):
-    print(*args, file=sys.stderr, **kwargs)
+    kwargs['file'] = sys.stderr
+    print(*args, **kwargs)
 
 
 if os.path.isfile(os.path.join(nearbyRepo, MODULE_NAME, "__init__.py")):

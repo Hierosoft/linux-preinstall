@@ -5,6 +5,9 @@ import platform
 
 from linuxpreinstall.readonlydict import ReadOnlyDict
 
+from linuxpreinstall import (
+    echo0,
+)
 # sysfiles = ReadOnlyDict()
 
 
@@ -72,11 +75,11 @@ class SystemPaths(ReadOnlyDict):
 
 sysdirs = SystemPaths()  # Call .readonly() after vars are set below.
 sysdirs.init_platform(platform.system())
-print("Finished init_platform.")
+echo0("Finished init_platform.")  # don't interfere with stdout such as whichicon
 sysdirs.sanity_check()
 sysdirs.init_cloud()
 sysdirs.check_cloud()
 sysdirs.readonly()
 
 # sysfiles.readonly()
-# print("Finished sysfiles.")
+# echo0("Finished sysfiles.")

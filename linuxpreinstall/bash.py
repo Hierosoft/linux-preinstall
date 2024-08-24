@@ -3,15 +3,16 @@
 Interact with bash (Bourne Again Shell) idiosyncrasies using Python.
 """
 from __future__ import print_function
-import sys
-from linuxpreinstall import (  # noqa F401
-    echo0,
-    echo1,  # noqa F401
-    echo2,  # noqa F401
-)
+
 import json
 import shlex
 import subprocess
+import sys
+
+from linuxpreinstall.logging2 import getLogger
+
+
+logger = getLogger(__name__)
 
 
 def get_bash_values(path, only_exported=False,
@@ -36,7 +37,7 @@ def get_bash_values(path, only_exported=False,
     '''
 
     if only_exported:
-        echo2("* get_bash_values({})".format(json.dumps(path)))
+        logger.debug("* get_bash_values({})".format(json.dumps(path)))
         command = shlex.split("env -i bash -c 'source \"{}\" && env'"
                               "".format(path))
         '''
@@ -102,7 +103,7 @@ def get_bash_values(path, only_exported=False,
         splitter = "\n"
         if len(data.split("\r")) > len(data.split("\n")):
             splitter = "\r"
-            echo0("Warning: using \\r for newline in bash output.")
+            logger.warning("using \\r for newline in bash output.")
         for rawL in data.split(splitter):
             count += 1
             line = rawL.rstrip("\r\n")
@@ -111,8 +112,8 @@ def get_bash_values(path, only_exported=False,
             if key.strip() == "":
                 continue
             results[key] = value
-            echo2('{}="{}"'.format(key, value.replace('"', '\\"')))
-        echo2("* done processing {} line(s) of output".format(count))
+            logger.debug('{}="{}"'.format(key, value.replace('"', '\\"')))
+        logger.info("* done processing {} line(s) of output".format(count))
     else:
         # based on code by Lesmana answered Aug 17, 2010 at 18:45
         # edited Sep 5, 2018 at 11:58
@@ -125,10 +126,10 @@ def get_bash_values(path, only_exported=False,
             if key.strip() == "":
                 continue
             results[key] = value
-            echo2('{}="{}"'.format(key, value.replace('"', '\\"')))
+            logger.debug('{}="{}"'.format(key, value.replace('"', '\\"')))
         proc.communicate()
-        # pprint.pprint(dict(os.environ))
-        echo2("* done reading {} line(s) of output".format(count))
+        # echo0(repr(dict(os.environ)))
+        logger.info("* done reading {} line(s) of output".format(count))
 
     for key in builtins:
         if key in results:

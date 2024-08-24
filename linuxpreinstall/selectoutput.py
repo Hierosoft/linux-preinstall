@@ -13,8 +13,20 @@ selectoutput analog  # default behavior
 selectoutput hdmi
 '''
 from __future__ import print_function
-import sys
+import os
 import subprocess
+import sys
+
+if __name__ == "__main__":
+    MODULE_DIR = os.path.dirname(os.path.realpath(__file__))
+    sys.path.insert(0, os.path.dirname(MODULE_DIR))
+
+from linuxpreinstall.logging2 import (
+    getLogger,
+)
+
+
+logger = getLogger(__name__)
 
 
 def main():
@@ -40,7 +52,7 @@ def main():
     # ^ bytes
     e = err.decode("utf-8")
     if len(e) > 0:
-        print("ERROR: {}".format(e))
+        logger.error("{}".format(e))
     s = out.decode('utf-8')
     indent = ""
     prev_indent = ""

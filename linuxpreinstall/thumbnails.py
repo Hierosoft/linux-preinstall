@@ -48,20 +48,19 @@ if platform.system() == "Windows":
 else:
     HOME = os.environ['HOME']
 
-verbosity = 0
-verbosity_levels = [True, False, 0, 1, 2]
+if __name__ == "__main__":
+    MODULE_DIR = os.path.dirname(os.path.realpath(__file__))
+    sys.path.insert(0, os.path.dirname(MODULE_DIR))
+
+from linuxpreinstall import (  # noqa: E402
+    echo0,
+)
+
+import linuxpreinstall.logging2 as logging  # noqa: E402
+from linuxpreinstall.logging2 import getLogger  # noqa: E402
 
 
-def set_verbosity(level):
-    global verbosity
-    if level not in verbosity_levels:
-        raise ValueError("level must be one of {}".format(verbosity_levels))
-    verbosity = level
-
-
-def echo0(*args, **kwargs):
-    print(*args, file=sys.stderr, **kwargs)
-    return True
+logger = getLogger(__name__)
 
 
 def usage():
@@ -126,8 +125,8 @@ def get_thumbnails(src_path):
         if os.path.isfile(thumbPath):
             results.append(thumbPath)
         else:
-            echo0('* There is no "{}" for "{}".'
-                  ''.format(thumbPath, src_path))
+            logger.warning(
+                '* There is no "{}" for "{}".'.format(thumbPath, src_path))
     return results
 
 
@@ -138,22 +137,22 @@ def main():
         arg = sys.argv[argI]
         if arg.startswith("--"):
             if arg == "--verbose":
-                set_verbosity(1)
+                logging.basicConfig(logging.INFO)
             elif arg == "--debug":
-                set_verbosity(2)
+                logging.basicConfig(logging.DEBUG)
             elif arg == "--view":
                 mode = "view"
             else:
-                echo0('The argument "{}" is invalid.'.format(arg))
+                logger.error('The argument "{}" is invalid.'.format(arg))
                 return 2
         elif os.path.isfile(arg):
             paths.append(arg)
         else:
-            echo0('Error: "{}" is not a file.'.format(arg))
+            logger.error('"{}" is not a file.'.format(arg))
             return 3
     if len(paths) < 1:
         usage()
-        echo0('Error: You must specify at least one thumbnail-able file.')
+        logger.error('You must specify at least one thumbnail-able file.')
         return 1
     for src_path in paths:
         for thumbPath in get_thumbnails(src_path):

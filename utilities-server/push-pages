@@ -51,6 +51,17 @@ import shlex
 import subprocess
 from datetime import datetime
 import json
+
+if __name__ == "__main__":
+    SCRIPTS_DIR = os.path.dirname(os.path.realpath(__file__))
+    sys.path.insert(0, os.path.dirname(SCRIPTS_DIR))
+
+from linuxpreinstall.logging2 import (
+    getLogger,
+)
+
+logger = getLogger(__name__)
+
 DATE = datetime.today().strftime('%Y%m%d')
 # DATE = "`date +%Y%m%d`"  # such as 20230114
 # datetime.today().strftime('%Y-%m-%d %H:%M:%S')
@@ -59,11 +70,9 @@ sys.path.insert(0, os.getcwd())  # Make sure cwd's push_config is used.
 config = None
 
 
-def echo0(*args):
-    if len(args) < 1:
-        print("", file=sys.stderr)
-        return True
-    print(*args, file=sys.stderr)
+def echo0(*args, **kwargs):
+    kwargs['file'] = sys.stderr
+    print(*args, **kwargs)
     return True
 
 
@@ -151,7 +160,7 @@ def load_config():
     if this_config is None:
         return None
 
-    print('Using "{}"'.format(config_file))
+    echo0("Using {}".format(repr(config_file)))
     resolve_local_dir(this_config)
     return this_config
 
@@ -171,8 +180,8 @@ def main():
         tip='(same as REMOTE_DIR but without the \"hostname:\" part)',
     )
     '''
-    print()
-    print()
+    echo0()
+    echo0()
 
     bools = ['images']
     config['images'] = to_bool(os.environ.get('_IMAGES'))
@@ -183,7 +192,7 @@ def main():
             if isinstance(config.get('key'), list):
                 raise ValueError("Setting a list isn't implemented.")
             config[key] = arg
-            print("Set {}={}".format(key, arg))
+            print("let \"{} = {}\"".format(key, repr))
             if key == "local_dir":
                 resolve_local_dir(config)  # performs checks as well
             key = None
@@ -198,24 +207,25 @@ def main():
                 key = None
         else:
             usage()
-            echo0("Error: {} is not a valid option.".format(arg))
+            logger.error("{} is not a valid option.".format(arg))
             return 1
 
-    print('Pushing "{}"'.format(config['local_dir']))
+    echo0('Pushing "{}"'.format(config['local_dir']))
     remote_dir = require('remote_dir')
     local_dir = require('local_dir')
     image_extensions = ["png", "jpg", "gif"]  # "mp4"
     image_dotexts = ["." + ext for ext in image_extensions]
     if to_bool(config.get("images")):
         for rel_dir in require("image_dirs"):  # DIRNAME
-            print("* processing \"/{}\"...".format(rel_dir))
+            echo0("* processing \"/{}\"...".format(rel_dir))
             local_sub_path = os.path.join(local_dir, rel_dir)
             for sub_sub in os.listdir(local_sub_path):
                 sub_sub_path = os.path.join(local_sub_path, sub_sub)
                 sub_sub_noext, sub_sub_dotext = os.path.splitext(sub_sub)
                 if sub_sub_dotext not in image_dotexts:
-                    print('Warning: skipping image type not in filter set: "{}"'
-                          ''.format(sub_sub_path))
+                    logger.warning(
+                        'skipping image type not in filter set: "{}"'
+                        .format(sub_sub_path))
             # --exclude="*" since rsync only uses the first matching filter
             #   and any not matching should be excluded:
 
@@ -232,13 +242,13 @@ def main():
                 remote_dir=remote_dir,
                 rel_dir=rel_dir,  # required for include (see further up)
             )
-            print("Running: {}".format(cmd))
+            echo0("Running: {}".format(cmd))
             cmd_parts = shlex.split(cmd)
             subprocess.run(cmd_parts, stderr=sys.stderr, stdout=sys.stdout,
                            stdin=sys.stdin)
-            print("* You still may have to do the following"
+            echo0("* You still may have to do the following"
                   " on the remote machine:")
-            print("  chown www-data.www-data -R {remote_dir}/{rel_dir}"
+            echo0("  chown www-data.www-data -R {remote_dir}/{rel_dir}"
                   "".format(remote_dir=remote_dir, rel_dir=rel_dir))
 
             # The following problem doesn't happen after changing the
@@ -250,7 +260,7 @@ def main():
             # echo0("# then re-run this script.")
     # else see != True further down
 
-    print("* processing \"/\"...")
+    echo0("* processing \"/\"...")
     cmd_fmt = 'rsync -rtvP --dirs --prune-empty-dirs'
     # ^ -r (recursive) is only necessary for html_dir(s) than "/" :
     html_dirs = config.get("html_dirs")
@@ -260,7 +270,7 @@ def main():
         cmd_fmt += ' --include="{}"'.format(html_dir)
     cmd_fmt += ' --include="*.html" --exclude="*" {local_dir}/ {remote_dir}'
     cmd = cmd_fmt.format(local_dir=local_dir, remote_dir=remote_dir)
-    print("Running: {}".format(cmd))
+    echo0("Running: {}".format(cmd))
     cmd_parts = shlex.split(cmd)
     subprocess.run(cmd_parts, stderr=sys.stderr, stdout=sys.stdout,
                    stdin=sys.stdin)
@@ -268,13 +278,13 @@ def main():
     unfiltered_dirs = config.get("unfiltered_dirs")
     if unfiltered_dirs is not None:
         for sync_dir in unfiltered_dirs:
-            print("* processing \"{}\"...".format(sync_dir))
+            echo0("* processing \"{}\"...".format(sync_dir))
             cmd_fmt = 'rsync -rtvP --prune-empty-dirs'
             cmd_fmt += ' {local_dir}/{sync_dir} {remote_dir}'
             # ^ exclude / at end of first path to create it in the dest.
             cmd = cmd_fmt.format(local_dir=local_dir, sync_dir=sync_dir,
                                  remote_dir=remote_dir)
-            print("Running: {}".format(cmd))
+            echo0("Running: {}".format(cmd))
             cmd_parts = shlex.split(cmd)
             subprocess.run(cmd_parts, stderr=sys.stderr, stdout=sys.stdout,
                            stdin=sys.stdin)
@@ -288,26 +298,26 @@ def main():
     #     (If you include, you must exclude everything but then include
     #     directories :( )
     #     - didn't work: --include="*/" --include="*.html" --exclude="*"
-    print()
-    print()
+    echo0()
+    echo0()
     known_pairs = {}
     known_pairs['css_dir'] = "*.css"
     known_pairs['js_dir'] = "*.js"
     # known_pairs['fonts_dir'] = ["*.otf", "*.eot", "*.svg", "*.ttf", "*.woff", "*.woff2"]
     asset_dirs_count = 0
-    print("Checking for {}...".format(known_pairs.keys()))
+    echo0("Checking for {}...".format(known_pairs.keys()))
     for key, mask in known_pairs.items():
         rel_dir = config.get(key)
         if rel_dir is None:
             continue
         asset_dirs_count += 1
-        print("* processing \"{rel_dir}\"...".format(rel_dir=rel_dir))
+        echo0("* processing \"{rel_dir}\"...".format(rel_dir=rel_dir))
         cmd_fmt = ('rsync -rtvP --dirs --prune-empty-dirs --include="/{rel_dir}"'
                    ' --include="{mask}" --exclude="*" {local_dir}/{rel_dir}/'
                    ' {remote_dir}/{rel_dir}')
         cmd = cmd_fmt.format(rel_dir=rel_dir, local_dir=local_dir,
                              remote_dir=remote_dir, mask=mask)
-        print("Running: {}".format(cmd))
+        echo0("Running: {}".format(cmd))
         cmd_parts = shlex.split(cmd)
         subprocess.run(cmd_parts, stderr=sys.stderr, stdout=sys.stdout,
                        stdin=sys.stdin)

@@ -27,7 +27,8 @@ nearbyRepo = os.path.join(MY_REPOS, REPO_NAME)
 
 
 def echo0(*args, **kwargs):
-    print(*args, file=sys.stderr, **kwargs)
+    kwargs['file'] = sys.stderr
+    print(*args, **kwargs)
 
 
 if os.path.isfile(os.path.join(nearbyRepo, MODULE_NAME, "__init__.py")):
@@ -39,7 +40,7 @@ elif os.path.isdir(tryModule):
 else:
     pass
     # use the one in the python path (or fail)
-    # print("There is no {}".format(os.path.join(thisRepo, MODULE_NAME)))
+    # echo0("There is no {}".format(os.path.join(thisRepo, MODULE_NAME)))
 
 import linuxpreinstall
 

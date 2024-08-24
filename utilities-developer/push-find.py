@@ -7,7 +7,8 @@ import difflib
 
 
 def echo0(*args, **kwargs):
-    print(*args, file=sys.stderr, **kwargs)
+    kwargs['file'] = sys.stderr
+    print(*args, **kwargs)
 
 
 def diff(file1, file2):
@@ -100,7 +101,7 @@ def shinra_tensei(source_paths, grandparent, subdirectories=None):
                     continue
             if not os.path.isdir(scripts_path):
                 continue
-            # print('* checking "{}"'.format(scripts_path))
+            # echo0('* checking "{}"'.format(scripts_path))
             for src_path in source_paths:
                 script_name = os.path.basename(src_path)
                 dst_path = os.path.join(scripts_path, script_name)
@@ -129,12 +130,12 @@ def main():
             continue
         names += sub
         files_here.append(os.path.join(source_dir, sub))
-        print("[{}] collected {}".format(me, sub))
+        echo0("[{}] collected {}".format(me, sub))
     sub = "push-find.py"
     if not os.path.isfile(sub):
         raise RuntimeError('"{}" is missing.'.format(sub))
     files_here.append(sub)
-    print("[{}] collected {}".format(me, sub))
+    echo0("[{}] collected {}".format(me, sub))
     return shinra_tensei(
         files_here,
         REPOS_DIR,

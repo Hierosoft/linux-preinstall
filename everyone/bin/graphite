@@ -14,7 +14,7 @@ NPM_START_LOG=~/.var/log/linux-preinstall--graphite-npm_start.log
 echo "linux-preinstall graphite runner script log" | tee $LOG
 # ^ do *not* append, overwrite
 echo "-------------------------------------------" | tee -a $LOG
-echo "originally from https://github.com/poikilos/linux-preinstall"
+echo "originally from https://github.com/Hierosoft/linux-preinstall"
 echo "based on the instructions at https://graphite.rs/contribute/ accessed 2022-11-16"
 echo "The script started at: `date`" | tee -a $LOG
 echo "[$me] stat $0..." | tee -a $LOG
@@ -114,4 +114,3 @@ code=$?
 if [ $code -ne 0 ]; then
     customExit "[$me] Error: 'npm start' failed in `pwd` with code $code. See $NPM_START_LOG for details" $code
 fi
-

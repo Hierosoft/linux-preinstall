@@ -5,7 +5,7 @@ getrepo
 Get or pull a repo.
 
 This is submodule of linuxpreinstall hosted at
-<https://github.com/Poikilos/linux-preinstall>.
+<https://github.com/Hierosoft/linux-preinstall>.
 This submodule is also present in
 <https://github.com/Poikilos/marlininfo>
 in preload_tft_sdcard.py (since they are trivial and should make
@@ -27,8 +27,9 @@ else:
     # NOTE: USER is not set when run by cron!
 
 
-def echo0(*args):
-    print(*args, file=sys.stderr)
+def echo0(*args, **kwargs):
+    kwargs['file'] = sys.stderr
+    print(*args, **kwargs)
 
 
 def get_or_pull(repo_url, repo_dir):
@@ -57,11 +58,10 @@ def get_or_pull(repo_url, repo_dir):
 
 
 def repo_flag_sub(path):
-    '''
-    Get the file that indicates the path is probably not an sdcard.
+    '''Get the file that indicates the path is probably not an SD card.
 
     Returns:
-    The bad subdirectory (name not path).
+        str: The bad subdirectory (name not path).
     '''
     oops_sub = None
     for sub in os.listdir(path):

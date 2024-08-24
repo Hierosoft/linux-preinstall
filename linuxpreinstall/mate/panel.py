@@ -4,51 +4,43 @@ This module controls various aspects of the MATE panel.
 '''
 
 from __future__ import print_function
-import sys
-import os
+
 import json
+import os
+import sys
 # if sys.version_info.major >= 3:
 #     import functools  # Python 3
-# import sys
-from subprocess import Popen
-import gi
+
+# from subprocess import Popen
+import gi  # type:ignore
 gi.require_version("Gtk", "3.0")
 # ^ MATE is now GTK 3
-from gi.repository import (
+from gi.repository import (  # noqa: E402 # type:ignore
     Gio,
     GLib,
 )
 
+if __name__ == "__main__":
+    SUBMODULE_DIR = os.path.dirname(os.path.realpath(__file__))
+    MODULE_DIR = os.path.dirname(os.path.dirname(SUBMODULE_DIR))
+    sys.path.insert(0, os.path.dirname(MODULE_DIR))
 
-try:
-    import linuxpreinstall
-except ModuleNotFoundError as ex:
-    if "No module named 'linuxpreinstall'" in str(ex):
-        mateDir = os.path.dirname(os.path.abspath(__file__))
-        moduleDir = os.path.dirname(mateDir)
-        repoDir = os.path.dirname(moduleDir)
-        tryModulePath = os.path.join(repoDir, 'linuxpreinstall')
-        goodModuleFlag = os.path.join(tryModulePath, "__init__.py")
-        if os.path.isfile(goodModuleFlag):
-            sys.path.append(repoDir)
-            import linuxpreinstall
-        else:
-            raise ex
-    else:
-        raise ex
-
-from linuxpreinstall.mate.gsettings import (
+from linuxpreinstall.mate.gsettings import (  # noqa: E402
     GSettings,
 )
-from linuxpreinstall import (
+from linuxpreinstall import (  # noqa: E402
     echo0,
-    echo1,
-    echo2,
-    set_verbosity,
 )
 
-echo1("")
-echo1("The panel module has started.")
+import linuxpreinstall.logging2 as logging  # noqa: E402
+
+from linuxpreinstall.logging2 import getLogger  # noqa: E402
+
+
+logger = getLogger(__name__)
+
+echo0("")
+echo0("The panel module has started.")
 
 """
     @property
@@ -97,8 +89,9 @@ class MatePanel(Gio.Settings):
 
     def __init__(self):
         Gio.Settings.__init__(self)
-        echo1("* initializing a MatePanel object incorrectly"
-              " (use get-default)")
+        logger.error(
+            "* initializing a MatePanel object incorrectly"
+            " (use get-default)")
         MatePanel.post_init(self)
 
     def _get(self, path, key):
@@ -230,18 +223,18 @@ class MatePanel(Gio.Settings):
             right_msg = ""
             if right:
                 right_msg = " (right)"
-            echo1("- pos: {}{}".format(pos, right_msg))
-            echo1("  path: {}".format(path))
-            # echo1("  self.get_has_unapplied(): {}"
-            #       "".format(self.get_has_unapplied()))
+            logger.info("- pos: {}{}".format(pos, right_msg))
+            logger.info("  path: {}".format(path))
+            # logger.info("  self.get_has_unapplied(): {}"
+            #     .format(self.get_has_unapplied()))
             # For some reason, get_has_unapplied works on self but not
             #   on panel_obj_settings.
-            # echo1("  self.panel_obj_settings.get_has_unnapplied(): {}"
-            #       "".format(self.panel_obj_settings.get_has_unapplied()))
+            # logger.info("  self.panel_obj_settings.get_has_unnapplied(): {}"
+            #     .format(self.panel_obj_settings.get_has_unapplied()))
 
             p_s = self.panel_obj_settings
             for extra_k in ('object-type', 'applet-iid',):
-                echo2("  {}: {}"
+                logger.debug("  {}: {}"
                       "".format(extra_k, p_s._get(path, extra_k)))
             '''
             ^ gsettings get \
@@ -264,38 +257,41 @@ class MatePanel(Gio.Settings):
             # value = self._get(path, key)
             value = self.panel_obj_settings._get(path, key)
             type_var = self.panel_obj_settings._get(path, 'object-type')
-            # echo0(" {}: {}".format(key, value))
-            # echo1("type({}): {}".format(key, type(value).__name__))
+            # logger.info(" {}: {}".format(key, value))
+            # logger.info("type({}): {}".format(key, type(value).__name__))
             # break
             if type_var != applet_flag_var:
-                echo1("  skipping {} ({} not {})"
-                      "".format(iid, type_var, applet_flag_var))
+                logger.info(
+                    "  skipping {} ({} not {})"
+                    .format(iid, type_var, applet_flag_var))
                 # good_ids.append(iid)
                 continue
             if value == bad_value_var:
-                print("  found bad {}: {}"
-                      "".format(type_var, iid))
+                logger.warning("  found bad {}: {}".format(type_var, iid))
                 bad_ids.append(iid)
             else:
-                print("  found good {} {}: {}"
-                      "".format(type_var, value, iid))
+                logger.info(
+                    "  found good {} {}: {}".format(type_var, value, iid))
                 # good_ids.append(iid)
         good_ids = list(self.items)
         for bad_id in bad_ids:
             if bad_id in good_ids:
                 good_ids.remove(bad_id)
             else:
-                echo0("WARNING: bad_id {} is not in items.")
+                logger.warning("bad_id {} is not in items.")
         if good_ids != list(self.items):
-            echo0("Changing panel from \n  {} to \n  {}..."
-                  "".format(self.items, good_ids))
-            echo0("NotImplemented: Remove the objects before the keys,"
-                  " or the objects will remain on the menu and be"
-                  " unable to be enumerated by some code.")
+            logger.warning(
+                "Changing panel from \n  {} to \n  {}..."
+                .format(self.items, good_ids))
+            logger.warning(
+                "NotImplemented: Remove the objects before the keys,"
+                " or the objects will remain on the menu and be"
+                " unable to be enumerated by some code.")
             # self.items = good_ids
         else:
-            echo0("There are no panels objects with {}=={}"
-                  "".format(key, json.dumps(bad_value)))
+            logger.warning(
+                "There are no panels objects with {}=={}"
+                .format(key, json.dumps(bad_value)))
         # self.items = sorted(self.items, key=sc_fn_to_name)
         return bad_ids
 
@@ -308,9 +304,9 @@ def main():
         arg = sys.argv[i]
         if arg.startswith("-"):
             if arg == "--verbose":
-                set_verbosity(1)
+                logging.basicConfig(level=logging.INFO)
             elif arg == "--debug":
-                set_verbosity(2)
+                logging.basicConfig(level=logging.DEBUG)
             else:
                 raise ValueError("Unknown argument: {}".format(arg))
         elif bad_item is None:
@@ -320,7 +316,7 @@ def main():
     if bad_item is None:
         bad_item = ""
     echo0("Looking for bad applet id {}..."
-          "".format(json.dumps(bad_item)))
+          .format(json.dumps(bad_item)))
     remove_ids = ('object-2', 'object-27', 'object-34')
     bad_ids = settings.remove_items_where(
         bad_item,

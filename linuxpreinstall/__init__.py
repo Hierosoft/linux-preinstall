@@ -2,21 +2,30 @@
 
 from __future__ import print_function
 from __future__ import division
-import os
-import sys
-import subprocess
-import platform
-import json
 
-from collections import OrderedDict
+import json
+import os
+import platform
+import subprocess
+import sys
+
 from csv import reader
 
 MODULE_DIR = os.path.dirname(os.path.realpath(__file__))
-REPO_DIR = os.path.dirname(MODULE_DIR)
 
-from linuxpreinstall.sysdirs import (
+
+if __name__ == "__main__":
+    sys.path.insert(0, os.path.dirname(MODULE_DIR))
+
+from linuxpreinstall.sysdirs import (  # noqa: E402
     sysdirs,
 )
+
+from linuxpreinstall.logging2 import (  # noqa: E402
+    getLogger,
+)
+
+logger = getLogger(__name__)
 
 HOME = sysdirs['HOME']
 
@@ -53,144 +62,15 @@ def is_str_like(value):
     return type(value).__name__ in ("str", "bytes", "bytearray", "unicode")
 
 
-pformat_preferred_quote = None  # < See quote under set_pformat_preferred_quote
-
-
-def pformat(value, quote_if_like_str=True):
-    """This is mostly like pformat from pprint except always on one line.
-
-    Numbers are left as numbers even if quote_if_like_str is True, to
-    avoid adding extra quotes. Use set pformat_preferred_quote to set
-    the preferred quote.
-
-    Args:
-        value: any value that can convert to str. Values in
-            an iterable will be processed resursively first.
-        quote_if_like_str (Optional[bool]): Do not use this option, or
-            your pformat calls will be incompatible with
-            pprint.pformat--This option is only for recursion. Add
-            quotes (not done recursively, since if iterable but not
-            is_str_like, the last step which is converting from iterable
-            to string adds quotes to all string values).
-
-    Returns:
-        str: string where only strings are quote_if_like_str (without
-            leading b or u).
-    """
-    original_value = value
-    enclosures = None
-    if not is_str_like(value):
-        # ^ unicode isn't normal in Python 3 so check typename not isinstance
-        iterated = False
-        try:
-            parts = []
-            enclosures = ("[", "]")
-            if isinstance(enclosures, tuple):
-                enclosures = ("(", ")")
-            if hasattr(value, 'items'):
-                if isinstance(value, OrderedDict):
-                    parts = OrderedDict()
-                else:
-                    parts = {}
-                for key, item in value.items():
-                    parts[key] = pformat(item, quote_if_like_str=False)
-                return parts
-            for i, item in enumerate(value):
-                iterated = True
-                parts.append(pformat(item, quote_if_like_str=False))
-                # Use append not '=' since tuple is not assignable
-            if isinstance(value, tuple):
-                value = tuple(parts)
-            else:
-                value = parts
-        except TypeError:
-            if iterated:
-                raise
-            # else it is not iterable, so do not try to fix elements
-    if not quote_if_like_str:
-        try:
-            _ = len(value)
-        except TypeError:
-            # It is not str-like. To avoid adding quotes to non-str-like
-            #   (number, bool, etc.) leave it as is
-            #   (otherwise it will get quotes on list to str).
-            return value
-    value = str(value)
-    # big_enclosures = ["OrderedDict(", ")"]
-    if is_enclosed(value, "b'", "'") or is_enclosed(value, "u'", "'"):
-        if quote_if_like_str:
-            return value[1:]  # Only remove b or u not b'' etc.
-        else:
-            return value[2:-1]
-    elif is_str_like(original_value):
-        if quote_if_like_str:
-            if pformat_preferred_quote is None:
-                if '"' in value:
-                    return "'%s'" % value.replace("'", "\\'")
-                else:
-                    return '"%s"' % value.replace('"', '\\"')
-            else:
-                # This is universal but isn't as nice since it will
-                #   force escaped quotes. The case above is adaptive.
-                quo = pformat_preferred_quote
-                return '%s%s%s' % (quo, value.replace(quo, '\\'+quo), quo)
-    # elif isinstance(value, OrderedDict)
-    return value
-
-
 def write0(arg):
     sys.stderr.write(arg)
     sys.stderr.flush()
     return True
 
 
-def write1(arg):
-    if verbosity < 1:
-        return False
-    sys.stderr.write(arg)
-    sys.stderr.flush()
-    return True
-
-
-def write2(arg):
-    if verbosity < 2:
-        return False
-    sys.stderr.write(arg)
-    sys.stderr.flush()
-    return True
-
-
-def write3(arg):
-    if verbosity < 3:
-        return False
-    sys.stderr.write(arg)
-    sys.stderr.flush()
-    return True
-
-
 def echo0(*args, **kwargs):
-    print(*args, file=sys.stderr, **kwargs)
-    return True
-
-
-def echo1(*args, **kwargs):  # formerly debug
-    if verbosity < 1:
-        return False
-    print(*args, file=sys.stderr, **kwargs)
-    return True
-
-
-def echo2(*args, **kwargs):  # formerly extra
-    if verbosity < 2:
-        return False
-    print(*args, file=sys.stderr, **kwargs)
-    return True
-
-
-def echo3(*args, **kwargs):
-    if verbosity < 3:
-        return False
-    print(*args, file=sys.stderr, **kwargs)
+    kwargs['file'] = sys.stderr
+    print(*args, **kwargs)
     return True
 
 
@@ -307,8 +187,9 @@ def run_and_get_lists(cmd_parts, collect_stderr=True):
                 if bI < 0:
                     break
                 elif bI == 0:
-                    print("WARNING: Removing a backspace from the"
-                          " start of \"{}\".".format(line))
+                    logger.warning(
+                        "Removing a backspace from the"
+                        " start of \"{}\".".format(line))
                 line = line[:bI-1] + line[bI+1:]
                 # -1 to execute the backspace not just remove it
             errs.append(line.rstrip("\n\r"))
@@ -401,7 +282,7 @@ def which(program_name, more_paths=[]):
         paths = paths_str.split(os.path.pathsep)
         fallback_path = None
         for path in (paths + more_paths):
-            echo1(prefix+"looking in {}".format(path))
+            logger.info(prefix+"looking in {}".format(path))
             try_path = os.path.join(path, filename)
             if is_exe(try_path):
                 return try_path
@@ -410,7 +291,7 @@ def which(program_name, more_paths=[]):
                       ' but is not executable.'.format(try_path))
                 fallback_path = try_path
             else:
-                echo1(prefix+"There is no {}".format(try_path))
+                logger.info(prefix+"There is no {}".format(try_path))
         result = None
         if preferred_path is not None:
             echo0(prefix+'Warning: "{}" will be returned'
@@ -489,7 +370,7 @@ def any_contains(haystacks, needle, allow_blank=False, quiet=False,
         # Passing case_sensitive isn't necessary since lower()
         # is already one in that case above:
         if contains(haystack, needle, allow_blank=allow_blank, quiet=quiet):
-            echo1("is_in_any: {} is in {}".format(needle, haystack))
+            logger.debug("is_in_any: {} is in {}".format(needle, haystack))
             return True
     return False
 
@@ -512,7 +393,7 @@ def contains_any(haystack, needles, allow_blank=False, quiet=False,
         # Passing case_sensitive isn't necessary since lower()
         # is already one in that case above:
         if contains(haystack, needle, allow_blank=allow_blank, quiet=quiet):
-            echo3("is_in_any: {} is in {}".format(needle, haystack))
+            logger.debug("is_in_any: {} is in {}".format(needle, haystack))
             return True
     return False
 
@@ -549,8 +430,9 @@ def is_like(haystack, needle, allow_blank=False, quiet=False,
         needle_start = 0
     haystack = haystack[haystack_start:]
     needle = needle[needle_start:]
-    echo3(tab+"in is_like({}, {})"
-          "".format(json.dumps(haystack), json.dumps(needle)))
+    logger.debug(
+        tab+"in is_like({}, {})"
+        .format(json.dumps(haystack), json.dumps(needle)))
     if needle_start == 0:
         double_star_i = needle.find("**")
         if "***" in needle:
@@ -560,12 +442,14 @@ def is_like(haystack, needle, allow_blank=False, quiet=False,
         if (double_star_i > 0):
             # and (double_star_i < len(needle) - 2):
             # It is allowed to be at the end.
-            echo3(tab+"* splitting needle {} at **"
-                  "".format(json.dumps(needle)))
+            logger.debug(
+                tab+"* splitting needle {} at **"
+                .format(json.dumps(needle)))
             left_needle = needle[:double_star_i] + "*"
             right_needle = needle[double_star_i+2:]
-            echo3(tab+"* testing left_needle={}"
-                  "".format(json.dumps(left_needle)))
+            logger.debug(
+                tab+"* testing left_needle={}"
+                .format(json.dumps(left_needle)))
             if is_like(haystack, left_needle,
                        allow_blank=allow_blank, quiet=quiet,
                        indent=indent+2):
@@ -578,8 +462,9 @@ def is_like(haystack, needle, allow_blank=False, quiet=False,
                 if next_slash_i > -1:
                     right_haystack = right_haystack[next_slash_i:]
                 elif right_needle == "":
-                    echo3(tab+"  * there is no right side,"
-                          " so it matches")
+                    logger.debug(
+                        tab+"  * there is no right side,"
+                        " so it matches")
                     # ** can match any folder, so the return is True
                     # since:
                     # - There is nothing to match after **, so any
@@ -587,19 +472,20 @@ def is_like(haystack, needle, allow_blank=False, quiet=False,
                     # - The remainder of haystack has no slash, so it is
                     #   a leaf.
                     return True
-                echo3(tab+"* testing right_haystack={}, right_needle={}"
-                      "".format(json.dumps(right_haystack),
-                                json.dumps(right_needle)))
+                logger.debug(
+                    tab+"* testing right_haystack={}, right_needle={}"
+                    .format(json.dumps(right_haystack),
+                            json.dumps(right_needle)))
                 if (right_needle == ""):
                     if (right_haystack == ""):
                         return True
                     else:
-                        echo3(tab+"* WARNING: right_haystack")
+                        logger.debug(tab+"* WARNING: right_haystack")
                 return is_like(right_haystack, right_needle,
                                allow_blank=True, quiet=quiet,
                                indent=indent+2)
             else:
-                echo3(tab+"  * False")
+                logger.debug(tab+"  * False")
                 # It is already false, so return
                 # (prevent issue 22: "More than one '*' in a row").
                 return False
@@ -666,23 +552,25 @@ def is_like(haystack, needle, allow_blank=False, quiet=False,
                 return True
             # match_indices = []
             next_needle_c = needle[nI+1]
-            echo3(tab+"* checking for each possible continuation of"
-                  " needle[needle.find('*')+1]"
-                  " in haystack {}[{}:] -> {}"
-                  .format(haystack, hI, haystack[hI:]))
+            logger.debug(
+                tab+"* checking for each possible continuation of"
+                " needle[needle.find('*')+1]"
+                " in haystack {}[{}:] -> {}"
+                .format(haystack, hI, haystack[hI:]))
             for try_h_i in range(hI, len(haystack)):
                 if haystack[try_h_i] == next_needle_c:
-                    echo3(tab+"  * is_like({}[{}:] -> {}, {}[{}+1:]"
-                          " -> {})"
-                          "".format(haystack, try_h_i,
-                                    haystack[try_h_i:],
-                                    needle, nI, needle[nI+1:]))
+                    logger.debug(
+                        tab+"  * is_like({}[{}:] -> {}, {}[{}+1:]"
+                        " -> {})"
+                        .format(haystack, try_h_i,
+                                haystack[try_h_i:],
+                                needle, nI, needle[nI+1:]))
                     if is_like(haystack, needle,
                                allow_blank=allow_blank,
                                quiet=quiet, haystack_start=try_h_i,
                                needle_start=nI+1,
                                indent=indent+2):
-                        echo3(tab+"    * True")
+                        logger.debug(tab+"    * True")
                         # The rest may match from ANY starting point of
                         # the character after *, such as:
                         # abababc is like *ababc (should be True)
@@ -697,7 +585,7 @@ def is_like(haystack, needle, allow_blank=False, quiet=False,
                         #     - (ababc, a*c) -> True
                         return True
                     else:
-                        echo3(tab+"    * False")
+                        logger.debug(tab+"    * False")
 
             if next_needle_c == haystack[hI]:
                 nI += 2
@@ -709,8 +597,9 @@ def is_like(haystack, needle, allow_blank=False, quiet=False,
             matches += 1
         elif inc == -1:
             return False
-    echo3(tab+"is_like matches={} req_count={}"
-          "".format(matches, req_count))
+    logger.debug(
+        tab+"is_like matches={} req_count={}"
+        .format(matches, req_count))
     return matches == req_count
 
 
@@ -770,8 +659,7 @@ else:
 digits = "1234567890"  # or use s.isdigit()
 digit_or_dot = digits + "."
 
-osrelease = None
-MODULE_DIR = os.path.dirname(__file__)
+os_release = None
 ASSETS_DIR = os.path.join(MODULE_DIR, "static")
 
 packages_name = "package_names.csv"
@@ -833,7 +721,7 @@ class InstallManager:
 
 
 def _init_commands():
-    echo1("* _init_commands...")
+    logger.info("* _init_commands...")
     global refresh_parts
     global install_parts
     # global uninstall_parts  # See remove_parts
@@ -904,11 +792,11 @@ def _init_commands():
                           "".format(refresh_parts))
             if returncode == 0:
                 result_msg = "OK"
-            echo1("* refreshing package list..." + result_msg)
+            logger.info("* refreshing package list..." + result_msg)
         else:
-            echo1("* linuxpreinstall is not refreshing the package list"
+            logger.info("* linuxpreinstall is not refreshing the package list"
                   " since you are not a superuser.")
-    echo1("  * done _init_commands")
+    logger.info("  * done _init_commands")
 
 
 def get_installed():
@@ -1041,21 +929,21 @@ def find_unquoted(haystack, needle, quotes=['"']):
     return -1
 
 
-def _init_osrelease():
-    echo1("* _init_osrelease...")
-    global osrelease
-    if osrelease is None:
-        osrelease = {}
-    osrelease_path = os.path.join("/etc", "os-release")
+def _init_os_release():
+    logger.info("* _init_os_release...")
+    global os_release
+    if os_release is None:
+        os_release = {}
+    os_release_path = os.path.join("/etc", "os-release")
     # other release files and formats:
     # /etc/centos-release: CentOS Linux release 8.4.2105
     # /etc/debian_version: 11.1
     # /etc/devuan_version: chimaera
     # ^ devuan also has /etc/debian_version
-    if os.path.isfile(osrelease_path):
-        osrelease = {}
+    if os.path.isfile(os_release_path):
+        os_release = {}
         lineN = 0
-        with open(osrelease_path) as ins:
+        with open(os_release_path) as ins:
             for rawL in ins:
                 lineN += 1
                 line = rawL.strip()
@@ -1071,16 +959,16 @@ def _init_osrelease():
                     if len(v) >= 2:
                         if (v[0] == '"') and (v[-1] == '"'):
                             v = v[1:-1]
-                    osrelease[key] = v
+                    os_release[key] = v
                 else:
                     signRawI = find_unquoted(rawL, "=")
                     raise SyntaxError("{}:{}:{}: misplaced '='"
-                                      "".format(osrelease_path, lineN,
+                                      "".format(os_release_path, lineN,
                                                 signRawI))
     else:
-        echo0("osrelease_path \"{}\" was not found. osrelease:{}"
-              "".format(osrelease_path, osrelease))
-    echo1("  * done _init_osrelease")
+        echo0("os_release_path \"{}\" was not found. os_release:{}"
+              "".format(os_release_path, os_release))
+    logger.info("  * done _init_os_release")
 
 
 def bin_exists(name):
@@ -1092,7 +980,7 @@ def bin_exists(name):
 
 
 def _init_packagenames():
-    echo1("* _init_packagenames...")
+    logger.info("* _init_packagenames...")
     global packageInfos
     if packageInfos is None:
         packageInfos = {}
@@ -1132,10 +1020,10 @@ def _init_packagenames():
                 else:
                     for k, v in o.items():
                         packageInfos[pkgid][k] = v
-                echo1("object[{}]: {}".format(pkgid, o))
-    echo1("  * done _init_packagenames")
+                logger.info("object[{}]: {}".format(pkgid, o))
+    logger.info("  * done _init_packagenames")
 
 
-_init_osrelease()
+_init_os_release()
 _init_packagenames()
 _init_commands()

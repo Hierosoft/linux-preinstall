@@ -1,5 +1,5 @@
 # Linux Drivers
-(from <https://github.com/poikilos/linux-preinstall/tree/master/drivers>)
+(from <https://github.com/Hierosoft/linux-preinstall/tree/master/drivers>)
 
 In many cases, drivers are included with the linux kernel, or can be installed from a software repository.
 

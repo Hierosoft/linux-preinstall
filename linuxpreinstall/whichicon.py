@@ -241,7 +241,8 @@ def which_icon(BIN_PATH):
                                 json.dumps(execSub)))
                     if BIN_PATH == execSub:
                         found = line
-                        print('    * matched name "{}"'.format(found))
+                        echo0('    * matched name "{}"'.format(found))
+                        # ^ don't print (stdout could be redirected)
                         exact = True
                         break
                     elif check_all_parts and any_contains(execParts, BIN_PATH,
@@ -302,21 +303,25 @@ def which_icon(BIN_PATH):
         sub = os.path.split(subPath)[1]
         # if found is not None:
         if not endsWithAny(sub, icon_dot_extensions, CS=False):
-            print("  * skipping non-shortcut \"{}\""
-                  "".format(subPath))
+            echo0("  * skipping non-shortcut \"{}\""
+                  .format(subPath))
+            # ^ don't print (stdout could be redirected)
             continue
         if sub == "bamf-2.index":
-            print("  * skipping non-shortcut \"{}\""
-                  "".format(subPath))
+            echo0("  * skipping non-shortcut \"{}\""
+                  .format(subPath))
+            # ^ don't print (stdout could be redirected)
             continue
         if sub == "mimeinfo.cache":
-            print("  * skipping non-shortcut \"{}\""
-                  "".format(subPath))
+            echo0("  * skipping non-shortcut \"{}\""
+                  .format(subPath))
+            # ^ don't print (stdout could be redirected)
             continue
         if result != "":
-            print("  * skipping \"{}\""
+            echo0("  * skipping \"{}\""
                   " since already got a result!"
-                  "".format(subPath))
+                  .format(subPath))
+            # ^ don't print (stdout could be redirected)
             continue
         print(subPath)
         result = subPath
