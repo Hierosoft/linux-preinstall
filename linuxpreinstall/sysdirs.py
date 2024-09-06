@@ -2,13 +2,20 @@
 #  (eventually that should as well).
 import os
 import platform
+import sys
 
 from linuxpreinstall.readonlydict import ReadOnlyDict
 
-from linuxpreinstall import (
-    echo0,
-)
+# from linuxpreinstall import (  # commented: circular import: imports sysdirs
+#     echo0,
+# )
 # sysfiles = ReadOnlyDict()
+
+
+def echo0(*args, **kwargs):
+    kwargs['file'] = sys.stderr
+    print(*args, **kwargs)
+    return True
 
 
 class SystemPaths(ReadOnlyDict):
