@@ -19,7 +19,7 @@ END
 mkdir -p ~/Downloads/laclin
 cd ~/Downloads/laclin
 echo "* Information and updates regarding this feature patch is at <https://laclin.com/xfce4-tabset.html>."
-sudo apt install libvte-2.91-dev libxfce4ui-2-dev
+sudo apt install -y libvte-2.91-dev libxfce4ui-2-dev intltool
 if [ ! -f "xfce4-terminal_0.8.10.orig.tar.bz2" ]; then
     wget http://deb.debian.org/debian/pool/main/x/xfce4-terminal/xfce4-terminal_0.8.10.orig.tar.bz2
     if [ $? -ne 0 ]; then exit 1; fi
