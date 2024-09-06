@@ -71,5 +71,14 @@ sudo killall xfce4-terminal
 echo "* [$0] sudo make install..."
 sudo make install
 if [ $? -ne 0 ]; then exit 1; fi
+sudo mkdir -p /usr/local/share/applications
+
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+CAT_DIR="`dirname $SCRIPT_DIR`"
+REPO_DIR="`dirname $CAT_DIR`"
+bash $REPO_DIR/linuxpreinstall/helpers_bash/reload-menu-instructions.sh
+# ^ Or python -c 'from linuxpreinstall.helpers.reload_menu import main; main()'
+
+echo "If icon is still missing, try again after: sudo wget -O /usr/local/share/applications/xfce4-terminal.desktop https://raw.githubusercontent.com/xfce-mirror/xfce4-terminal/master/xfce4-terminal.desktop.in"
 echo Done
 exit 0
