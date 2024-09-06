@@ -23,7 +23,11 @@ sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328
 #   deb [signed-by=/usr/share/keyrings/mono-official-archive-keyring.gpg] https://download.mono-project.com/repo/ubuntu stable-focal main
 #   - 20.04
 #   - No later versions are listed at <https://download.mono-project.com/repo/ubuntu/dists/index.html>.
-echo "deb https://download.mono-project.com/repo/ubuntu stable-focal main" | sudo tee /etc/apt/sources.list.d/mono-official-vs.list
+if [ -f /etc/apt/sources.list.d/mono-official-vs.list ]; then
+	sudo mkdir -p /etc/apt/sources.list.disabled
+    sudo mv /etc/apt/sources.list.d/mono-official-vs.list /etc/apt/sources.list.disabled/
+fi
+echo "deb https://download.mono-project.com/repo/ubuntu stable-focal main" | sudo tee /etc/apt/sources.list.d/mono-official-stable.list
 sudo apt update
 sudo apt install mono-devel
 
@@ -65,8 +69,13 @@ sudo apt install -y git autoconf libtool automake build-essential gettext cmake 
 
 sudo mkdir -p /opt/git
 sudo chown tcs:tcs /opt/git
-git clone https://gitlab.winehq.org/mono/mono /opt/git/mono
-cd /opt/git/mono || exit 1
+if [ ~ -d /opt/git/mono ]; then
+	git clone https://gitlab.winehq.org/mono/mono /opt/git/mono
+	cd /opt/git/mono || exit 1
+else
+	cd /opt/git/mono || exit 1
+	git pull
+fi
 # ./autogen.sh
 
 #   but change PREFIX as per <https://www.mono-project.com/docs/compiling-mono/linux/>!
@@ -74,7 +83,40 @@ PREFIX="/usr/local"
 sudo mkdir -p $PREFIX
 sudo chown -R `whoami` $PREFIX
 PATH=$PREFIX/bin:$PATH
+echo
+echo
+echo "Running \"./autogen.sh\"..."
 ./autogen.sh --prefix=$PREFIX
+code=$?
+if [ $code -ne 0 ]; then
+	echo "\"./autogen.sh\" failed in `pwd` with code $code"
+	exit $code
+fi
+echo
+echo
+echo "Running \"make\"..."
 make
-make check || exit $?
-make install | tee ~/manifest.txt
+code=$?
+if [ $code -ne 0 ]; then
+	echo "\"make\" failed in `pwd` with code $code"
+	exit $code
+fi
+echo
+echo
+echo "Running \"make check\"..."
+make check
+code=$?
+if [ $code -ne 0 ]; then
+	echo "\"make check\" failed in `pwd` with code $code"
+	exit $code
+fi
+
+echo
+echo "Running \"make install\"..."
+GIT_HASH=$(git rev-parse --short HEAD)
+make install | tee ~/manifest-$GIT_HASH.txt
+code=$?
+if [ $code -ne 0 ]; then
+	echo "\"make install\" failed in `pwd` with code $code"
+	exit $code
+fi
