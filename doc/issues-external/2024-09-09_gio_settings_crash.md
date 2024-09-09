@@ -55,6 +55,8 @@ Running the program causes:
 Trace/breakpoint trap (core dumped)
 ```
 
+Related code in glib: <https://github.com/bratsche/glib/blob/abfef39da9a11f59051dfa23a50bc374c0b8ad6e/gio/gsettings.c#L506>
+
 If I skip the "new" operation when the `schema_name` contains "deprecated", that isn't enough. Various other names also cause the error.
 
 
