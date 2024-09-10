@@ -12,7 +12,21 @@ else:
 logger = getLogger(__name__)
 
 HOME = os.path.expanduser("~")
-AVATAR_PATH = os.path.join(HOME, ".config", "linux-preinstall", "user.png")
+AVATARS_SUB = os.path.join(".config", "linux-preinstall")
+AVATARS_PATH = os.path.join(HOME, AVATARS_SUB)
+AVATAR_NAMES = "user.jpg", "user.png"
+
+
+def get_avatar_path(home=HOME):
+    avatars_path = AVATARS_PATH
+    if home != HOME:
+        avatars_path = os.path.join(HOME, AVATARS_SUB)
+    for name in AVATAR_NAMES:
+        path = os.path.join(avatars_path, name)
+        if os.path.isfile(path):
+            return path
+    return None
+
 
 def pin_app_to_favorites(desktop_file_path, index=None):
     """
@@ -54,7 +68,7 @@ def pin_app_to_favorites(desktop_file_path, index=None):
         print(f"Pinned '{app_name}' to favorites.")
 
 
-def create_logout_desktop_file():
+def create_logout_desktop_file(home=HOME):
     """
     Creates a .desktop file to log out from Cinnamon and pins it to the favorites.
 
@@ -81,7 +95,7 @@ def create_logout_desktop_file():
         "Exec=cinnamon-session-quit --logout\n"
         "Icon={}\n"
         "Terminal=false\n"
-    ).format(name, AVATAR_PATH)
+    ).format(name, get_avatar_path(home=home))
 
     # Write the content to the file
     with open(desktop_file_path, "w") as desktop_file:
@@ -100,8 +114,8 @@ def main():
     """
     Main function to create the logout desktop file and pin it to Cinnamon favorites.
     """
-    if not os.path.isfile(AVATAR_PATH):
-        print("Error: Create {} first.".format(AVATAR_PATH))
+    if not get_avatar_path():
+        print("Error: Create any {} in {} first.".format(AVATAR_NAMES, AVATARS_PATH))
         return 1
     # try:
     create_logout_desktop_file()
