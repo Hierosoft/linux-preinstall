@@ -29,9 +29,12 @@ def main():
             if not schema:
                 continue
 
+            if not schema.get_path():
+                print(f"  Skipping relocatable schema: {schema_branch}")
+                continue
             # Create a Gio.Settings object for each schema
-            # settings = Gio.Settings.new(schema_branch)
-            # ^ Can cause crash. See:
+            settings = Gio.Settings.new(schema_branch)
+            # ^ Can cause crash if relocatable. See:
             #   - <https://stackoverflow.com/questions/78966924/how-do-i-check-if-a-listed-gio-schema-is-good-glib-gio-error-attempting-to-crea>
             #     - same as linux-preinstall/doc/issues-external/2024-09-09_gio_settings_crash.md
 
@@ -41,9 +44,9 @@ def main():
                 continue
             for key in keys:
                 full_key = f"{schema_branch}.{key}"
-                print(full_key)
-                # value = settings.get_value(key)
-                # print(f"  Key: {schema_branch}.{key} = {value}")
+                # print(full_key)
+                value = settings.get_value(key)
+                print(f"  Key: {full_key} = {value}")
 
 if __name__ == '__main__':
     main()
