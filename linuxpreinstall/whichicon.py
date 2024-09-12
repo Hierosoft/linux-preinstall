@@ -81,10 +81,11 @@ def add_icon_dirs_recursively(parent, hidden=False):
             if sub.startswith("."):
                 continue
         sub_path = os.path.join(parent, sub)
+        dot_ext = os.path.splitext(sub)[1]
         if os.path.isdir(sub_path):
             recursive_count += add_icon_dirs_recursively(sub_path)
-        elif (sub.lower().endswith(".desktop") or
-                sub.lower().endswith(".lnk")):
+        elif dot_ext.lower() in (".desktop", ".lnk"):
+            # ^ Manually allow .lnk since used for wine_programs
             this_count += 1
     if this_count > 0:
         icon_paths.append(parent)
@@ -232,6 +233,15 @@ def which_icon(BIN_PATH):
                         check_all_parts = True
                     elif name == "#!":
                         pass
+                    elif name == "X-KDE-GlobalAccel-CommandShortcut":
+                        # May be false, but should only exist for
+                        #   KGlobalAccel hotkeys (It's not great, but it
+                        #   is what it is. See
+                        #   [This KDE Bug Breaks The COSMIC Desktop??]
+                        #   (https://youtube.com/watch?v=gn43JbqFwMQ&t=628s)
+                        logger.info("  * skipping since has"
+                                    " X-KDE-GlobalAccel-CommandShortcut")
+                        continue
                     else:
                         logger.info("  * skipping ")
                         continue
