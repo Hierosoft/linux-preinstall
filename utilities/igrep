@@ -39,6 +39,17 @@ do
 done
 # for hexchat_path in ~/.config/hexchat-bad ~/.config/hexchat-bad2 ~/.config/hexchat
 hexchat_path=~/.config/hexchat
+if [ ! -d "$hexchat_path/logs" ]; then
+    alt_path="$HOME/.config/hexchat.deactivated-use.weechat.instead"
+    if [ -d "$alt_path/logs" ]; then
+        hexchat_path="$alt_path"
+        >&2 echo "* using \"$hexchat_path\""
+    else
+        >&2 echo "* no \"$alt_path\""
+    fi
+else
+    >&2 echo "* using \"$hexchat_path\""
+fi
 
 # for logname in "ircnow for minetest etc by jrmu via oldcoder" irc.oldcoder.org "minetest.io irc bouncer"
 # ~~Use "find" to get the full path (See <https://stackoverflow.com/questions/246215/how-can-i-generate-a-list-of-files-with-their-absolute-path-in-linux>).~~
