@@ -68,7 +68,8 @@ sudo apt install -y git autoconf libtool automake build-essential gettext cmake 
 # Then compile as per <https://gitlab.winehq.org/mono/mono>:
 
 sudo mkdir -p /opt/git
-sudo chown tcs:tcs /opt/git
+THIS_GROUP=`id -nG | awk '{print $1}'`
+sudo chown $USER:$THIS_GROUP /opt/git
 if [ ~ -d /opt/git/mono ]; then
 	git clone https://gitlab.winehq.org/mono/mono /opt/git/mono
 	cd /opt/git/mono || exit 1

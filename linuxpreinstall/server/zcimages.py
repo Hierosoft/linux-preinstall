@@ -53,7 +53,7 @@ dst_dirs.append(os.path.join(dst_dirs[0], "medium"))
 dst_dirs.append(os.path.join(dst_dirs[0], "large"))
 
 sizes = [(120, 120), (400, 400), (1200, 1200)]
-# ^ Images on shop.tcsdcc.com predating this script are generally:
+# ^ Images on shop.example.com predating this script are generally:
 # [300, 1600, 3843] or so. However, the width was used instead of the
 # max dimension, so the actual numbers used appear to be 120, 400, 1200
 # (narrow images are that wide).
