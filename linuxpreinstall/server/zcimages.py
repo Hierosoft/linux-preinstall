@@ -112,6 +112,8 @@ def zc_make_sized_images(src_path, dst_zen_cart, force=False,
         parStartI, parEndI = find_slice(dst_name, "(", ")")
         if parStartI > -1:
             dst_name = dst_name[:parStartI] + dst_name[parEndI:]
+            # ^ There is no need for parEndI+1, because the slice ender
+            #   is the same as the character after the paren.
         for bad_end in bad_ends:
             if dst_name.lower().endswith(bad_end.lower()):
                 bad_name = dst_name[:len(bad_end)].strip()
