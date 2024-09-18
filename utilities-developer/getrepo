@@ -1,4 +1,38 @@
 #!/bin/bash
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+GETREPO_PY="$SCRIPT_DIR/getrepo.py"
+if [ ! -f "$GETREPO_PY" ]; then
+    >&2 echo "Error: $GETREPO_PY not found. Make sure getrepo runs from the same directory."
+    >&2 echo "Otherwise, remove any symlink to getrepo in any folder in PATH then do:"
+    >&2 echo "    cd linux-preinstall && ln -s \`pwd\`/utilities-developer/getrepo.py ~/.local/bin/getrepo"
+    >&2 echo "and make sure ~/.local/bin is in your PATH."
+    exit 1
+fi
+if [ -f "`command -v python3`" ]; then
+    python3 "$GETREPO_PY" "$@"
+elif [ -f "`command -v python`" ]; then
+    python "$GETREPO_PY" "$@"
+else
+    >$2 echo "Error: Python is not installed."
+    exit 1
+fi
+exit $?
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 if [ ! -f "`command -v git`" ]; then
     echo "Error: git is not installed."
     exit 1
