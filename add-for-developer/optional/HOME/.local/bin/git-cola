@@ -1,6 +1,6 @@
 #!/bin/bash
 
-git-cola-env main
+git-cola-env cola "$@"
 # ^ call linux-preinstall's workaround to run pip version after checking install status
 
 # !/usr/bin/python

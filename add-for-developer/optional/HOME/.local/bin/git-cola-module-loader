@@ -1,0 +1,53 @@
+#!/usr/bin/env python3
+from __future__ import print_function
+import sys
+import re
+import importlib
+
+def show_warning(actual_value, expected_values):
+    """Show a warning with the actual value and expected values."""
+    print("Warning: Unrecognized subcommand '%s'." % actual_value)
+    print("Expected one of: %s" % ", ".join(expected_values))
+
+if __name__ == "__main__":
+    expected_values = ["cola", "dag", "sequenceeditor"]
+
+    if len(sys.argv) < 2:
+        print("Error: No subcommand provided. Expected one of: %s" % ", ".join(expected_values))
+        sys.exit(1)
+
+    # Set submodule to the first argument
+    submodule = sys.argv[1]
+
+    # Map "cola" to "main"
+    if sys.argv[1] == "cola":
+        submodule = "main"
+
+    # Show warning if sys.argv[1] is not in expected values
+    if sys.argv[1] not in expected_values:
+        show_warning(sys.argv[1], expected_values)
+
+    # If submodule is "main", change sys.argv[1] to "cola"
+    if submodule == "main":
+        sys.argv[1] = "cola"
+
+    # Change sys.argv[0] to "git"
+    sys.argv[0] = "git"
+
+    # Dynamically import based on the submodule (not sys.argv[1])
+    try:
+        module = importlib.import_module("cola.%s" % submodule)
+        main_func = getattr(module, "main")
+    except ImportError:
+        print("Error: Could not import the module 'cola.%s'." % submodule)
+        sys.exit(1)
+    except AttributeError:
+        print("Error: Module 'cola.%s' does not have a 'main' function." % submodule)
+        sys.exit(1)
+
+    # Clean up sys.argv[0]
+    # sys.argv[0] = re.sub(r"(-script\.pyw|\.exe)?$", "", sys.argv[0])
+    del sys.argv[0]  # don't pass it along, or argv[1] will become an arg
+
+    # Run the main function
+    sys.exit(main_func())

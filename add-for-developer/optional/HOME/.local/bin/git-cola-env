@@ -30,10 +30,16 @@ if [ -f "$DISTRO_GIT_COLA" ]; then
     me="`realpath $0`"
     DISTRO_GIT_COLA="`realpath $DISTRO_GIT_COLA`"
 
-    if [ "$DISTRO_GIT_COLA" != "$me" ]; then
-        show_message "This script only works if there is no packaged git-cola command, but $DISTRO_GIT_COLA exists and is not me ($0 -> $me)!"
+    # if [ "$DISTRO_GIT_COLA" != "$me" ]; then
+    #     show_message "This script only works if there is no packaged git-cola command, but $DISTRO_GIT_COLA exists and is not me ($0 -> $me)!"
+    #     exit 1
+    # fi
+    # ^ always true since git-cola-env runs git in linux-preinstall pip version workaround environment.
+    if [ "$(dirname "$DISTRO_GIT_COLA")" != "$(dirname "$me")" ]; then
+        show_message "This script only works if there is no packaged git-cola command, but $DISTRO_GIT_COLA exists and is not in the same folder as me ($0 -> $me)!"
         exit 1
     fi
+
 fi
 
 git_cola_venv_path="$HOME/.virtualenvs/git-cola"
@@ -79,49 +85,23 @@ if [ $code -ne 0 ]; then
 fi
 
 # Run the Python script and capture stderr and stdout
-if [ "$1" = "sequenceeditor" ]; then
-"$cola_env_python" -c '
-import sys
-import re
-from cola.sequenceeditor import main
-
-if __name__ == "__main__":
-    sys.argv[0] = re.sub(r"(-script\.pyw|\.exe)?$", "", sys.argv[0])
-    sys.exit(main())
-' > "$output_file" 2>&1
-elif [ "$1" = "dag" ]; then
-"$cola_env_python" -c '
-import sys
-import re
-from cola.sequenceeditor import main
-
-if __name__ == "__main__":
-    sys.argv[0] = re.sub(r"(-script\.pyw|\.exe)?$", "", sys.argv[0])
-    sys.exit(main())
-' > "$output_file" 2>&1
-else
-    if [ "$1" != "cola" ]; then
-        >&2 "[$0] Warning: unknown/missing arg: '$1'. Expected cola, dag, or sequenceeditor. Defaulting to cola."
-    fi
-"$cola_env_python" -c '
-import sys
-import re
-from cola.main import main
-
-if __name__ == "__main__":
-    sys.argv[0] = re.sub(r"(-script\.pyw|\.exe)?$", "", sys.argv[0])
-    sys.exit(main())
-' > "$output_file" 2>&1
+GIT_MODULE_LOADER="`command -v git-cola-module-loader`"
+if [ ! -f "$GIT_MODULE_LOADER" ]; then
+    >&2 echo "Cannot find git-cola-module-loader. Make sure linux-preinstall installed git-cola-env properly."
+    exit 1
 fi
+"$cola_env_python" "$GIT_MODULE_LOADER" "$@" > "$output_file" 2>&1
 code=$?
 
 # Check if Python command failed
 if [ $code -ne 0 ]; then
     if [ $code -ne 66 ]; then
-        echo "The process returned error code $code." >> "$output_file"
-        echo "Even after installing packages you still must do:" >> "$output_file"
-        # echo "rm -rf \"$git_cola_venv_path\"" >> "$output_file"
-        echo "\"$cola_env_python\" -m pip install PyQt5" >> "$output_file"
+        >&2 echo "The process returned error code $code." >> "$output_file"
+        if grep -q "Qt" "$output_file"; then
+            >&2 echo "A Qt Error seems to have occurred." >> "$output_file"
+            >&2 echo "Even after installing packages you still must do:" >> "$output_file"
+            >&2 echo "\"$cola_env_python\" -m pip install PyQt5" >> "$output_file"
+        fi
         show_message "" "$output_file"
         rm "$output_file"
         exit $code
