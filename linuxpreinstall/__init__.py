@@ -1024,6 +1024,59 @@ def _init_packagenames():
     logger.info("  * done _init_packagenames")
 
 
+QUIET = False
+
+def compare_versions(item1, item2, quiet=QUIET):
+    args = [item1, item2]
+    items = []
+    for item in args:
+        version = item.split("-")[0]  # such as "4.7.1-api" or "4.7.1"
+        # ^ only has 1 element if no hyphen such as "4.7.1"!
+        items.append(version.split("."))  # tuple such as (4, 7, 1)
+    while len(items[0]) > len(items[1]):
+        items[1].append('0')  # change 4.7. to 4.7.0 etc (actually [4, 7, 0])
+    while len(items[1]) > len(items[0]):
+        items[0].append('0')
+    assert len(items[0]) == len(items[1])
+    values = [0, 0]
+    exp = 10000
+    for i in range(2):
+        multiplier = 1
+        for place in reversed(range(len(items[i]))):
+            try:
+                place_value = int(items[i][place])
+            except ValueError:
+                if not quiet:
+                    print(
+                        "Error: \"%s\" is not a version component"
+                        " (in \"%s\")"
+                        % (items[i][place], args[i]), file=sys.stderr)
+                multiplier = 1 if (values[i] < 0) else -1
+                place_value = 1 if (multiplier < 0) else -1
+            if place_value > exp:
+                if not quiet:
+                    print(
+                        "Error: Cannot compare version place %s since > %s"
+                        % (place_value, exp), file=sys.stderr)
+                multiplier = 1 if (values[i] < 0) else -1
+                place_value = 1 if (multiplier < 0) else -1
+            values[i] += place_value * multiplier
+            multiplier *= exp
+        # logger.debug("Using value %s for %s" % (values[i], items[i]))
+        # NOTE: ^ sometimes both will be two long or both will be 3,
+        #   which is not a mistake. See len assertion above.
+    return values[0] - values[1]
+
+
+def sorted_versions(versions, quiet=False):
+    global QUIET
+    QUIET = quiet
+    if sys.version_info.major < 3:
+        return sorted(versions, cmp=compare_versions)
+    from functools import cmp_to_key
+    return sorted(versions, key=cmp_to_key(compare_versions))
+
+
 _init_os_release()
 _init_packagenames()
 _init_commands()

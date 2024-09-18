@@ -3,6 +3,7 @@ from __future__ import print_function
 
 import os
 import shutil
+import stat
 import sys
 
 from collections import OrderedDict
@@ -12,6 +13,15 @@ if sys.version_info.major < 3:
     FileNotFoundError = OSError  # TODO: See if Python 2 has this.
     FileExistsError = OSError  # TODO: See if Python 2 has this.
 
+
+MODULE_DIR = os.path.dirname(os.path.realpath(__file__))
+REPO_DIR = os.path.dirname(MODULE_DIR)
+sys.path.insert(0, REPO_DIR)
+
+from linuxpreinstall import (
+    # compare_versions,
+    sorted_versions,
+)
 # Assemblies known to be not in the Mono GAC
 # (and therefore need full path in mcs command)
 # - Determined using WineHQ's mono compiled locally
@@ -19,15 +29,78 @@ if sys.version_info.major < 3:
 EXTERNAL_ASSEMBLIES = [
     "System.Text.Json.dll",
     "System.Threading.dll",
-    "System.Reflection.Emit.dll"
+    "System.Reflection.Emit.dll",
+    "System.Buffers.dll",
+    "System.IO.dll",   # here to avoid version conflicts: See IO_MISMATCH_COMMENT below
 ]
+
+# Convert class or namespace from `using` into an actual assembly reference.
+REDUNDANT_ASSEMBLIES = {
+    "System.Environment": "mscorlib",
+}
+
+IO_MISMATCH_COMMENT = """
+Unhandled Exception:
+System.NotImplementedException: The method or operation is not implemented.
+  at System.IO.Ports.SerialPort.set_DiscardNull (System.Boolean value) [0x00000] in <b95dfe79e58c4102b7a41d3edfa6bb32>:0 
+  at (wrapper remoting-invoke-with-check) System.IO.Ports.SerialPort.set_DiscardNull(bool)
+  at {namespace}.MainForm.InitializeComponent () [0x0023d] in <9300349e8d174f3fa3783e7ccae42068>:0 
+  at {namespace}.MainForm..ctor () [0x00056] in <9300349e8d174f3fa3783e7ccae42068>:0 
+  at (wrapper remoting-invoke-with-check) {namespace}.MainForm..ctor()
+  at {namespace}.Program.Main () [0x0000b] in <9300349e8d174f3fa3783e7ccae42068>:0 
+[ERROR] FATAL UNHANDLED EXCEPTION: System.NotImplementedException: The method or operation is not implemented.
+  at System.IO.Ports.SerialPort.set_DiscardNull (System.Boolean value) [0x00000] in <b95dfe79e58c4102b7a41d3edfa6bb32>:0 
+  at (wrapper remoting-invoke-with-check) System.IO.Ports.SerialPort.set_DiscardNull(bool)
+  at {namespace}.MainForm.InitializeComponent () [0x0023d] in <9300349e8d174f3fa3783e7ccae42068>:0 
+  at {namespace}.MainForm..ctor () [0x00056] in <9300349e8d174f3fa3783e7ccae42068>:0 
+  at (wrapper remoting-invoke-with-check) {namespace}.MainForm..ctor()
+  at {namespace}.Program.Main () [0x0000b] in <9300349e8d174f3fa3783e7ccae42068>:0
+"""
+
+IMPLIED_ASSEMBLIES = {
+    "System.Text.Json.dll": ["System.Buffers.dll"],
+    # avoid: "System.TypeInitializationException: The type initializer for '{namespace}.MainForm' threw an exception. ---> System.IO.FileNotFoundException: Could not load file or assembly 'System.Buffers, Version=4.0.2.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' or one of its dependencies.
+    #  at System.Text.Json.JsonDocument.Parse (System.String json, System.Text.Json.JsonDocumentOptions options) [0x00014] in <83434c3504484469bfe9fa2ebdb16a14>:0"
+}
+
+# Only needs to be one value since if more you can use the value as a key in
+#   IMPLIED_ASSEMBLIES (add dependency there instead).
+# USING_ASSEMBLIES = {
+#     "System.IO": "System.IO.dll",
+# }
 
 # Mono reference assembly directories
 #   (for finding assemblies not in the GAC)
-ASSEMBLY_DIRS = {
-    "MSBUILD_BIN_DIR": "/usr/lib/mono/msbuild/Current/bin",
-    "FACADES_DIR": "/opt/git/mono/external/binary-reference-assemblies/v4.8/Facades"
-}
+ASSEMBLY_DIRS = OrderedDict()
+ASSEMBLY_DIRS["FACADES_DIR"] = "/opt/git/mono/external/binary-reference-assemblies/v4.8/Facades"
+ASSEMBLY_DIRS["MSBUILD_BIN_DIR"] = "/usr/lib/mono/msbuild/Current/bin"
+
+LOCAL_LIB_MONO = "/usr/local/lib/mono/"
+LOCAL_LIB_MONO_VERSIONS = []
+for sub in os.listdir(LOCAL_LIB_MONO):
+    sub_path = os.path.join(LOCAL_LIB_MONO, sub)
+    if sub.startswith("."):
+        continue
+    if not os.path.isdir(sub_path):
+        continue
+    # if not sub[:1].isdigit():
+    #     # This should be handled by sort_versions instead, version -1
+    #     # Actually, also prevented by it not having a Facades dir below
+    #     continue
+    if not os.path.isdir(os.path.join(sub_path, "Facades")):
+        # No Facades dir, so no assemblies
+        continue
+    LOCAL_LIB_MONO_VERSIONS.append(sub)
+
+if LOCAL_LIB_MONO_VERSIONS:
+    for sub in reversed(sorted_versions(LOCAL_LIB_MONO_VERSIONS, quiet=True)):
+        # ^ quiet=True to ignore (they will be considered version < 0)
+        # TODO: See if -api dir is better or worse (example: "4.8-api")
+        sub_path = os.path.join(LOCAL_LIB_MONO, sub, "Facades")
+        print("Using \"%s\" instead of \"%s\""
+              % (sub_path, ASSEMBLY_DIRS["FACADES_DIR"]))
+        ASSEMBLY_DIRS["FACADES_DIR"] = sub_path
+        break
 
 USED_BASH_VARS = []
 
@@ -54,6 +127,7 @@ def find_assembly(relative_path, with_bash_var=False):
                 USED_BASH_VARS.append(key)
                 return "$%s/%s" % (key, relative_path)
             return try_path
+        # logger.debug("No '%s'" % try_path, file=sys.stderr)
     return None
 
 
@@ -83,7 +157,6 @@ class CSProject:
             details as needed.
     """
 
-
     def __init__(self):
         self.cs_files = []
         self.assemblies = []
@@ -99,6 +172,7 @@ class CSProject:
         Args:
             source (str): The path to the .csproj file.
         """
+        other_os_sep = "\\" if (os.path.sep == "/") else "/"
         tree = ET.parse(source)
         root = tree.getroot()
         namespace = '{http://schemas.microsoft.com/developer/msbuild/2003}'
@@ -118,6 +192,8 @@ class CSProject:
         )
         if output_path_element is not None:
             self.out_dir = output_path_element.text.rstrip("\\/")
+            self.out_dir = \
+                self.out_dir.replace(other_os_sep, os.path.sep)
             if self.out_dir.startswith("/bin") or (self.out_dir == "/"):
                 # for safety:
                 self.out_dir = self.out_dir.lstrip("\\/")
@@ -130,7 +206,77 @@ class CSProject:
                 "%sItemGroup/%sReference" % (namespace, namespace)
             )
         ]
+
+        source_dir = os.path.dirname(source)
+        # Collect source files first so implied references can be collected.
+        self.cs_files = [
+            file.get('Include') for file in root.findall(
+                "%sItemGroup/%sCompile" % (namespace, namespace)
+            )
+        ]
+        # self.load_comments()
+        more_assemblies = OrderedDict()
+        using_keyword = b"using"
+        for i in range(len(self.cs_files)):
+            self.cs_files[i] = \
+                self.cs_files[i].replace(other_os_sep, os.path.sep)
+            cs_path = os.path.join(source_dir, self.cs_files[i])
+            if not os.path.isfile(cs_path):
+                print(
+                    "Error: Missing \"%s\" so \"using\" statements"
+                    " will not be validated." % cs_path)
+                continue
+            with open(cs_path, "rb") as stream:
+                for line in stream:
+                    if line.startswith(b"#"):
+                        continue
+                    if line.strip().startswith(b"namespace"):
+                        # The using statements better be over.
+                        break
+                    if line.strip().startswith(b"class"):
+                        # The using statements better be over.
+                        break
+                    using_i = line.find(using_keyword)
+                    if using_i < 0:
+                        continue
+                    start = using_i + len(using_keyword)
+                    end = line.find(b";", start)
+                    if end != -1:
+                        result = line[start:end].strip().decode("utf-8")
+                        parts = result.split()
+                        if len(parts) > 1:
+                            print("INFO: ignored \"%s\" in \"using %s\""
+                                  % (" ".join(parts[:-1]), result))
+                            result = parts[-1]
+                        redundant_assembly = REDUNDANT_ASSEMBLIES.get(result)
+                        if redundant_assembly:
+                            if redundant_assembly not in more_assemblies:
+                                print("Using assembly %s for redundant %s"
+                                    % (redundant_assembly, result))
+                            result = redundant_assembly
+                            # Example: Change System.Environment to System
+                            #   (System.Environment is not an assembly, it is a
+                            #   namespace in the System assembly)
+                        else:
+                            if result not in more_assemblies:
+                                print("Using non-redundant assembly %s" % result)
+                        # ^ Fix strings such as `using static System.Environment;`
+                        if result not in more_assemblies:
+                            more_assemblies[result] = []
+                        more_assemblies[result].append(self.cs_files[i])
+                        # ^ Use as key so it is only added once below.
+        for assembly, cs_files in more_assemblies.items():
+            assembly_file = assembly + ".dll"
+            if ((assembly not in self.assemblies)
+                    and (assembly_file not in self.assemblies)):
+                print("Warning: A reference to %s will be"
+                      " automatically added since used in %s"
+                      % (assembly, cs_files))
+                self.assemblies.append(assembly)
+        # NOTE: Any IMPLIED_ASSEMBLIES are added in the emit_bash method.
         for i in range(len(self.assemblies)):
+            self.assemblies[i] = \
+                self.assemblies[i].replace(other_os_sep, os.path.sep)
             if not self.assemblies[i].lower().endswith(".dll"):
                 endI = self.assemblies[i].find(", ")
                 if endI >= 0:
@@ -141,18 +287,8 @@ class CSProject:
                 self.assemblies[i] = self.assemblies[i].replace("\\", os.path.sep)
                 self.assemblies[i] += ".dll"
 
-        # Collect source files
-        self.cs_files = [
-            file.get('Include') for file in root.findall(
-                "%sItemGroup/%sCompile" % (namespace, namespace)
-            )
-        ]
-        # self.load_comments()
-        for i in range(len(self.cs_files)):
-            self.cs_files[i] = self.cs_files[i].replace("\\", os.path.sep)
 
         self.meta = OrderedDict()  # reserved for future use (get more metadata)
-
 
     def load_comments(self):
         # Load comments if files exist
@@ -171,19 +307,28 @@ class CSProject:
                     line = "# " + line
                 f.write("%s\n" % line)
 
-    def emit_bash(self, path):
+    def emit_bash(self, path, force=False):
         """Emit a bash script based on the loaded project data.
 
         Args:
             path (str): The path where the bash script will be written.
+            force (bool): Overwrite the destination if it exists.
         """
         print("Writing %s..." % path)
         results = {'warnings': []}
-        if os.path.isfile(path):
-            raise FileExistsError("File \"%s\" already exists." % os.path.abspath(path))
+        if os.path.isfile(path) and not force:
+            raise FileExistsError("File \"%s\" already exists."
+                                  % os.path.abspath(path))
 
         self.load_comments()
         tmp_path = path + ".tmp"  # use tmp to prevent corrupt output if fails
+        MCS = "mcs"
+        for try_mcs in ["/usr/local/bin/mcs"]:
+            # To get /usr/local/bin/mcs, see
+            #   mono-from-source.*.sh
+            if os.path.isfile(try_mcs):
+                MCS = try_mcs
+                break
         with open(tmp_path, "w") as f:
             f.write("#!/bin/bash\n")
             self.write_as_comments(f, self.top_comments)
@@ -197,13 +342,24 @@ class CSProject:
             references = OrderedDict()
             dll_paths = OrderedDict()
             for assembly in self.assemblies:
+                implied_assemblies = IMPLIED_ASSEMBLIES.get(assembly)
+                if implied_assemblies:
+                    for implied_assembly in implied_assemblies:
+                        if implied_assembly not in self.assemblies:
+                            self.assemblies.append(implied_assembly)
+            for assembly in self.assemblies:
                 minimum_path = assembly
                 if minimum_path in EXTERNAL_ASSEMBLIES:
                     minimum_path = find_assembly(assembly, with_bash_var=True)
+                    if not minimum_path:
+                        raise FileNotFoundError("%s not found." % assembly)
                 dll_paths[assembly] = find_assembly(assembly)
                 references[assembly] = minimum_path
 
-            f.write("mcs -out=\"%s/%s\" \\\n" % (self.out_dir, self.out_name))
+            f.write("echo \"compiling '%s/%s'\"\n"
+                    % (self.out_dir, self.out_name))
+            f.write("%s -out:\"%s/%s\" \\\n"
+                    % (MCS, self.out_dir, self.out_name))
             for _, reference in references.items():
                 f.write('    -r:%s \\\n' % reference)
 
@@ -219,9 +375,12 @@ class CSProject:
                 if abs_path:
                     f.write('cp "%s" "$OUTPUT_DIR/"\n' % abs_path)
                 else:
-                    error = 'MISSING "%s", can\'t copy to "$OUTPUT_DIR"' % rel_path
+                    error = ('MISSING assembly "%s",'
+                             ' can\'t copy to "$OUTPUT_DIR"'
+                             % rel_path)
                     results['warnings'].append(error)
                     print("Error: %s" % error, file=sys.stderr)
+                    # ^ Error: MISSING assembly
                     f.write('# %s\n' % error)
 
             # Handle output inspector
@@ -245,12 +404,18 @@ class CSProject:
             f.write("fi\n")
             f.write("\n# Exit with the same code as the compilation command\n")
             f.write("exit $code\n")
+        if os.path.isfile(path) and force:
+            os.remove(path)
         shutil.move(tmp_path, path)
         print("Wrote \"%s\"" % path)
+        st = os.stat(path)
+        os.chmod(path, st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+        # S_IXUSR, S_IXGRP, S_IXOTH: executable for owner, group, other,
+        #   respectively
         return results
 
 
-def csproj_to_build_sh(source, destination):
+def csproj_to_build_sh(source, destination, force=False):
     """Convert a .csproj file to a bash build script.
 
     Args:
@@ -259,7 +424,7 @@ def csproj_to_build_sh(source, destination):
     """
     project = CSProject()
     project.load(source)
-    project.emit_bash(destination)
+    project.emit_bash(destination, force=force)
 
 
 def main():
@@ -272,7 +437,10 @@ def main():
         print("Error: you must specify a csproj filename in the current directory.")
         return 1
     destination = "build-%s.sh" % os.path.splitext(name)[0]
-    csproj_to_build_sh(name, destination)
+    force = False
+    if "--force" in sys.argv:
+        force = True
+    csproj_to_build_sh(name, destination, force=force)
     return 0
 
 
