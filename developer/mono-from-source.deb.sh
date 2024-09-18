@@ -36,7 +36,7 @@ sudo apt install mono-devel
 # > If you don't have a working Mono installation, you can try a slightly more risky approach: getting the latest version of the 'monolite' distribution, which contains just enough to run the 'mcs' compiler. You do this with:
 # > Run the following line after ./autogen.sh
 # > make get-monolite-latest
-# 
+#
 # -<https://gitlab.winehq.org/mono/mono>
 
 # ./autogen.sh says we need ... "to compile Mono.":
@@ -59,11 +59,12 @@ sudo apt install -y autotools-dev autoconf libtool cmake
 # Result:
 sudo apt install -y autoconf automake bison cmake dc debhelper dpkg-dev libkrb5-dev libtool libx11-dev libxml-dom-perl libxslt1-dev libxt-dev lsb-release procps python3 tzdata zlib1g-dev
 # <https://www.mono-project.com/docs/compiling-mono/linux/> says:
+# (See /opt/git/linux-preinstall/utilities-developer/build-mono.sh for a copy of their Debian mono build script)
 sudo apt install -y git autoconf libtool automake build-essential gettext cmake python3 curl
 # or try:
 # sudo apt-get --simulate build-dep mono
 # or:
-# apt showsrc mono | grep '^Build-Depends' 
+# apt showsrc mono | grep '^Build-Depends'
 
 # Then compile as per <https://gitlab.winehq.org/mono/mono>:
 
@@ -113,9 +114,9 @@ if [ $code -ne 0 ]; then
 fi
 
 echo
-echo "Running \"make install\"..."
+echo "Running \"sudo make install\"..."
 GIT_HASH=$(git rev-parse --short HEAD)
-make install | tee ~/manifest-$GIT_HASH.txt
+sudo make install | tee ~/mono-$GIT_HASH.manifest.txt
 code=$?
 if [ $code -ne 0 ]; then
 	echo "\"make install\" failed in `pwd` with code $code"
