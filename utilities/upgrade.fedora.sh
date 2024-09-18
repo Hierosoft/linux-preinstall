@@ -1,8 +1,12 @@
 #!/bin/bash
 . /etc/os-release
 if [ "$NAME" != "Fedora" ]; then
-    echo "Error: NAME=Fedora was expected in /etc/os-release but NAME is $NAME. This script is only for Fedora."
-    exit 1
+    if [ "$NAME" != "Fedora Linux" ]; then
+        if [ "$ID" != "fedora" ]; then
+            echo "Error: ID=fedora or NAME=\"Fedora Linux\" (or older NAME=Fedora) was expected in /etc/os-release but ID is $ID and NAME is $NAME. This script is only for Fedora."
+            exit 1
+        fi
+    fi
 fi
 me=`basename $0`
 NEXT_VER=$(($VERSION_ID+1))
