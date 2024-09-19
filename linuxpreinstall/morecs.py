@@ -26,19 +26,41 @@ from linuxpreinstall import (
 # (and therefore need full path in mcs command)
 # - Determined using WineHQ's mono compiled locally
 #   2024-09-06 on Linux Mint 22:
+# - Only ones that seem to be missing from 4.5 (not found by mcs)
+#   are:
+#   - System.Buffers.dll
+#   - System.Memory.dll
+#   - System.Runtime.CompilerServices.Unsafe.dll
+#   - System.Text.Json.dll
+
+
+# Files which need to be copied to the output dir
+NON_GAC_ASSEMBLIES = [
+    "System.Buffers",
+    "System.Memory",
+    "System.Text.Json",
+    "System.Runtime.CompilerServices.Unsafe"
+]
+
+# Files that need to be referenced by absolute path
 EXTERNAL_ASSEMBLIES = [
-    "System.Text.Json.dll",
-    "System.Threading.dll",
-    "System.Reflection.Emit.dll",
-    "System.Buffers.dll",
-    "System.IO.dll",   # here to avoid version conflicts: See IO_MISMATCH_COMMENT below
-    "System.Text.RegularExpressions.dll",
+    "System.Deployment",
+    "System.Memory",
+    # "System.Threading",
+    # "System.Reflection.Emit",
+    # "System.Buffers",
+    # "System.IO",   # here to avoid version conflicts: See IO_MISMATCH_COMMENT below
+    # "System.Text.RegularExpressions",
+    # "System.Runtime.InteropServices",
+    # "System.Collections",
+    # "System.ComponentModel.Primitives",
+    # "System.Runtime",
 ]
 
 # Convert class or namespace from `using` into an actual assembly reference.
 REDUNDANT_ASSEMBLIES = {
     "System.Environment": "mscorlib",
-    "System.Collections.Generic": "",
+    "System.Collections.Generic": "System.Collections",
     "System.ComponentModel": "System.ComponentModel.Primitives",
     "System.Threading.Tasks": "System.Runtime",
     "System.Runtime.CompilerServices": "System.Runtime",
@@ -46,6 +68,9 @@ REDUNDANT_ASSEMBLIES = {
     "System.Text": "System",  # TODO: or "mscorlib"?
     "System.Media": "System",  # Usage may require System.Windows.Extensions.dll!
     "System.Reflection": "System.Runtime",
+    # "System.ReadOnlySpan": "System.Runtime",  # used by System.Text.Json.dll
+    # "System.ReadOnlyMemory": "System.Runtime",  # a Struct, used by System.Text.Json.dll.
+    # ^ MS documentation says System.Runtime.dll, compiler error says reference System.Memory.
     # NOTE: System.Runtime.CompilerServices.Unsafe.dll is only in Mono
     #   4.5 or /usr/local/lib/mono/msbuild/Current/bin/Roslyn/
     # NOTE: System.Text.RegularExpressions is/was a nuget package but
@@ -55,26 +80,39 @@ REDUNDANT_ASSEMBLIES = {
 IO_MISMATCH_COMMENT = """
 Unhandled Exception:
 System.NotImplementedException: The method or operation is not implemented.
-  at System.IO.Ports.SerialPort.set_DiscardNull (System.Boolean value) [0x00000] in <b95dfe79e58c4102b7a41d3edfa6bb32>:0 
+  at System.IO.Ports.SerialPort.set_DiscardNull (System.Boolean value) [0x00000] in <b95dfe79e58c4102b7a41d3edfa6bb32>:0
   at (wrapper remoting-invoke-with-check) System.IO.Ports.SerialPort.set_DiscardNull(bool)
-  at {namespace}.MainForm.InitializeComponent () [0x0023d] in <9300349e8d174f3fa3783e7ccae42068>:0 
-  at {namespace}.MainForm..ctor () [0x00056] in <9300349e8d174f3fa3783e7ccae42068>:0 
+  at {namespace}.MainForm.InitializeComponent () [0x0023d] in <9300349e8d174f3fa3783e7ccae42068>:0
+  at {namespace}.MainForm..ctor () [0x00056] in <9300349e8d174f3fa3783e7ccae42068>:0
   at (wrapper remoting-invoke-with-check) {namespace}.MainForm..ctor()
-  at {namespace}.Program.Main () [0x0000b] in <9300349e8d174f3fa3783e7ccae42068>:0 
+  at {namespace}.Program.Main () [0x0000b] in <9300349e8d174f3fa3783e7ccae42068>:0
 [ERROR] FATAL UNHANDLED EXCEPTION: System.NotImplementedException: The method or operation is not implemented.
-  at System.IO.Ports.SerialPort.set_DiscardNull (System.Boolean value) [0x00000] in <b95dfe79e58c4102b7a41d3edfa6bb32>:0 
+  at System.IO.Ports.SerialPort.set_DiscardNull (System.Boolean value) [0x00000] in <b95dfe79e58c4102b7a41d3edfa6bb32>:0
   at (wrapper remoting-invoke-with-check) System.IO.Ports.SerialPort.set_DiscardNull(bool)
-  at {namespace}.MainForm.InitializeComponent () [0x0023d] in <9300349e8d174f3fa3783e7ccae42068>:0 
-  at {namespace}.MainForm..ctor () [0x00056] in <9300349e8d174f3fa3783e7ccae42068>:0 
+  at {namespace}.MainForm.InitializeComponent () [0x0023d] in <9300349e8d174f3fa3783e7ccae42068>:0
+  at {namespace}.MainForm..ctor () [0x00056] in <9300349e8d174f3fa3783e7ccae42068>:0
   at (wrapper remoting-invoke-with-check) {namespace}.MainForm..ctor()
   at {namespace}.Program.Main () [0x0000b] in <9300349e8d174f3fa3783e7ccae42068>:0
 """
 
 IMPLIED_ASSEMBLIES = {
-    "System.Text.Json.dll": ["System.Buffers.dll"],
+    "System.Text.Json": ["System.Buffers", "System.Runtime"],  # System.Runtime has System.ReadOnlySpan
     # avoid: "System.TypeInitializationException: The type initializer for '{namespace}.MainForm' threw an exception. ---> System.IO.FileNotFoundException: Could not load file or assembly 'System.Buffers, Version=4.0.2.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51' or one of its dependencies.
     #  at System.Text.Json.JsonDocument.Parse (System.String json, System.Text.Json.JsonDocumentOptions options) [0x00014] in <83434c3504484469bfe9fa2ebdb16a14>:0"
 }
+
+for assembly in EXTERNAL_ASSEMBLIES:
+    assert not assembly.lower().endswith(".dll")
+
+for key, value in REDUNDANT_ASSEMBLIES.items():
+    assert not key.lower().endswith(".dll")
+    assert not value.lower().endswith(".dll")
+
+for key, values in IMPLIED_ASSEMBLIES.items():
+    assert not key.lower().endswith(".dll")
+    assert isinstance(values, list)
+    for value in values:
+        assert not value.lower().endswith(".dll")
 
 # Only needs to be one value since if more you can use the value as a key in
 #   IMPLIED_ASSEMBLIES (add dependency there instead).
@@ -102,6 +140,7 @@ for sub in os.listdir(LOCAL_LIB_MONO):
     #     continue
     if not os.path.isdir(os.path.join(sub_path, "Facades")):
         # No Facades dir, so no assemblies
+        # Examples: lldb, monodoc, mono-configuration-crypto
         continue
     LOCAL_LIB_MONO_VERSIONS.append(sub)
 
@@ -116,6 +155,31 @@ if LOCAL_LIB_MONO_VERSIONS:
         break
 
 USED_BASH_VARS = []
+
+
+def is_external_assembly(name):
+    if name.lower().endswith(".dll"):
+        name = name[:-4]
+    return name in EXTERNAL_ASSEMBLIES
+
+
+def is_in_gac(name):
+    # TODO: actually check gac.
+    if name.lower().endswith(".dll"):
+        name = name[:-4]
+    return name not in NON_GAC_ASSEMBLIES
+
+
+def core_assembly(name):
+    if name.lower().endswith(".dll"):
+        name = name[:-4]
+    return REDUNDANT_ASSEMBLIES.get(name)
+
+
+def implied_assemblies(name):
+    if name.lower().endswith(".dll"):
+        name = name[:-4]
+    return IMPLIED_ASSEMBLIES.get(name)
 
 
 def find_assembly(relative_path, with_bash_var=False):
@@ -178,6 +242,8 @@ class CSProject:
         self.top_comments = []
         self.build_comments = []
         self.meta = OrderedDict()
+        self.sdk_target = "4.5"
+        self.release_type = "Debug"
 
     def load(self, source):
         """Load the project file and extract necessary information.
@@ -187,24 +253,32 @@ class CSProject:
         """
         other_os_sep = "\\" if (os.path.sep == "/") else "/"
         tree = ET.parse(source)
-        root = tree.getroot()
+        root_el = tree.getroot()
+        self.ns = {'msbuild': 'http://schemas.microsoft.com/developer/msbuild/2003'}
         namespace = '{http://schemas.microsoft.com/developer/msbuild/2003}'
 
         # Extract AssemblyName from PropertyGroup
-        assembly_name_element = root.find(
+        assembly_name_el = root_el.find(
             "%sPropertyGroup/%sAssemblyName" % (namespace, namespace)
         )
-        if assembly_name_element is not None:
-            self.out_name = "%s.exe" % assembly_name_element.text
+        # or assembly_name_el = root_el.find('msbuild:PropertyGroup/msbuild:AssemblyName', self.ns)
+        if assembly_name_el is not None:
+            self.out_name = "%s.exe" % assembly_name_el.text
         else:
             self.out_name = "%s.exe" % os.path.splitext(source)[0]
 
         # Extract OutputPath from PropertyGroup
-        output_path_element = root.find(
-            "%sPropertyGroup/%sOutputPath" % (namespace, namespace)
+        # output_path_el = root.find(
+        #     "%sPropertyGroup/%sOutputPath" % (namespace, namespace)
+        # )
+        output_path_el = root_el.find(
+            f"msbuild:PropertyGroup[@Condition=\" '$(Configuration)|$(Platform)' == '{self.release_type}|AnyCPU' \"]/msbuild:OutputPath",
+            self.ns
         )
-        if output_path_element is not None:
-            self.out_dir = output_path_element.text.rstrip("\\/")
+        self.out_dir = output_path_el.text if output_path_el is not None else ""
+
+        if output_path_el is not None:
+            self.out_dir = output_path_el.text.rstrip("\\/")
             self.out_dir = \
                 self.out_dir.replace(other_os_sep, os.path.sep)
             if self.out_dir.startswith("/bin") or (self.out_dir == "/"):
@@ -213,17 +287,30 @@ class CSProject:
                 # ^ '' is ok since os.path.join('', no_leading_slash)
                 #   results in a relative path.
 
+        # Collect Embedded Resources
+        embedded_resources_els = root_el.findall('msbuild:ItemGroup/msbuild:EmbeddedResource', self.ns)
+
+        self.resx_files = []
+        for resource_el in embedded_resources_els:
+            file_name = resource_el.attrib['Include']
+            dependent_upon_el = resource_el.find('msbuild:DependentUpon', self.ns)
+            if dependent_upon_el is not None:
+                self.resx_files.append((file_name, dependent_upon_el.text))
+
         # Collect assembly references
         self.assemblies = [
-            ref.get('Include') for ref in root.findall(
+            ref.get('Include') for ref in root_el.findall(
                 "%sItemGroup/%sReference" % (namespace, namespace)
             )
         ]
+        for i in range(len(self.assemblies)):
+            if self.assemblies[i].lower().endswith(".dll"):
+                self.assemblies[i] = self.assemblies[i][:-4]
 
         source_dir = os.path.dirname(source)
         # Collect source files first so implied references can be collected.
         self.cs_files = [
-            file.get('Include') for file in root.findall(
+            file.get('Include') for file in root_el.findall(
                 "%sItemGroup/%sCompile" % (namespace, namespace)
             )
         ]
@@ -261,7 +348,7 @@ class CSProject:
                             print("INFO: ignored \"%s\" in \"using %s\""
                                   % (" ".join(parts[:-1]), result))
                             result = parts[-1]
-                        redundant_assembly = REDUNDANT_ASSEMBLIES.get(result)
+                        redundant_assembly = core_assembly(result)
                         if redundant_assembly:
                             if redundant_assembly not in more_assemblies:
                                 print("Using assembly %s for redundant %s"
@@ -279,15 +366,16 @@ class CSProject:
                         more_assemblies[result].append(self.cs_files[i])
                         # ^ Use as key so it is only added once below.
         for assembly, cs_files in more_assemblies.items():
-            assembly_file = assembly + ".dll"
-            if ((assembly not in self.assemblies)
-                    and (assembly_file not in self.assemblies)):
+            # assembly_file = assembly + ".dll"
+            if (assembly not in self.assemblies):
+                #     and (assembly_file not in self.assemblies)):
                 print("Warning: A reference to %s will be"
                       " automatically added since used in %s"
                       % (assembly, cs_files))
                 self.assemblies.append(assembly)
         for using_name, assembly in REDUNDANT_ASSEMBLIES.items():
-            using_file_bad = using_name + ".dll"
+            # using_file_bad = using_name + ".dll"
+            using_file_bad = using_name
             if using_file_bad in self.assemblies:
                 raise ValueError("Non-existent assembly %s should be %s"
                                  % (using_file_bad, assembly))
@@ -304,7 +392,6 @@ class CSProject:
                     self.assemblies[i] = self.assemblies[i][:endI]
                 self.assemblies[i] = self.assemblies[i].replace("\\", os.path.sep)
                 self.assemblies[i] += ".dll"
-
 
         self.meta = OrderedDict()  # reserved for future use (get more metadata)
 
@@ -360,6 +447,7 @@ class CSProject:
             # Construct the mcs command
             references = OrderedDict()
             dll_paths = OrderedDict()
+            non_gac_paths = OrderedDict()
             for assembly in self.assemblies:
                 implied_assemblies = IMPLIED_ASSEMBLIES.get(assembly)
                 if implied_assemblies:
@@ -368,17 +456,32 @@ class CSProject:
                             self.assemblies.append(implied_assembly)
             for assembly in self.assemblies:
                 minimum_path = assembly
-                if minimum_path in EXTERNAL_ASSEMBLIES:
+                if is_external_assembly(minimum_path):
                     minimum_path = find_assembly(assembly, with_bash_var=True)
                     if not minimum_path:
                         raise FileNotFoundError("%s not found." % assembly)
                 dll_paths[assembly] = find_assembly(assembly)
+                if not is_in_gac(assembly):
+                    non_gac_paths[assembly] = find_assembly(assembly)
                 references[assembly] = minimum_path
-
+            # Generate resgen commands
+            if self.resx_files:
+                f.write("echo \"compiling resources...\"\n")
+                for resx_file, _ in self.resx_files:
+                    resx_output = resx_file.replace('\\', '.').replace('.resx', '.resources')
+                    f.write("resgen %s %s\n" % (resx_file, resx_output))
             f.write("echo \"compiling '%s/%s'\"\n"
                     % (self.out_dir, self.out_name))
-            f.write("%s -out:\"%s/%s\" \\\n"
-                    % (MCS, self.out_dir, self.out_name))
+            f.write("%s -out:\"%s\" \\\n"
+                    % (MCS, os.path.join(self.out_dir, self.out_name)))
+
+            for resx_file, dependent_file in self.resx_files:
+                resource_file = resx_file.replace('\\', '.').replace('.resx', '.resources')
+                namespace = dependent_file.replace('.cs', '').replace('\\', '.')
+                f.write("    -resource:%s,%s.%s \\\n" % (resource_file, namespace, resource_file))
+
+            if self.sdk_target:
+                f.write('    -sdk:%s' % self.sdk_target)
             for _, reference in references.items():
                 f.write('    -r:%s \\\n' % reference)
 
@@ -390,7 +493,7 @@ class CSProject:
             self.write_as_comments(f, self.build_comments)
 
             # Copy referenced DLLs
-            for rel_path, abs_path in dll_paths.items():
+            for rel_path, abs_path in non_gac_paths.items():
                 if abs_path:
                     f.write('cp "%s" "$OUTPUT_DIR/"\n' % abs_path)
                 else:
