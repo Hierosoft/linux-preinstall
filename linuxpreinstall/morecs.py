@@ -32,11 +32,24 @@ EXTERNAL_ASSEMBLIES = [
     "System.Reflection.Emit.dll",
     "System.Buffers.dll",
     "System.IO.dll",   # here to avoid version conflicts: See IO_MISMATCH_COMMENT below
+    "System.Text.RegularExpressions.dll",
 ]
 
 # Convert class or namespace from `using` into an actual assembly reference.
 REDUNDANT_ASSEMBLIES = {
     "System.Environment": "mscorlib",
+    "System.Collections.Generic": "",
+    "System.ComponentModel": "System.ComponentModel.Primitives",
+    "System.Threading.Tasks": "System.Runtime",
+    "System.Runtime.CompilerServices": "System.Runtime",
+    "System.Linq": "System.Core",
+    "System.Text": "System",  # TODO: or "mscorlib"?
+    "System.Media": "System",  # Usage may require System.Windows.Extensions.dll!
+    "System.Reflection": "System.Runtime",
+    # NOTE: System.Runtime.CompilerServices.Unsafe.dll is only in Mono
+    #   4.5 or /usr/local/lib/mono/msbuild/Current/bin/Roslyn/
+    # NOTE: System.Text.RegularExpressions is/was a nuget package but
+    #   also is in Mono
 }
 
 IO_MISMATCH_COMMENT = """
@@ -127,7 +140,7 @@ def find_assembly(relative_path, with_bash_var=False):
                 USED_BASH_VARS.append(key)
                 return "$%s/%s" % (key, relative_path)
             return try_path
-        # logger.debug("No '%s'" % try_path, file=sys.stderr)
+        print("No '%s'" % try_path)
     return None
 
 
@@ -273,6 +286,11 @@ class CSProject:
                       " automatically added since used in %s"
                       % (assembly, cs_files))
                 self.assemblies.append(assembly)
+        for using_name, assembly in REDUNDANT_ASSEMBLIES.items():
+            using_file_bad = using_name + ".dll"
+            if using_file_bad in self.assemblies:
+                raise ValueError("Non-existent assembly %s should be %s"
+                                 % (using_file_bad, assembly))
         # NOTE: Any IMPLIED_ASSEMBLIES are added in the emit_bash method.
         for i in range(len(self.assemblies)):
             self.assemblies[i] = \
@@ -337,6 +355,7 @@ class CSProject:
             for key, value in ASSEMBLY_DIRS.items():
                 f.write("%s=%s\n" % (key, value))
             f.write("OUTPUT_DIR=%s\n\n" % self.out_dir)
+            f.write("mkdir -p \"$OUTPUT_DIR\"\n")
 
             # Construct the mcs command
             references = OrderedDict()
