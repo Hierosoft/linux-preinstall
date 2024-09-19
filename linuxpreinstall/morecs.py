@@ -123,7 +123,7 @@ for key, values in IMPLIED_ASSEMBLIES.items():
 # Mono reference assembly directories
 #   (for finding assemblies not in the GAC)
 ASSEMBLY_DIRS = OrderedDict()
-ASSEMBLY_DIRS["FACADES_DIR"] = "/opt/git/mono/external/binary-reference-assemblies/v4.8/Facades"
+ASSEMBLY_DIRS["REFERENCE_DIR"] = "/opt/git/mono/external/binary-reference-assemblies/v4.8/Facades"
 ASSEMBLY_DIRS["MSBUILD_BIN_DIR"] = "/usr/lib/mono/msbuild/Current/bin"
 
 LOCAL_LIB_MONO = "/usr/local/lib/mono/"
@@ -138,21 +138,55 @@ for sub in os.listdir(LOCAL_LIB_MONO):
     #     # This should be handled by sort_versions instead, version -1
     #     # Actually, also prevented by it not having a Facades dir below
     #     continue
-    if not os.path.isdir(os.path.join(sub_path, "Facades")):
-        # No Facades dir, so no assemblies
+    # if not os.path.isdir(os.path.join(sub_path, "Facades")):
+    has_dll = False
+    for sub_sub in os.listdir(sub_path):
+        if sub_sub.endswith(".dll"):
+            has_dll = True
+            break
+    if not has_dll:
         # Examples: lldb, monodoc, mono-configuration-crypto
         continue
     LOCAL_LIB_MONO_VERSIONS.append(sub)
 
-if LOCAL_LIB_MONO_VERSIONS:
-    for sub in reversed(sorted_versions(LOCAL_LIB_MONO_VERSIONS, quiet=True)):
-        # ^ quiet=True to ignore (they will be considered version < 0)
-        # TODO: See if -api dir is better or worse (example: "4.8-api")
-        sub_path = os.path.join(LOCAL_LIB_MONO, sub, "Facades")
-        print("Using \"%s\" instead of \"%s\""
-              % (sub_path, ASSEMBLY_DIRS["FACADES_DIR"]))
-        ASSEMBLY_DIRS["FACADES_DIR"] = sub_path
-        break
+
+def detect_reference_dir(version=None):
+    """Detect the correct directory containing reference assemblies.
+
+    Args:
+        version (bool, optional): If set, this version will try to be
+            found in LOCAL_LIB_MONO. Defaults to None.
+    """
+    if not LOCAL_LIB_MONO_VERSIONS:
+        print("Warning: no versions found in ")
+        return
+    if version:
+        found = False
+        api_version = version
+        if not version.endswith("-api"):
+            api_version = version + "-api"
+        for try_version in LOCAL_LIB_MONO_VERSIONS:
+            if try_version == version or try_version == api_version:
+                sub_path = os.path.join(LOCAL_LIB_MONO, try_version)
+                print("Using \"%s\" instead of \"%s\""
+                    % (sub_path, ASSEMBLY_DIRS["REFERENCE_DIR"]))
+                found = True
+                ASSEMBLY_DIRS["REFERENCE_DIR"] = sub_path
+                break
+        if not found:
+            print("Warning: Version %s was not found in LOCAL_LIB_MONO=%s"
+                  % (version, LOCAL_LIB_MONO))
+        else:
+            return
+    if LOCAL_LIB_MONO_VERSIONS:
+        for sub in reversed(sorted_versions(LOCAL_LIB_MONO_VERSIONS, quiet=True)):
+            # ^ quiet=True to ignore (they will be considered version < 0)
+            # TODO: See if -api dir is better or worse (example: "4.8-api")
+            sub_path = os.path.join(LOCAL_LIB_MONO, sub)
+            print("Using \"%s\" instead of \"%s\""
+                % (sub_path, ASSEMBLY_DIRS["REFERENCE_DIR"]))
+            ASSEMBLY_DIRS["REFERENCE_DIR"] = sub_path
+            break
 
 USED_BASH_VARS = []
 
@@ -202,9 +236,17 @@ def find_assembly(relative_path, with_bash_var=False):
         if os.path.exists(try_path):
             if with_bash_var:
                 USED_BASH_VARS.append(key)
-                return "$%s/%s" % (key, relative_path)
+                return "$%s/%s" % (parent, relative_path)
             return try_path
-        print("No '%s'" % try_path)
+        print ("No '%s'" % try_path)
+        facade_path = os.path.join(parent, "Facades", relative_path)
+        try_path = os.path.join(parent, "Facades", relative_path)
+        if os.path.exists(facade_path):
+            if with_bash_var:
+                USED_BASH_VARS.append(key)
+                return "$%s/Facades/%s" % (key, relative_path)
+            return try_path
+        print ("No '%s/Facades/%s'" % (parent, relative_path))
     return None
 
 
@@ -434,6 +476,8 @@ class CSProject:
             if os.path.isfile(try_mcs):
                 MCS = try_mcs
                 break
+        if self.sdk_target:
+            detect_reference_dir(self.sdk_target)
         with open(tmp_path, "w") as f:
             f.write("#!/bin/bash\n")
             self.write_as_comments(f, self.top_comments)
