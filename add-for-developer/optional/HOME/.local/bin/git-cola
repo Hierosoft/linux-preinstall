@@ -2,6 +2,7 @@
 
 git-cola-env cola "$@"
 # ^ call linux-preinstall's workaround to run pip version after checking install status
+return $?
 
 # !/usr/bin/python
 #  -*- coding: utf-8 -*-

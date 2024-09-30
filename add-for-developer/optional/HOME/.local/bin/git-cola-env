@@ -103,6 +103,7 @@ if [ $code -ne 0 ]; then
             >&2 echo "\"$cola_env_python\" -m pip install PyQt5" >> "$output_file"
         fi
         show_message "" "$output_file"
+        echo "Removing \"$output_file\" after error."
         rm "$output_file"
         exit $code
     # else ignore 66 (EXIT_NOINPUT = 66 in cola/core.py always occurs if no project open)
@@ -110,4 +111,5 @@ if [ $code -ne 0 ]; then
 fi
 
 # Cleanup the output file after successful execution
+echo "Removing \"$output_file\" after successful run."
 rm "$output_file"
