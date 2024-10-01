@@ -58,7 +58,7 @@ chm_lines = [
 # - export HISTFILESIZE=10000
 
 cmd_history_multisession_sh = '''
-# region added by linux-preinstall
+# region immediate bash history (linux-preinstall)
 # As per <https://www.shellhacks.com/tune-command-line-history-bash/>,
 #   append instead of overwrite history:
 {}
@@ -68,7 +68,7 @@ cmd_history_multisession_sh = '''
 #   edited Jun 13, 2020 at 8:39 by Vlastimil Burián
 {}
 {}
-# region added by linux-preinstall
+# endregion immediate bash history (linux-preinstall)
 '''.format(chm_lines[0], chm_lines[1], chm_lines[2])
 
 old_set_line = "PROMPT_COMMAND='history -a'"
