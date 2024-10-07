@@ -3,6 +3,7 @@ from __future__ import print_function
 import argparse
 import re
 
+
 class AptAction:
     def __init__(self):
         self.start_date = ""
@@ -46,8 +47,9 @@ class AptAction:
 
         print("\nRedo command:")
         print(self.command_line)
-
-        undo_command = "apt install" + " ".join(self.remove_packages + self.side_effects)
+        print('# Remove packages: "%s"' % self.remove_packages)
+        print('# side effects: "%s"' % self.side_effects)
+        undo_command = "apt install " + " ".join(self.remove_packages + self.side_effects)
         print("\nUndo command:")
         print(undo_command)
 
@@ -76,7 +78,7 @@ def get_last_remove_actions(count):
         elif "Remove:" in line and action is not None:
             action.set_subcommand("remove")  # Set subcommand to "remove"
             # Split the line by commas first
-            packages = line.split(",")
+            packages = line.split(":", 1)[1].split(",")
             for package in packages:
                 package_name = package.strip()
                 package_name = re.sub(r'\s*\(.*?\)', '', package_name)  # Remove parenthetical parts
@@ -89,10 +91,12 @@ def get_last_remove_actions(count):
             action = None  # Reset for the next action
 
     # Limit to the requested count
-    remove_actions = remove_actions[-count:]
+    if count is not None:
+        remove_actions = remove_actions[:count]
 
     for action in remove_actions:
         display_action(action)
+
 
 def display_action(action):
     action.display()
@@ -100,9 +104,9 @@ def display_action(action):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Show last apt remove actions.")
-    parser.add_argument('-n', '--count', type=int, default=1,
-                        help='Number of remove actions to show (default: 1)')
+    parser.add_argument('-n', '--count', type=int,
+                        help='Number of remove actions to show (default: no limit)')
 
     args = parser.parse_args()
-
+    print("Limit: %s\n" % args.count)
     get_last_remove_actions(args.count)
