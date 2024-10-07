@@ -18,7 +18,7 @@ Subsections of this document contain prompts used to generate content, in a way 
 tool(s) used:
 - GPT-4-Turbo (Version 4o, chatgpt.com)
 
-Scope of use: Only code described in subsections below--typically modified by hand to improve logic, variable naming, integration, etc, but in this commit, unmodified.
+Scope of use: Only code described in subsections below--typically modified by hand to improve logic, variable naming, integration, etc, but unmodified in this commit.
 
 
 ## linuxpreinstall
@@ -79,4 +79,9 @@ I said delete line  packages = line.split(":")[1].strip().split(",") and add pac
 
 now before the first if statement, make a case that checks for "Commandline:" and put the rest of the line after that in a variable called command_line. Then whenever you process a Remove: line you can use that variable to get the actual redo command.
 
+command_line is not being associated with all of the lines associated with the action. Create an AptAction class to make the code more reliable and clear.
+
+rename current_action to action for brevity. Also, the lines aren't being grouped into the correct action, so create a new "Start-Date:" case and only create an action instance on such a line.
+
+Make a new attribute of AptAction called subcommand that defaults to None. In the "Remove:" case, set subcommand to  "remove". In the End-Date: case, only append to remove actions if the subcommand is "remove".
 
