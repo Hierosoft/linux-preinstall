@@ -14,18 +14,18 @@ such as https://gitlab.com
 have one before it will be used as REPO_NAME or a URL.)
 
 EXAMPLES
-    script_name basic_materials --user poikilos --site https://gitlab.com
-    # ends up as ~/Downloads/git/poikilos/
+    script_name basic_materials --user Poikilos --site https://gitlab.com
+    # ends up as ~/Downloads/git/Poikilos/
 
-    script_name filter --user poikilos --repos_dir ~/git
-    # - uses github.com/poikilos
-    # - clones to ~/git/poikilos/filter
+    script_name filter --user Poikilos --repos_dir ~/git
+    # - uses github.com/Poikilos
+    # - clones to ~/git/Poikilos/filter
 
     script_name filter --site github
     # - uses github.com
-    # - clones to ~/Downloads/git/poikilos/filter
+    # - clones to ~/Downloads/git/Poikilos/filter
 
-    script_name git@github.com:poikilos/filter.git
+    script_name git@github.com:Poikilos/filter.git
     # - parses the URL and clones it to the appropriate directory.
 """
 
@@ -36,6 +36,13 @@ import argparse
 import subprocess
 from argparse import ArgumentParser
 
+SITES = {
+    'site': None,
+    'github': "https://github.com",
+    'gitlab': "https://gitlab.com",
+    'codeberg': "https://codeberg.org",
+    'notabug': "https://notabug.org",
+}
 
 def check_git_installed():
     """Check if git is installed."""
@@ -47,7 +54,10 @@ def check_git_installed():
 def construct_url(website, user, repo_name):
     """Construct the URL for cloning the repo."""
     if website:
-        return "{}/{}/{}.git".format(website, user, repo_name)
+        base_url = SITES.get(website)
+        if not base_url:
+            base_url = website
+        return "{}/{}/{}.git".format(base_url, user, repo_name)
     return ""
 
 
@@ -73,8 +83,24 @@ def main():
     parser.add_argument(
         '--site',
         help=("Set the base URL for CUSTOM_URL. If it is a known name "
-              "(notabug, gitlab, or github), it will be automatically "
+              "(notabug, codeberg, gitlab, github), it will be automatically "
               "converted to a URL.")
+    )
+    parser.add_argument(
+        '--github',
+        help=("Set the base URL to github.com")
+    )
+    parser.add_argument(
+        '--gitlab',
+        help=("Set the base URL to gitlab.com")
+    )
+    parser.add_argument(
+        '--notabug',
+        help=("Set the base URL to notabug.org")
+    )
+    parser.add_argument(
+        '--codeberg',
+        help=("Set the base URL to codeberg.org")
     )
     parser.add_argument(
         '--url',
@@ -92,7 +118,35 @@ def main():
     repo_name_or_url = args.repo_name_or_url
     repos_dir = os.path.expanduser(args.repos_dir) if args.repos_dir else "~/Downloads/git"
     remote_git_user = args.user
-    website = args.site
+    website = None
+    count = 0
+
+    got_sites = []
+    for key in list(SITES.keys()):
+        if getattr(args, key):
+            count += 1
+            if key == 'site':
+                website = getattr(args, key)
+            else:
+                # Others are boolean, so use key as value.
+                website = key
+            got_sites.append(website)
+    if len(got_sites) > 1:
+        print(
+            "Error: You can only choose one of the mutually exclusive"
+            " arguments %s or --url, but got %s" % (list(SITES.keys()), got_sites),
+            file=sys.stderr,
+        )
+        return 1
+    elif len(got_sites) > 0 and args.url:
+        print(
+            "Error: You can only choose one of the mutually exclusive"
+            " arguments %s or --url, but got %s and --url"
+            % (list(SITES.keys()), got_sites),
+            file=sys.stderr,
+        )
+        return 1
+
     custom_url = args.url
     user_dir = os.path.expanduser(args.user_dir) if args.user_dir else None
 
@@ -132,8 +186,8 @@ def main():
     print("* Cloning into directory: {}".format(user_dir))
 
     # Execute git clone
-    subprocess.call(["git", "clone", custom_url, os.path.join(user_dir, repo_name)])
-
+    return_code = subprocess.call(["git", "clone", custom_url, os.path.join(user_dir, repo_name)])
+    return return_code
 
 if __name__ == "__main__":
     sys.exit(main())

@@ -10,13 +10,15 @@ if [ ! -f "$GETREPO_PY" ]; then
 fi
 if [ -f "`command -v python3`" ]; then
     python3 "$GETREPO_PY" "$@"
+    code=$?
 elif [ -f "`command -v python`" ]; then
     python "$GETREPO_PY" "$@"
+    code=$?
 else
     >$2 echo "Error: Python is not installed."
     exit 1
 fi
-exit $?
+exit $code
 
 
 
