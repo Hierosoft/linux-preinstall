@@ -1,0 +1,33 @@
+#!/bin/bash
+
+# Detect the active wireless interface
+interface=$(iw dev | awk '$1=="Interface"{print $2}')
+
+# Check if a wireless interface was found
+if [ -z "$interface" ]; then
+    echo "No wireless interface found."
+    exit 1
+fi
+
+# Get connection status of the wireless interface
+status=$(iw dev "$interface" link | grep "Connected to")
+
+# Check if the interface is connected to a WAP
+if [ -z "$status" ]; then
+    echo "Wireless interface $interface is not connected."
+    exit 1
+fi
+
+# Extract the MAC address (BSSID) of the WAP
+bssid=$(iw dev "$interface" link | awk '$1=="Connected"{print $3}')
+
+# Get the IP address of the WAP from the ARP table
+wap_ip=$(arp -n | grep "$bssid" | awk '{print $1}')
+
+if [ -z "$wap_ip" ]; then
+    echo "Unable to find WAP IP address for BSSID $bssid."
+    exit 1
+fi
+
+# Output the WAP IP address
+echo "WAP IP Address: $wap_ip"
