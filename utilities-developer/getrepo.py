@@ -88,18 +88,22 @@ def main():
     )
     parser.add_argument(
         '--github',
+        action='store_true',
         help=("Set the base URL to github.com")
     )
     parser.add_argument(
         '--gitlab',
+        action='store_true',
         help=("Set the base URL to gitlab.com")
     )
     parser.add_argument(
         '--notabug',
+        action='store_true',
         help=("Set the base URL to notabug.org")
     )
     parser.add_argument(
         '--codeberg',
+        action='store_true',
         help=("Set the base URL to codeberg.org")
     )
     parser.add_argument(
