@@ -10,9 +10,9 @@ if sys.version_info.major < 3:
 '''
 
 install_requires = [
-    'pycodetool @ git+https://github.com/Hierosoft/pycodetool.git'
+    'pycodetool @ git+https://github.com/Hierosoft/pycodetool.git',
     'Pillow',
-    'python-magic'
+    'python-magic',
 ]
 
 description = (
