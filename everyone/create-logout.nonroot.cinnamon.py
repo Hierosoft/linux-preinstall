@@ -2,7 +2,16 @@
 
 import os
 import sys
-from gi.repository import Gio
+try:
+    from gi.repository import Gio
+except ImportError as ex:
+    print("{}: {}".format(type(ex).__name__, ex))
+    print("You must first install gi, such as via:", file=sys.stderr)
+    print("  sudo apt install python3-gi libgirepository1.0-dev", file=sys.stderr)
+    # sudo apt install libcairo2-dev libxt-dev libgirepository1.0-dev
+    print("If still not found, and your prompt starts with parenthesis, try `conda deactivate` first")
+    # pip install pycairo PyGObject
+    sys.exit(1)
 
 if sys.version_info.major < 3:
     from linuxpreinstall.logging2 import getLogger
