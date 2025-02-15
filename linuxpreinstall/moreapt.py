@@ -4,8 +4,13 @@ import os
 import re
 import sys
 
+from linuxpreinstall.logging2 import getLogger
+
+logger = getLogger(__name__)
+
 if sys.version_info.major < 3:
     FileNotFoundError = IOError
+
 
 class AptAction:
     def __init__(self):
@@ -114,25 +119,61 @@ if __name__ == "__main__":
     print("Limit: %s\n" % args.count)
     get_last_remove_actions(args.count)
 
+LISTS_DIR = "/var/lib/apt/lists"
+
 
 def get_package_files():
-    """Get a list of package files in /var/lib/apt/lists"""
+    """Get a list of package files in LISTS_DIR
+    such as /var/lib/apt/lists
+    """
+    results = []
     try:
-        files = os.listdir("/var/lib/apt/lists")
-        return files
+        # return [name for name in os.listdir(LISTS_DIR)
+        #     if os.path.isfile(os.path.join(LISTS_DIR, name))]
+        # ^ no user-level permission to auxfiles, lock, or partial, so fails
+        for sub in os.listdir(LISTS_DIR):
+            if sub in ["auxfiles", "lock", "partial"]:
+                # avoid PermissionError: [Errno 13] Permission denied: '/var/lib/apt/lists/lock'
+                continue
+            if "cnf_Command" in sub:
+                continue
+            if ".gz" in sub:
+                continue
+            sub_path = os.path.join(LISTS_DIR, sub)
+            if not os.path.isfile(sub_path):
+                continue
+            results.append(sub)
     except FileNotFoundError:
-        raise FileNotFoundError("/var/lib/apt/lists directory not found.")
+        raise FileNotFoundError("{} directory not found.".format(LISTS_DIR))
+    return results
 
 
-def get_packages(packages_file):
+def get_packages(repo_name_pattern):
     """Get a list of packages from the specified packages file."""
-    packages_file_path = "/var/lib/apt/lists/{}".format(packages_file)
-    try:
-        with open(packages_file_path, "r") as f:
-            packages = []
-            for line in f:
-                if line.startswith("Package:"):
-                    packages.append(line.split()[-1].strip())
-            return packages
-    except FileNotFoundError:
-        raise FileNotFoundError("Package file '{}' not found.".format(packages_file_path))
+    # packages_file_path = "{}/{}".format(LISTS_DIR, packages_file)
+    results = {}
+    results['errors'] = []
+    results['packages'] = []
+    results['lists_dir'] = LISTS_DIR
+    for packages_file in get_package_files():
+        packages_file_path = os.path.join(LISTS_DIR, packages_file)
+        try:
+            with open(packages_file_path, "r") as f:
+                if repo_name_pattern not in packages_file:
+                    continue
+                packages = []
+                logger.warning("Examining {}".format(repr(packages_file_path)))
+                for line in f:
+                    if line.startswith("Package:"):
+                        pair = line.split()[-1].strip(), packages_file
+                        packages.append(pair)
+                    else:
+                        logger.info(
+                            "{} is not Packages:".format(repr(line.strip())))
+                results['packages'] += packages
+        except FileNotFoundError as ex:
+            results['errors'].append(
+                "Package file '{}': {}: {}"
+                .format(packages_file_path, type(ex).__name__, ex)
+            )
+    return results

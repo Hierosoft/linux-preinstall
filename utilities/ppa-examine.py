@@ -12,10 +12,14 @@ REPO_DIR = os.path.dirname(SCRIPTS_DIR)
 
 sys.path.insert(0, REPO_DIR)
 
+from linuxpreinstall.logging2 import getLogger
+
 from linuxpreinstall.moreapt import (
     get_package_files,
     get_packages,
 )
+
+logger = getLogger(__name__)
 
 
 def main():
@@ -32,7 +36,7 @@ def main():
             files = get_package_files()
             for f in files:
                 print(f)
-            print("Specify one of the package files above to list packages from the repo.")
+            print("Specify one of the package files above (or substring) to list packages from the repo(s).")
             print("ppa-examine <packages file>")
             return 1
         except FileNotFoundError as e:
@@ -41,13 +45,33 @@ def main():
 
     # If a package file is specified, read and process it
     try:
-        packages = get_packages(args.packages_file)
-        for package in packages:
-            print(package)
+        results = get_packages(args.packages_file)
+        packages = results.get('packages')
+        errors = results.get('errors')
+        if not packages:
+            logger.warning("No package lines found in {}"
+                           .format(repr(args.packages_file)))
+            return 0
+        names = []
+        repos = set()
+        for package, repo in packages:
+            print(package, " # from", repr(repo), file=sys.stderr)
+            names.append(package)
+            repos.add(repo)
+        print(file=sys.stderr)
+        print("# Lists dir: {}".format(results.get('lists_dir')), file=sys.stderr)
+        print("# Repos: {}".format(" ".join(repos)), file=sys.stderr)
+        print("# Packages:", file=sys.stderr)
+        if names:
+            print(" ".join(names))
+        if errors:
+            for error in errors:
+                logger.error(error)
         return 0
     except FileNotFoundError as e:
         print("Error:", e)
         return 3
+
 
 if __name__ == "__main__":
     sys.exit(main())
