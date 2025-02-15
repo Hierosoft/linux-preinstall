@@ -1,0 +1,18 @@
+#!/usr/bin/env python
+from __future__ import print_function
+import sys
+import os
+import argparse
+
+if sys.version_info.major < 3:
+    FileNotFoundError = IOError
+
+SCRIPTS_DIR = os.path.dirname(os.path.realpath(__file__))
+REPO_DIR = os.path.dirname(SCRIPTS_DIR)
+
+sys.path.insert(0, REPO_DIR)
+
+from linuxpreinstall.ppaexamine import main
+
+if __name__ == "__main__":
+    sys.exit(main())
