@@ -1,8 +1,11 @@
-#!/usr/bin/env python3
 from __future__ import print_function
 import argparse
+import os
 import re
+import sys
 
+if sys.version_info.major < 3:
+    FileNotFoundError = IOError
 
 class AptAction:
     def __init__(self):
@@ -110,3 +113,26 @@ if __name__ == "__main__":
     args = parser.parse_args()
     print("Limit: %s\n" % args.count)
     get_last_remove_actions(args.count)
+
+
+def get_package_files():
+    """Get a list of package files in /var/lib/apt/lists"""
+    try:
+        files = os.listdir("/var/lib/apt/lists")
+        return files
+    except FileNotFoundError:
+        raise FileNotFoundError("/var/lib/apt/lists directory not found.")
+
+
+def get_packages(packages_file):
+    """Get a list of packages from the specified packages file."""
+    packages_file_path = "/var/lib/apt/lists/{}".format(packages_file)
+    try:
+        with open(packages_file_path, "r") as f:
+            packages = []
+            for line in f:
+                if line.startswith("Package:"):
+                    packages.append(line.split()[-1].strip())
+            return packages
+    except FileNotFoundError:
+        raise FileNotFoundError("Package file '{}' not found.".format(packages_file_path))

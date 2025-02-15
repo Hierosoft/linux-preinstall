@@ -84,3 +84,9 @@ command_line is not being associated with all of the lines associated with the a
 rename current_action to action for brevity. Also, the lines aren't being grouped into the correct action, so create a new "Start-Date:" case and only create an action instance on such a line.
 
 Make a new attribute of AptAction called subcommand that defaults to None. In the "Remove:" case, set subcommand to  "remove". In the End-Date: case, only append to remove actions if the subcommand is "remove".
+
+
+## morepdf
+make a python script that accepts a "path", an "old" string and a "new" string, and replaces the old string with the new string assuming the path is a pdf
+
+For backward compatibility, start with a python shebang and from __future__ import print_function, and use percent substitution instead of string interpolation throughout the code. Save the output file as os.path.splitext(path)[0] + "%s-.pdf" % new. Make replace_text_in_pdf a method of a new MorePDF class which has a "load" function to initialize doc which should become self.doc. Count the number of instances as in each block as block_replaced, then add that to a total "replaced" count, which should be shown in the print statement as "%s replacement(s) complete" instead of "Replacements complete". In save, rename "new" to "suffix" and only add "-%s" % suffix if suffix is not None. Call save like pdf_editor.save(path, suffix=new). use argparse. Instead of old, use args.find, and instead of new use args.replace. For find, allow -f or --find, for replace allow -r or --replace. If find is set and replace is not set, call replace_text_in_pdf(args.find, None). Change replace_text_in_pdf so that if new is None, the block's text is displayed with print but not modified. Display the page number before each matching block's text if new is None.
