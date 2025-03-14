@@ -44,6 +44,7 @@ SITES = {
     'notabug': "https://notabug.org",
 }
 
+
 def check_git_installed():
     """Check if git is installed."""
     if not subprocess.call(['which', 'git'], stdout=subprocess.DEVNULL) == 0:
@@ -76,15 +77,15 @@ def main():
     )
     parser.add_argument(
         '--user_dir',
-        help=("Construct the local repo path from "
-              "$USER_DIR/$REPO_NAME instead of "
-              "$DEFAULT_REPO_DIR/$REMOTE_GIT_USER/$REPO_NAME.")
+        help=("Construct the local repo path from"
+              " $USER_DIR/$REPO_NAME instead of"
+              " $DEFAULT_REPO_DIR/$REMOTE_GIT_USER/$REPO_NAME.")
     )
     parser.add_argument(
         '--site',
-        help=("Set the base URL for CUSTOM_URL. If it is a known name "
-              "(notabug, codeberg, gitlab, github), it will be automatically "
-              "converted to a URL.")
+        help=("Set the base URL for CUSTOM_URL. If it is a known name"
+              " (notabug, codeberg, gitlab, github), it will be automatically"
+              " converted to a URL.")
     )
     parser.add_argument(
         '--github',
@@ -108,8 +109,8 @@ def main():
     )
     parser.add_argument(
         '--url',
-        help=("Set the repo URL directly. This option overrides the "
-              "WEBSITE option.")
+        help=("Set the repo URL directly. This option overrides the"
+              " WEBSITE option.")
     )
 
     parser.add_argument(
@@ -120,7 +121,10 @@ def main():
     args = parser.parse_args()
 
     repo_name_or_url = args.repo_name_or_url
-    repos_dir = os.path.expanduser(args.repos_dir) if args.repos_dir else "~/Downloads/git"
+
+    repos_dir = args.repos_dir if args.repos_dir else "~/Downloads/git"
+    repos_dir = os.path.expanduser(repos_dir)
+
     remote_git_user = args.user
     website = None
     count = 0
@@ -138,7 +142,8 @@ def main():
     if len(got_sites) > 1:
         print(
             "Error: You can only choose one of the mutually exclusive"
-            " arguments %s or --url, but got %s" % (list(SITES.keys()), got_sites),
+            " arguments %s or --url, but got %s"
+            % (list(SITES.keys()), got_sites),
             file=sys.stderr,
         )
         return 1
@@ -156,7 +161,8 @@ def main():
 
     # Detect if repo_name_or_url is a URL
     parts = None
-    if repo_name_or_url.startswith("git@") or repo_name_or_url.startswith("https://"):
+    if (repo_name_or_url.startswith("git@")
+            or repo_name_or_url.startswith("https://")):
         custom_url = repo_name_or_url
         parts = repo_name_or_url.split("/")
         if parts[-1].endswith(".git"):
@@ -183,15 +189,20 @@ def main():
         custom_url = construct_url(website, remote_git_user, repo_name)
 
     if not custom_url:
-        print("Error: Repository URL could not be determined.")
+        parser.print_help()
+        print("\nError: Repository URL could not be determined."
+              " Specify --url or a base url (above) containing {}/{}"
+              .format(remote_git_user, repo_name))
         sys.exit(1)
 
     print("* Cloning from: {}".format(custom_url))
     print("* Cloning into directory: {}".format(user_dir))
 
     # Execute git clone
-    return_code = subprocess.call(["git", "clone", custom_url, os.path.join(user_dir, repo_name)])
+    return_code = subprocess.call(
+        ["git", "clone", custom_url, os.path.join(user_dir, repo_name)])
     return return_code
+
 
 if __name__ == "__main__":
     sys.exit(main())
