@@ -1,4 +1,8 @@
 #!/bin/bash
+me=$(basename $0)
+EVERYONE_DIR=$(realpath "$0" | sed 's|\(.*\)/.*|\1|')
+REPO_DIR=$(dirname "$EVERYONE_DIR")
+
 # See also developer/developer.fedora.sh
 if [ -f "`command -v xfce4-terminal`" ]; then
     echo "Error: xfc4-terminal is already installed. If you installed a packaged version, uninstall it first. If you installed from source delete or rename '`command -v xfce4-terminal`' then run this script again."
@@ -49,7 +53,10 @@ if [ ! -f "configure" ]; then
         # It will show a message to install:
         # xfce4-dev-tools glib2 gtk-doc gtk+-3.0 vte-2.91 libxfce4ui-2
         cat <<END
-For Debian-based distros: sudo apt install -y xfce4-dev-tools libglib2.0-dev gtk-doc-tools gtk+-3.0-dev libvte-2.91-dev libxfce4ui-2-dev
+For Debian-based distros: sudo apt install -y build-essential xfce4-dev-tools libglib2.0-dev gtk-doc-tools libvte-2.91-dev libxfce4ui-2-dev
+then one or the other:
+- sudo apt install gtk+-3.0-dev
+- sudo apt install libgtk-3-dev
 For Fedora:
   sudo dnf groupinstall "Development Tools" "Development Libraries"
   # If you get an selinux error, click Troubleshoot, run the commands it suggests if is correct, then reinstall:
@@ -63,6 +70,7 @@ END
     fi
     make
     sudo make install
+    code=$?
 else
     ./configure
     code=$?
@@ -72,8 +80,21 @@ else
     fi
     make
     sudo make install
-
+    code=$?
 fi
 
-../utilities/refresh-any-panel.nonroot.sh
+if [ $code -ne 0 ]; then
+    echo "[$me] 'sudo make install' failed."
+    exit $code
+fi
 
+echo "Running $REPO_DIR/utilities/refresh-any-panel.nonroot.sh..."
+$REPO_DIR/utilities/refresh-any-panel.nonroot.sh
+code=$?
+if [ $code -ne 0 ]; then
+    echo "[$me] refresh panel failed. You may not see the icon until the next login."
+    exit $code
+else
+    echo "[$me] Done"
+fi
+exit $code
