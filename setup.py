@@ -13,6 +13,7 @@ install_requires = [
     'pycodetool @ git+https://github.com/Hierosoft/pycodetool.git',
     'Pillow',
     'python-magic',
+    'pykeepass',
 ]
 
 description = (
