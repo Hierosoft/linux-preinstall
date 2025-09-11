@@ -1,0 +1,89 @@
+#!/bin/bash
+
+set -e
+
+RC_PATH=/etc/combine_pem.rc
+
+if [ -f "$RC_PATH" ]; then
+  source "$RC_PATH"
+else
+  echo "There is no '$RC_PATH'. Defaults will be used:"
+fi
+
+if [ -z "$RELAY_CERTS_DIR" ]; then
+  RELAY_CERTS_DIR=/home/weechat/.weechat/ssl
+fi
+RELAY_PEM=relay.pem
+#RELAY_DOM=poikilos.org
+if [ -z "$ACME_CLIENT_DIR" ]; then
+  ACME_CLIENT_DIR=/etc/nginx/acme_client
+fi
+
+echo "RELAY_CERTS_DIR='$RELAY_CERTS_DIR'"
+echo "ACME_CLIENT_DIR='$ACME_CLIENT_DIR'"
+
+
+if [ -z "$RELAY_DOM" ]; then
+    echo "You must set the RELAY_DOM variable (may be set in $RC_PATH), assuming something like example.com (and a directory with underscores instead, like $ACME_CLIENT_DIR/example_com)"
+fi
+echo "RELAY_DOM='$RELAY_DOM'"
+ACME_DIR=$ACME_CLIENT_DIR/$RELAY_DOM
+# Change '.' to '_':
+ACME_DIR=`echo $ACME_DIR | sed 's/\./_/g'`
+echo "- therefore ACME_DIR='$ACME_DIR'"
+
+if [ ! -f "$ACME_DIR/certificate.pem" ]; then
+  echo "Error: missing '$ACME_DIR/certificate.pem'"
+  exit 1
+fi
+
+src_stamp="$(stat -c %Y $ACME_DIR/certificate.pem)"
+# "%Y" format is a numerical unix timestamp (seconds from epoch)
+# "%y" format example: 2025-09-04 16:51:44.138383585 -0400
+
+echo "$ACME_DIR/certificate.pem timestamp: $src_stamp"
+
+if [ -f "$RELAY_CERTS_DIR/$RELAY_PEM" ]; then
+  dst_stamp="$(stat -c %Y $RELAY_CERTS_DIR/$RELAY_PEM)"
+  echo "$RELAY_CERTS_DIR/$RELAY_PEM timestamp: $dst_stamp"
+  if [ $dst_stamp -ge $src_stamp ]; then
+    echo "$RELAY_CERTS_DIR/$RELAY_PEM is already up to date."
+    exit 0
+  else
+    echo "$RELAY_CERTS_DIR/$RELAY_PEM is out of date. Reconstructing..."
+  fi
+else
+  echo "There is no $RELAY_CERTS_DIR/$RELAY_PEM yet. Constructing..."
+fi
+
+# echo IRC relay domain is $RELAY_DOM
+# echo ACME_DIR is $ACME_DIR
+# echo Weechat certs dir is $RELAY_CERTS_DIR
+
+ls $ACME_DIR
+cd /                            # Safety measure
+rm -fr   $RELAY_CERTS_DIR
+mkdir -p $RELAY_CERTS_DIR
+cd       $RELAY_CERTS_DIR
+
+#ifdef NOTDEF
+# cat *.key *.crt                >  $RELAY_PEM
+# cat /etc/ssl/certs/dhparam.pem >> $RELAY_PEM
+#endif
+
+#ifdef NOTDEF
+# cat $RELAY_DOM.crt $RELAY_DOM.issuer.crt > fullchain.pem
+# cat fullchain.pem  $RELAY_DOM.key        > $RELAY_PEM
+#endif
+
+cp -p $ACME_DIR/*.* .
+cat certificate.pem private.key >  $RELAY_PEM
+cat /etc/ssl/certs/dhparam.pem  >> $RELAY_PEM
+#endif
+
+chown -R weechat:weechat $RELAY_CERTS_DIR
+chmod 700                $RELAY_CERTS_DIR
+
+nginx-restart
+/opt/bin/restart-weechat
+echo $0 done
