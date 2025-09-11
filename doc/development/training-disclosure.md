@@ -17,6 +17,7 @@ Subsections of this document contain prompts used to generate content, in a way 
 
 tool(s) used:
 - GPT-4-Turbo (Version 4o, chatgpt.com)
+- Grok 3
 
 Scope of use: Only code described in subsections below--typically modified by hand to improve logic, variable naming, integration, etc.
 
@@ -94,3 +95,28 @@ For backward compatibility, start with a python shebang and from __future__ impo
 - 2025-04-29: Grok 3
 
 Make a Python script with pykeepass that asks for a password, then loads plist.kdbx, and iterates all items in the "Bills" directory. Make a dictionary called spans = {"6mo": "bi-annually", "per yr": "annually", "yr": "annually", "year": "year", "mo": "monthly", "month": "monthly", "bi-annually": "bi-annually", "quarterly": "quarterly", "3mo": "quarterly", "3months": "quarterly", "wk": "weekly"}. Set d0 = Decimal(0). Create empty totals = OrderedDictionary([("weekly", d0), ("monthly", d0), ("bi-annually": d0), ("annually", d0), "every 2 years": d0, "every 3 years", "every 4 years", "every 5 years"]). Set well_defined_keys = {"per yr": "annually"} Fill in additional 1-1 mappings into spans as follows: iterate key, _ in totals.items(): spans[key] = key. Display a single row for each entry in the Bills folder of the keypass database file as follows. Set span = None. Set amount = None. Set lines = notes.split("\n"). Convert the last modified date to a datetime object and display and format, then after that on the same line display lines[0] only. Do line_parts = lines[0].split(), then iterate for chunk in line_parts. If not chunk.startswith("$"): continue (short circuit the inner note_parts loop) and if that short circuit does not occur do the following in the chunk scope: set amount_parts = note_part.split("/") do amount_parts[0] = amount_parts[0].lstrip("$"), and set amount = Decimal(amount_parts[0]). If the length of amount_parts is != 2, show logger.warning showing the length and full note_part, and continue (short circuit the chunk loop only). if that short circuit does not occur, do the following in the chunk scope: span = spans.get(amount_parts[1]). if span is None, continue (short circuit the chunk loop). After the chunk loop has ended, do the following in the main entry iteration scope: Iterate for try_key, try_span in well_defined_keys.items(): If lines[0] contains try_key: span = try_key. After that inner loop, do the following in the main entry loop: if span is not None and amount is not None: totals[span] += Decimal(amount) else: show a logger warning saying "span={span}, amount={amount}". After the entry loop is over, iterate for span, amount in totals.items(): print("{span}: {amount}")
+
+## utilities/install_blender_addon.py
+- 2025-06-26 Grok 3 https://grok.com/share/c2hhcmQtMg%3D%3D_9eb8fcf7-8c22-4a7b-b741-3f8893e05219
+
+install add-on from command line blender. I don't want to use the new extension system. I want to install an add-on. If there is no way to do it, write a python script that extracts a given zip/py/folder and places it in the right place. If the zip does not contain a py file at the top level, look in each folder for __init__.py, and assume that folder is to be installed. If there is more than one folder in ~/.config/blender/, and --version is not specified via argparse, show an error and provide that list of versions in that folder to the user.
+
+Get a list of running processes containing the word "blender" case insensitive excluding ones that contain blender_addon and if there is more than one, show an error, otherwise get the full path to the running executable such as /home/owner/Downloads/blendernightly/versions/blender-3.6.19-linux-x64/blender then terminate the process, install the add-on, and start blender again asynchronously (without pausing execution of the script), loading /tmp/quit.blend automatically
+
+before terminating blender, run it with the --version argument, read all output, and split each line, and if a line starts with "Blender" and if it split to 2 parts, assume the second part is the version, split it by dots, and if there are 2 or more, join the first two elements with a dot such as "3.6" and set found_version to that. If the deepest "if" case does not occur (where there is a line starting with "Blender" that has two parts, and the 2nd element split by "." has at least two parts) show an error saying f"Running blender executable {path} did not output version in a known format" and exit before doing anything. If the user didn't specify a version, but found_version was set, default version to that. At this point, you should check get_blender_addons_path right away, so that if there is no version specified via argparse and there was no found_version, say "version detected from app data: {listed_version}" or make sure the specified one exists and say the full path to it, and if either that path doesn't exist (in that case say it doesn't) or there was more than one folder, exit before terminating or installing anything
+
+Make a function that detects the proper location of quit.blend depending on the platform. Use platform.system() there and where you used sys.platform. If blender is running, show an error unless --restart-blender is specified as an argument and say f"Error: Blender is running. Specify --restart-blender if configured to save {quit_blend_path} otherwise close Blender manually first" and return non-zero from main in that case or any other case, but if ok return 0, and if __name__ == "__main__": sys.exit(main()).
+
+If blender was terminated, at the end of the script instead of running blender with quit.blend, just run the Blender path and print a message telling the user to click "File", "Recover Last Session" to recover the last session.
+
+For compatibility, do not use pathlib, use expanduser
+
+The script is detecting itself as blender like I told you not to do, try to do it a better way. The first process it lists below is Blender, and the 2nd is the script itself running in bash:
+
+Error: Multiple Blender processes found:
+PID: 373583, Exe: /home/owner/Downloads/blendernightly/versions/blender-3.6.19-linux-x64/blender
+PID: 377994, Exe: /usr/bin/bash
+
+- 2025-07-22
+
+Return 0 from main. Add a named argument -v or --view to print the current cache filename and launch it with the default application, otherwise return 1 from main if the file does not exist. change the main() call to sys.exit(main())
