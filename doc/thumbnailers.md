@@ -6,6 +6,10 @@ A thumbnailer lets you see a preview of the files in a list. If you cannot see p
 ## STL/OBJ thumbnails
 (As discussed at <https://www.reddit.com/r/3Dprinting/comments/rbh7wj/linux_enabling_stlobj_thumbnails_in_linux/>)
 - [f3d releases](https://github.com/f3d-app/f3d/releases)
+  but it has a bad angle (top view). So add `--camera-azimuth-angle=0 --camera-elevation-angle=-45` to:
+  - /usr/share/thumbnailers/f3d-plugin-native.thumbnailer
+  - /usr/share/thumbnailers/f3d-plugin-assimp.thumbnailer
+  - clear ~/.cache/thumbnails
 
 ### Other STL thumnailers
 - [stl-thumb](https://github.com/unlimitedbacon/stl-thumb/releases)
