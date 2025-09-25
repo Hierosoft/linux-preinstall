@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 '''
 The unredirect module is part of linux-preinstall
 by Jake "Poikilos" Gustafson

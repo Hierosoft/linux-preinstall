@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 
 class ReadOnlyDict(dict):
     """Dictionary that becomes Read-only after calling readonly.

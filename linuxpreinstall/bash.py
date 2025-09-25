@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 """
 Interact with bash (Bourne Again Shell) idiosyncrasies using Python.
 """

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 Transfer only the parts you want (such as colors from one codeblocks
 XML config file to another).

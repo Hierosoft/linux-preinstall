@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 '''
 Discover PHP modules installed on an apt-based GNU/Linux distro.
 

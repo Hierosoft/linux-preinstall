@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 hierosoft submodule relicensed by same author for linux-preinstall
 

@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 '''
 Sort the list of favorites using this command. Import this module to manually
 instantiate BriskMenuSettings and get or set the list.

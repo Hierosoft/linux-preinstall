@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 '''
 Get or set any dconf setting using the Gio module in a similar way
 as using the gsettings command.
