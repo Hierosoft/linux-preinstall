@@ -4,7 +4,7 @@ NEXTCLOUD_CLIENT,,nextcloud-client,,nextcloud-desktop,,,nextcloud-client,,,devel
 GEANY_SPELL,,geany-plugins-spellcheck,,geany-plugin-spellcheck,,,everyone,,,developer.fedora,,,
 PY2_PIL,,python2-pillow,,python-pillow,,,everyone,,,developer.fedora,,,
 AVIDEMUX,,avidemux,,[unknown],,,video,Debian 10 says: E: Package 'avidemux' has no installation candidate,,developer.fedora,,,
-QT_CREATOR,,qt-creator,,qtcreator,,,development,,,developer.fedora,,[script],The additional packages are required in order to avoid the “No valid kits found” error.
+QT_CREATOR,,qt-creator,,qtcreator,,,development,,,developer.fedora,,[script],The additional packages are required in order to avoid the "No valid kits found" error.
 PY2_PYGAME,,python2-pygame,,python-pygame,,,development,,,developer.fedora,,,
 PROJECTM_PA,,projectM-pulseaudio,,projectm-pulseaudio,,,music,,"projectM-pulseaudio is a GUI program for viewing audio input using MilkDrop scripts! It is controlled using hotkeys (see F1 for help, and https://wiki.archlinux.org/index.php/ProjectM)",developer.fedora,,,
 ECLIPSE_JDT,,eclipse-jdt,,"- skipping ""eclipse-jdt"" since the package is not in Debian 10 and later and an automated install method is unknown on Debian 10 or later. See <https://linuxhint.com/install_eclipse_ide_debian_10/>",,,,,,developer.fedora,,,
@@ -25,7 +25,7 @@ ECLIPSE_JDT,,eclipse-jdt,,"- skipping ""eclipse-jdt"" since the package is not i
 *,,ladspa-autotalent-plugins,,,,,music-production,,,developer.fedora,,,
 *,,ladspa-zam-plugins,,,,,music-production,,,developer.fedora,,,
 *,,ladspa-rev-plugins,,,,,music-production,,,developer.fedora,,,
-*,,PersonalCopy-Lite-soundfont,,,,,music-production,TODO: install soundfonts in user space to save space on “/”,,developer.fedora,,,
+*,,PersonalCopy-Lite-soundfont,,,,,music-production,TODO: install soundfonts in user space to save space on "/",,developer.fedora,,,
 *,,ardour5,,,,,music-production,,,developer.fedora,,,
 *,,remarkable,,,,,everyone,,Markdown editor with GitHub markdown syntax support,developer.fedora,,,
 discord,,[script],,,,,gaming,,,developer.fedora,"The packaged version is too old to be allowed. The run-in-place version of Discord is necessary to get the latest updates automatically. If you want Discord, you'll have to get that version manually from https://discordapp.com/download (Select 'tar.gz' before clicking Download Now.)",,
