@@ -168,7 +168,7 @@ def find_blender_process():
                         or (name.lower() == match_name)):
                     # Exclude processes with 'blender_addon'
                     if (('blender_addon' not in name)
-                            and ('blender_addon' not in cmdline)):
+                        and ('blender_addon' not in cmdline)):
                         blender_processes.append(proc)
                         break
                 else:
