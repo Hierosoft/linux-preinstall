@@ -1,5 +1,6 @@
 import argparse
 import os
+import shlex
 import sys
 import platform
 from pathlib import Path
@@ -61,14 +62,23 @@ def get_blender_addons_path(version=None):
         print(f"Version detected from app data: {version}")
 
     if not addons_path.exists():
-        raise FileNotFoundError(f"Add-ons path {addons_path} does not exist.")
+        scripts_dir = os.path.dirname(addons_path)
+        version_conf_dir = os.path.dirname(scripts_dir)
+        if not os.path.isdir(version_conf_dir):
+            raise FileNotFoundError(
+                f"Configuration dir {version_conf_dir} does not exist.")
+        if not os.path.isdir(scripts_dir):
+            os.mkdir(scripts_dir)
+        os.mkdir(addons_path)
 
     addons_path.mkdir(parents=True, exist_ok=True)
     return addons_path
 
+
 def is_valid_addon_folder(folder_path):
     """Check if the folder contains an __init__.py file."""
     return (folder_path / "__init__.py").exists()
+
 
 def extract_zip_addon(zip_path, temp_dir):
     """Extract ZIP and return the path to the add-on file or folder."""
@@ -86,7 +96,10 @@ def extract_zip_addon(zip_path, temp_dir):
         if item.is_dir() and is_valid_addon_folder(item):
             return item
 
-    raise ValueError("ZIP does not contain a valid add-on (no .py file or folder with __init__.py).")
+    raise ValueError(
+        "ZIP does not contain a valid add-on"
+        " (no .py file or folder with __init__.py).")
+
 
 def install_addon(addon_path, addons_dir):
     """Install the add-on to the Blender add-ons directory."""
@@ -128,26 +141,54 @@ def install_addon(addon_path, addons_dir):
     else:
         raise ValueError("Unsupported add-on format. Must be a .py file, .zip file, or folder with __init__.py.")
 
+
+match_name = "blender.exe" if platform.system() == "Windows" else "blender"
+
+
 def find_blender_process():
     """Find running Blender processes, excluding those with 'blender_addon'."""
     blender_processes = []
     for proc in psutil.process_iter(['name', 'exe', 'cmdline']):
         try:
-            # Check process name and command line for 'blender' (case-insensitive)
+            # Check process name and command line for 'blender'
+            #   (case-insensitive)
             name = proc.info['name'].lower()
             cmdline = ' '.join(proc.info['cmdline']).lower() if proc.info['cmdline'] else ''
-            if 'blender' in name or 'blender' in cmdline:
-                # Exclude processes with 'blender_addon'
-                if 'blender_addon' not in name and 'blender_addon' not in cmdline:
-                    blender_processes.append(proc)
+            cmd_parts = shlex.split(cmdline)
+            for cmd_part in cmd_parts:
+                haystack = cmd_part
+                if os.path.sep in haystack:
+                    # Split the path for exact (case-insensitive) match,
+                    #   since fuzzy match would match too much
+                    #   such as blender-meshnav/pack.py etc.
+                    path_parts = os.path.split(haystack)
+                    haystack = path_parts[1]  # keep only the name
+                # if 'blender' in name or 'blender' in cmdline:
+                if ((haystack.lower() == match_name)
+                        or (name.lower() == match_name)):
+                    # Exclude processes with 'blender_addon'
+                    if (('blender_addon' not in name)
+                            and ('blender_addon' not in cmdline)):
+                        blender_processes.append(proc)
+                        break
+                else:
+                    print("Not blender command: {} (from {})"
+                          .format(haystack, cmd_part))
         except (psutil.NoSuchProcess, psutil.AccessDenied):
             continue
 
     if len(blender_processes) > 1:
-        process_info = "\n".join([f"PID: {p.pid}, Exe: {p.info['exe']}" for p in blender_processes])
-        raise RuntimeError(f"Multiple Blender processes found:\n{process_info}")
+        process_info = (
+            "\n\n".join([f"Name: {p.info['name']},\n"
+                         f"command: {p.info['cmdline'] if proc.info['cmdline'] else ''},\n"
+                         f"PID: {p.pid}, Exe: "
+                         f"{p.info['exe']}" for p in blender_processes]))
+        raise RuntimeError(
+            "Multiple Blender processes found"
+            f" (close Blender first):\n\n{process_info}")
 
     return blender_processes[0] if blender_processes else None
+
 
 def get_blender_version(executable_path):
     """Run Blender with --version and extract the version number."""
@@ -222,7 +263,8 @@ def main():
             cmd = [str(executable_path)]
             subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             print("Restarted Blender. To recover your last session, click \"File\" > \"Recover Last Session\" in Blender.")
-
+        print("Manual steps are required:")
+        print("Blender, Edit, Preferences, Addons, then make sure MeshNav is checked.")
         return 0
 
     except Exception as e:
