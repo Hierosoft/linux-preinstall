@@ -27,6 +27,11 @@ if [ ! -f "`command -v stl-thumb`" ]; then
     exit 1
 fi
 
+if [ -z "${path}" ]; then
+    show_message "No filename was provided."
+    exit 2
+fi
+
 if [ -f "$dest" ]; then
     dest_ts=`stat -c '%Y' "${path}"`
     if [ $path_ts -ne $dest_ts ]; then
