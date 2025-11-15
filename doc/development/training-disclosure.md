@@ -183,3 +183,13 @@ find . -type d -exec chmod 755 {} \;
 ```
 Except in python, and do not do it if "--skip-permissions"
 
+- 2025-11-15
+
+It worked but the second run says:
+```
+staging@staging.tcsdcc.com [~]# wikiup mediawiki-1.34.4 mediawiki-1.35.14
+ERROR: /home/staging/mediawiki-1.34.4 exists but is not a symlink. This script assumes it is the symlink to the latest version. Set WWW_DIR to a different path or remove/rename the existing /home/staging/mediawiki-1.34.4.
+# undo partial upgrade:
+ERROR: WWW_DIR not a symlink
+```
+I never said I wanted src to be a symlink. I want WWW_DIR, public_html in current directory by default, to be a symlink. Maybe calling `www_dir = Path(os.getenv("WWW_DIR", "public_html")).resolve()` is mucking things up  (it should generally be a symlink pointing to src and remain as such).

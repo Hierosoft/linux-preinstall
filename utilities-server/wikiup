@@ -105,7 +105,7 @@ def _copy_config_file(src_file, dst_file, dst_backup, dry_run, out, logger, undo
         logger.warning("No %s found to copy", src_file)
 
 
-def _set_permissions(dst, dry_run, out, logger, undo_list):
+def _set_permissions(dst, dry_run, out, logger):
     """Set standard MediaWiki permissions on PHP files and directories.
 
     Args:
@@ -113,7 +113,6 @@ def _set_permissions(dst, dry_run, out, logger, undo_list):
         dry_run: Whether to simulate.
         out: Output stream (for dry-run).
         logger: Logger instance.
-        undo_list: List to append undo commands (not used for chmod).
     """
     if dry_run:
         print(f"# Setting permissions in {_q(dst)}", file=out)
@@ -347,7 +346,7 @@ def perform_wiki_upgrade(src, dst, www_dir, dry_run=False, skip_permissions=Fals
 
     # Set permissions
     if not skip_permissions:
-        _set_permissions(dst, dry_run, out, logger, undo_commands)
+        _set_permissions(dst, dry_run, out, logger)
 
     # Update symlink
     old_link = None
@@ -442,9 +441,15 @@ def main():
 
     args = parser.parse_args()
 
-    src = Path(args.src).resolve()
-    dst = Path(args.dst).resolve()
-    www_dir = Path(os.getenv("WWW_DIR", "public_html")).resolve()
+    # Resolve src and dst as given (do not resolve to target if symlink)
+    src = Path(args.src)
+    dst = Path(args.dst)
+
+    # WWW_DIR is relative to current working directory unless absolute
+    www_dir_str = os.getenv("WWW_DIR", "public_html")
+    www_dir = Path(www_dir_str)
+    if not www_dir.is_absolute():
+        www_dir = Path.cwd() / www_dir
 
     if args.dry_run:
         print("#!/bin/bash")
