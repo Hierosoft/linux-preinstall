@@ -207,3 +207,106 @@ def echo0(*args, **kwargs):
     return True
 ```
 Also, change the 2-line db upgrade instructions to use the correct directory, not assume the os has a php7.4 exe, and one line: `"php {_q(www_dir)}/maintenance/upgrade.php"`
+
+The Python script gets an error changing permissions on `./vendor/wikimedia/less.php/lessc.inc.php`, and seems to quit because the perms don't end up being set right in the case of the staging site (We get the same permission errors as before the fix, but only on the staging site). If there is an error on one file we should keep iterating (put the try block in the innermost scope for chmod). Anyway the exception itself is not explicable yet since the following bash script works fine:
+```
+#!/bin/bash
+cd ~/public_html || exit $?
+chmod 644 index.php api.php
+find . -type f -name "*.php" -exec chmod 644 {} \;
+find . -type d -exec chmod 755 {} \;
+```
+More info:
+```
+staging@staging.tcsdcc.com [~/public_html]# find -L -name "*.inc.php"
+./vendor/wikimedia/less.php/lessc.inc.php
+staging@staging.tcsdcc.com [~/public_html]# stat ./vendor/wikimedia/less.php/lessc.inc.php
+  File: ‘./vendor/wikimedia/less.php/lessc.inc.php’
+  Size: 7231      	Blocks: 16         IO Block: 4096   regular file
+Device: d060b6e1h/3495999201d	Inode: 31790554    Links: 1
+Access: (0644/-rw-r--r--)  Uid: (  514/ staging)   Gid: (  514/ staging)
+Access: 2025-11-15 00:00:34.598240188 -0500
+Modify: 2023-12-21 12:20:20.604236100 -0500
+Change: 2025-11-15 07:40:07.090249274 -0500
+ Birth: -
+staging@staging.tcsdcc.com [~/public_html]# stat ./vendor/wikimedia/less.php
+  File: ‘./vendor/wikimedia/less.php’
+  Size: 4096      	Blocks: 8          IO Block: 4096   directory
+Device: d060b6e1h/3495999201d	Inode: 31842516    Links: 4
+Access: (0755/drwxr-xr-x)  Uid: (  514/ staging)   Gid: (  514/ staging)
+Access: 2025-11-15 07:43:12.729315290 -0500
+Modify: 2025-11-15 00:00:34.598240188 -0500
+Change: 2025-11-15 07:40:11.151228842 -0500
+ Birth: -
+staging@staging.tcsdcc.com [~/public_html]# stat ./vendor/wikimedia
+  File: ‘./vendor/wikimedia’
+  Size: 4096      	Blocks: 8          IO Block: 4096   directory
+Device: d060b6e1h/3495999201d	Inode: 31842487    Links: 29
+Access: (0755/drwxr-xr-x)  Uid: (  514/ staging)   Gid: (  514/ staging)
+Access: 2025-11-15 07:40:11.050229351 -0500
+Modify: 2025-11-15 00:00:34.670239816 -0500
+Change: 2025-11-15 07:40:11.049229355 -0500
+ Birth: -
+staging@staging.tcsdcc.com [~/public_html]# stat ./vendor
+  File: ‘./vendor’
+  Size: 4096      	Blocks: 8          IO Block: 4096   directory
+Device: d060b6e1h/3495999201d	Inode: 31842393    Links: 16
+Access: (0755/drwxr-xr-x)  Uid: (  514/ staging)   Gid: (  514/ staging)
+Access: 2025-11-15 07:43:12.727315300 -0500
+Modify: 2025-11-15 00:00:34.670239816 -0500
+Change: 2025-11-15 07:40:11.049229355 -0500
+ Birth: -
+
+```
+
+After logging any chmod error, use the print statement to print "# Failed to chmod" then print the necessary linux chmod command including the path.
+
+Lets diagnose why the chmod command would have failed in the first place.
+
+Before we change anything lets see the gathered info:
+```
+staging@staging.tcsdcc.com [~/public_html]# python3 - <<'PY'
+> from pathlib import Path
+> p = Path("./vendor/wikimedia/less.php/lessc.inc.php")
+> print("exists:", p.exists())
+> print("is_file:", p.is_file())
+> print("stat:", p.stat())
+> p.chmod(0o644)
+> PY
+exists: True
+is_file: True
+stat: os.stat_result(st_mode=33188, st_ino=31790554, st_dev=3495999201, st_nlink=1, st_uid=514, st_gid=514, st_size=7231, st_atime=1763182834, st_mtime=1703179220, st_ctime=1763210407)
+staging@staging.tcsdcc.com [~/public_html]# mount | grep "$(df ./vendor/wikimedia/less.php/lessc.inc.php | tail -1 | awk '{print $1}')"
+/dev/ploop53358p1 on / type ext4 (rw,relatime,lazytime,discard,data=ordered,balloon_ino=12,jqfmt=vfsv1,usrjquota=aquota.user,grpjquota=aquota.group)
+staging@staging.tcsdcc.com [~/public_html]# findmnt -T ./vendor/wikimedia/less.php/lessc.inc.php
+TARGET SOURCE            FSTYPE OPTIONS
+/      /dev/ploop53358p1 ext4   rw,relatime,lazytime,discard,data=ordered,balloon_ino=12,jqfmt=vfsv1,usrjquota=aquota.user,grpjquota=aquot
+staging@staging.tcsdcc.com [~/public_html]# getenforce
+Disabled
+staging@staging.tcsdcc.com [~/public_html]# ls vendor/wikimedia/less.php/
+./  ../  bin/  CHANGES.md  composer.json  lessc.inc.php  lib/  LICENSE  README.md
+staging@staging.tcsdcc.com [~/public_html]# ls vendor/wikimedia/less.php/
+./  ../  bin/  CHANGES.md  composer.json  lessc.inc.php  lib/  LICENSE  README.md
+staging@staging.tcsdcc.com [~/public_html]# ls -Z ./vendor/wikimedia/less.php/lessc.inc.php
+-rw-r--r-- staging staging ?                                ./vendor/wikimedia/less.php/lessc.inc.php
+staging@staging.tcsdcc.com [~/public_html]# readlink ./vendor/wikimedia/less.php/lessc.inc.php
+staging@staging.tcsdcc.com [~/public_html]# lsattr -a ./vendor/wikimedia/less.php/lessc.inc.php
+-------------e-- ./vendor/wikimedia/less.php/lessc.inc.php
+staging@staging.tcsdcc.com [~/public_html]# getfacl ./vendor/wikimedia/less.php/lessc.inc.php
+# file: vendor/wikimedia/less.php/lessc.inc.php
+# owner: staging
+# group: staging
+user::rw-
+group::r--
+other::r--
+
+staging@staging.tcsdcc.com [~/public_html]# capsh --print | grep -i cap_ch
+Bounding set =cap_chown,cap_dac_override,cap_dac_read_search,cap_fowner,cap_fsetid,cap_kill,cap_setgid,cap_setuid,cap_setpcap,cap_linux_immutable,cap_net_bind_service,cap_net_broadcast,cap_net_admin,cap_net_raw,cap_ipc_lock,cap_ipc_owner,cap_sys_module,cap_sys_rawio,cap_sys_chroot,cap_sys_ptrace,cap_sys_pacct,cap_sys_admin,cap_sys_boot,cap_sys_nice,cap_sys_resource,cap_sys_time,cap_sys_tty_config,cap_mknod,cap_lease,cap_audit_write,cap_audit_control,cap_setfcap,cap_mac_override,cap_mac_admin,cap_syslog,35,36
+staging@staging.tcsdcc.com [~/public_html]# strace -e trace=chmod python3 -c "Path('./vendor/wikimedia/less.php/lessc.inc.php').chmod(0o644)" 2>&1 | tail -20
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+NameError: name 'Path' is not defined
++++ exited with 1 +++
+```
+
+Show the entire script, including the fix.

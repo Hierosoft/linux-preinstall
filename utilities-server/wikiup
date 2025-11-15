@@ -119,40 +119,52 @@ def _copy_config_file(src_file, dst_file, dst_backup, dry_run, out, logger, undo
         logger.warning("No %s found to copy", src_file)
 
 
-def _set_permissions(dst, dry_run, out, logger):
+def _set_permissions(target_dir, dry_run, out, logger):
     """Set standard MediaWiki permissions on PHP files and directories.
 
     Args:
-        dst: Destination MediaWiki directory.
+        target_dir: Directory to set permissions on (should be www_dir symlink).
         dry_run: Whether to simulate.
         out: Output stream (for dry-run).
         logger: Logger instance.
     """
     if dry_run:
-        print(f"# Setting permissions in {_q(dst)}", file=out)
-        print(f"chmod 644 {_q(dst / 'index.php')} {_q(dst / 'api.php')}", file=out)
-        print(f"find {_q(dst)} -type f -name \"*.php\" -exec chmod 644 {{}} \\;", file=out)
-        print(f"find {_q(dst)} -type d -exec chmod 755 {{}} \\;", file=out)
+        print(f"# Setting permissions in {_q(target_dir)}", file=out)
+        print(f"chmod 644 {_q(target_dir / 'index.php')} {_q(target_dir / 'api.php')}", file=out)
+        print(f"find {_q(target_dir)} -type f -name \"*.php\" -exec chmod 644 {{}} \\;", file=out)
+        print(f"find {_q(target_dir)} -type d -exec chmod 755 {{}} \\;", file=out)
     else:
-        logger.info("Setting permissions in %s", dst)
-        try:
-            (dst / "index.php").chmod(0o644)
-            (dst / "api.php").chmod(0o644)
-        except Exception as e:
-            logger.error("Failed to chmod index.php/api.php: %s", e)
+        logger.info("Setting permissions in %s", target_dir)
 
-        for php_file in dst.rglob("*.php"):
+        # Explicitly set index.php and api.php
+        for entry in ["index.php", "api.php"]:
+            path = target_dir / entry
+            if path.exists():
+                try:
+                    path.chmod(0o644)
+                except Exception as e:
+                    logger.error("Failed to chmod %s: %s", path, e)
+                    echo0("# Failed to chmod %s" % path)
+                    echo0(f"chmod 644 {_q(path)}")
+
+        # Set permissions on all PHP files
+        for php_file in target_dir.rglob("*.php"):
             try:
                 php_file.chmod(0o644)
             except Exception as e:
-                logger.error("Failed to chmod %s: %s", php_file, e)
+                logger.error("Failed to chmod PHP file %s: %s", php_file, e)
+                echo0("# Failed to chmod %s" % php_file)
+                echo0(f"chmod 644 {_q(php_file)}")
 
-        for dir_path in dst.rglob("*"):
+        # Set permissions on all directories
+        for dir_path in target_dir.rglob("*"):
             if dir_path.is_dir():
                 try:
                     dir_path.chmod(0o755)
                 except Exception as e:
-                    logger.error("Failed to chmod %s: %s", dir_path, e)
+                    logger.error("Failed to chmod directory %s: %s", dir_path, e)
+                    echo0("# Failed to chmod %s" % dir_path)
+                    echo0(f"chmod 755 {_q(dir_path)}")
 
 
 def _handle_component(src_dir, dst_dir, name, dry_run, out, logger, undo_list):
@@ -358,10 +370,6 @@ def perform_wiki_upgrade(src, dst, www_dir, dry_run=False, skip_permissions=Fals
     else:
         log("Processed %d, copied %d new." % (skin_total, skin_new))
 
-    # Set permissions
-    if not skip_permissions:
-        _set_permissions(dst, dry_run, out, logger)
-
     # Update symlink
     old_link = None
     if www_dir.exists():
@@ -397,6 +405,16 @@ def perform_wiki_upgrade(src, dst, www_dir, dry_run=False, skip_permissions=Fals
             logger.error("Failed to create symlink %s to %s: %s", www_dir, dst, e)
             _print_undo(undo_commands[::-1])
             raise WikiUpError("Failed to create symlink", 7)
+
+    # Set permissions on the live site (via symlink)
+    if not skip_permissions:
+        if not dry_run:
+            if not www_dir.resolve().samefile(dst):
+                logger.warning("Symlink %s does not point to %s. Skipping permissions", www_dir, dst)
+            else:
+                _set_permissions(www_dir, dry_run, out, logger)
+        else:
+            _set_permissions(www_dir, dry_run, out, logger)
 
     # Final instructions
     instructions = [
