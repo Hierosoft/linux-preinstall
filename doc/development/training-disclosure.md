@@ -150,3 +150,17 @@ The "would copy" and other such statements are redundant. Only print the output 
 The "would copy" and other such statements are redundant. Only print the output we had before adding dry run unless dry_run then print the additional output. As much as possibly, print the output as pseudo-bash, such as "mv" and "rsync" commands (always using quotes around paths). All print statements that are not pseudo-bash should use logger otherwise prepend "#" so that the stdout of this script is bash-like such as so that it can be piped to create/overwrite a file that will become a bash script.
 
 Add skins handling support
+
+- 2025-11-14
+
+I need to support Python 3.6.8, so I get:
+
+```
+Traceback (most recent call last):
+
+  File "/home/staging/git/linux-preinstall/utilities-server/wikiup", line 60, in <module>
+
+    ) -> tuple[int, int]:
+
+TypeError: 'type' object is not subscriptable
+```
