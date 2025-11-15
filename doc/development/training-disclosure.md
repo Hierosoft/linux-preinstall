@@ -128,3 +128,25 @@ convert this to python using the env python3 shebang and my usual specifications
 instead of using a "usage" function and custom parsing, use argparse
 
 don't handle bare exceptions in main, only handle WikiUpError
+
+- 2025-11-14
+
+move the main functionality to a function that has src and dst arguments, and raises an exception one one or the other doesn't exist, or if public_html exists and is not a symlink.
+
+Do not set epilog as you have--that text should be printed manually after a successful run. As I've said run main like sys.exit(main())
+
+before printing next steps, print "Checking extensions..." If {src}/extensions exists, for each {src}/extensions/{sub} folder that doesn't have an analogous {dst}/extensions/{sub} folder, copy the folder recursively as that destination folder and show "* copied {sub} to {dst]/extensions". After iterating, "Processed {ext_count}, copied {new_count} new." but if there was no "{src}/extensions} do not iterate, just do logger.warning("No {src}/extensions") and use logger = getLogger(os.path.split(os.path.realpath__file__)[1]) for anything that is a warning or error.
+
+I said use logger for errors and warnings, but you are still using `print("Error`
+
+Instead of "you must back move it" I should have said "you must move it". Instead of copying the extensions before printing the final output I should have said do it before creating the symlink.
+
+Add dry-run option
+
+Use Google-style sphinx docstrings. Use PEP8 formatting such as a limit of 79 characters, 72 for comments, using continuations etc where necessary.
+
+The "would copy" and other such statements are redundant. Only print the output I've specified, and only print such extra content if dry_run.
+
+The "would copy" and other such statements are redundant. Only print the output we had before adding dry run unless dry_run then print the additional output. As much as possibly, print the output as pseudo-bash, such as "mv" and "rsync" commands (always using quotes around paths). All print statements that are not pseudo-bash should use logger otherwise prepend "#" so that the stdout of this script is bash-like such as so that it can be piped to create/overwrite a file that will become a bash script.
+
+Add skins handling support

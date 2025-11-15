@@ -1,13 +1,19 @@
 #!/usr/bin/env python3
-"""
-wikiup - Upgrade MediaWiki by moving images and LocalSettings.php from source to destination,
-         and updating the WWW_DIR symlink.
+"""wikiup - Upgrade MediaWiki by moving images and LocalSettings.php.
+
+This script migrates a MediaWiki installation from one version to another by
+moving user-uploaded images, copying LocalSettings.php, copying missing
+extensions and skins, and updating the public symlink (public_html or $WWW_DIR).
 
 Usage:
-    wikiup <mediawiki-version.a> <mediawiki-version.b>
+    wikiup <src> <dst> [--dry-run]
+
+When --dry-run is used, the script outputs a bash-compatible script to stdout.
+Otherwise, it performs the actions and prints progress to stderr via logger.
 """
 
 import argparse
+import logging
 import os
 import shutil
 import sys
@@ -16,36 +22,138 @@ from typing import NoReturn
 
 
 class WikiUpError(RuntimeError):
-    """Custom exception for expected operational errors during wiki upgrade."""
-    def __init__(self, message: str, exit_code: int = 1):
+    """Raised for expected operational failures during upgrade.
+
+    Attributes:
+        exit_code: Exit code to return to the shell.
+    """
+
+    def __init__(self, message: str, exit_code: int = 1) -> None:
+        """Initialize with message and exit code."""
         super().__init__(message)
         self.exit_code = exit_code
 
 
-def perform_wiki_upgrade(src: Path, dst: Path, www_dir: Path) -> None:
+def get_logger() -> logging.Logger:
+    """Return a logger named after the script filename.
+
+    Returns:
+        logging.Logger: Configured logger instance.
     """
-    Perform the MediaWiki upgrade from src to dst.
+    script_name = os.path.basename(sys.argv[0])
+    name = os.path.splitext(script_name)[0]
+    return logging.getLogger(name)
+
+
+def _q(path: Path) -> str:
+    """Return shell-quoted path."""
+    return f'"{path}"'
+
+
+def _handle_component(
+    src_dir: Path,
+    dst_dir: Path,
+    name: str,
+    dry_run: bool,
+    out,
+    logger,
+) -> tuple[int, int]:
+    """Handle copying missing extensions or skins.
 
     Args:
-        src: Path to the current MediaWiki installation.
-        dst: Path to the new MediaWiki installation.
-        www_dir: Path to the public symlink (default: public_html or $WWW_DIR).
+        src_dir: Source directory (e.g. src/extensions).
+        dst_dir: Destination directory (e.g. dst/extensions).
+        name: Component name ("extensions" or "skins").
+        dry_run: Whether to simulate.
+        out: Output stream (for dry-run).
+        logger: Logger instance.
+
+    Returns:
+        Tuple of (total_count, new_count).
+    """
+    total_count = 0
+    new_count = 0
+
+    if not src_dir.exists():
+        logger.warning("No %s", src_dir)
+        return total_count, new_count
+
+    if not dst_dir.exists():
+        cmd = f"mkdir -p {_q(dst_dir)}"
+        if dry_run:
+            print(cmd, file=out)
+        else:
+            logger.info("Creating %s directory: %s", name, dst_dir)
+            dst_dir.mkdir(parents=True, exist_ok=True)
+
+    for item in src_dir.iterdir():
+        if item.is_dir():
+            total_count += 1
+            dst_sub = dst_dir / item.name
+            if not dst_sub.exists():
+                cmd = f"rsync -a {_q(item)}/ {_q(dst_sub)}/"
+                if dry_run:
+                    print(cmd, file=out)
+                    new_count += 1
+                else:
+                    try:
+                        logger.info("Copying %s: %s", name[:-1], item.name)
+                        shutil.copytree(str(item), str(dst_sub))
+                        new_count += 1
+                    except Exception as e:
+                        logger.error(
+                            "Failed to copy %s %s: %s", name[:-1], item.name, e
+                        )
+            # If exists, skip — user may have custom version
+
+    return total_count, new_count
+
+
+def perform_wiki_upgrade(
+    src: Path,
+    dst: Path,
+    www_dir: Path,
+    dry_run: bool = False,
+) -> None:
+    """Perform the MediaWiki upgrade from src to dst.
+
+    Args:
+        src: Path to current MediaWiki installation.
+        dst: Path to new MediaWiki installation.
+        www_dir: Path to public symlink (public_html or $WWW_DIR).
+        dry_run: If True, output bash script instead of modifying filesystem.
 
     Raises:
-        WikiUpError: On any validation or operational failure.
+        WikiUpError: On validation or operational failure.
     """
-    # Validate directories
-    if not src.is_dir():
-        raise WikiUpError(f"Source directory does not exist or is not a directory: {src}", 1)
-    if not dst.is_dir():
-        raise WikiUpError(f"Destination directory does not exist or is not a directory: {dst}", 1)
+    logger = get_logger()
+    out = sys.stdout if dry_run else None
 
-    # Check WWW_DIR symlink assumption
+    def log(msg: str) -> None:
+        """Log to stderr or stdout with # prefix in dry-run."""
+        if dry_run:
+            print(f"# {msg}", file=out)
+        else:
+            logger.info("%s", msg)
+
+    # Validate source and destination
+    if not src.is_dir():
+        raise WikiUpError(
+            f"Source directory does not exist or is not a directory: {src}", 1
+        )
+    if not dst.is_dir():
+        raise WikiUpError(
+            f"Destination directory does not exist or is not a directory: {dst}",
+            1,
+        )
+
+    # Validate WWW_DIR symlink
     if www_dir.exists() and not www_dir.is_symlink():
         raise WikiUpError(
-            f"{www_dir} exists but is not a symlink. This script assumes it is the symlink to the latest version. "
-            f"Set WWW_DIR to a different path or remove/rename the existing {www_dir}.",
-            1
+            f"{www_dir} exists but is not a symlink. This script assumes it is "
+            f"the symlink to the latest version. Set WWW_DIR to a different "
+            f"path or remove/rename the existing {www_dir}.",
+            1,
         )
 
     src_images = src / "images"
@@ -59,71 +167,158 @@ def perform_wiki_upgrade(src: Path, dst: Path, www_dir: Path) -> None:
         if dst_images_1st.exists():
             raise WikiUpError(f"Already backed up stock images: {dst_images_1st}", 3)
         else:
-            shutil.move(str(dst_images), str(dst_images_1st))
-            print(f"Moved {dst_images} to {dst_images_1st}")
+            cmd = f"mv {_q(dst_images)} {_q(dst_images_1st)}"
+            if dry_run:
+                print(cmd, file=out)
+            else:
+                log(f"Moving stock images: {dst_images} to {dst_images_1st}")
+                shutil.move(str(dst_images), str(dst_images_1st))
     else:
         raise WikiUpError(f"No stock images directory: {dst_images}", 4)
 
-    # Move images
-    shutil.move(str(src_images), str(dst))
-    print(f"Moved {src_images} to {dst}/")
+    # Move user images
+    cmd = f"mv {_q(src_images)} {_q(dst)}/"
+    if dry_run:
+        print(cmd, file=out)
+    else:
+        log(f"Moving user images: {src_images} to {dst}/")
+        shutil.move(str(src_images), str(dst))
 
     # Handle LocalSettings.php
-    dst_localsettings = dst / "LocalSettings.php"
-    dst_localsettings_1st = dst / "LocalSettings.php.1st"
-    src_localsettings = src / "LocalSettings.php"
+    dst_local = dst / "LocalSettings.php"
+    dst_local_1st = dst / "LocalSettings.php.1st"
+    src_local = src / "LocalSettings.php"
 
-    if dst_localsettings.exists():
-        if dst_localsettings_1st.exists():
-            raise WikiUpError(f"Backup already exists: {dst_localsettings_1st}", 5)
+    if dst_local.exists():
+        if dst_local_1st.exists():
+            raise WikiUpError(f"Backup already exists: {dst_local_1st}", 5)
         else:
-            shutil.copy2(str(dst_localsettings), str(dst_localsettings_1st))
-            print(f"Backed up stock {dst_localsettings} to {dst_localsettings_1st}")
+            cmd = f"cp -a {_q(dst_local)} {_q(dst_local_1st)}"
+            if dry_run:
+                print(cmd, file=out)
+            else:
+                log(f"Backing up stock LocalSettings.php to {dst_local_1st}")
+                shutil.copy2(str(dst_local), str(dst_local_1st))
     else:
-        raise WikiUpError(f"No stock LocalSettings.php: {dst_localsettings}", 6)
+        raise WikiUpError(f"No stock LocalSettings.php: {dst_local}", 6)
 
-    if src_localsettings.exists():
-        shutil.copy2(str(src_localsettings), str(dst_localsettings))
-        print(f"Copied {src_localsettings} to {dst_localsettings}")
+    if src_local.exists():
+        cmd = f"cp -a {_q(src_local)} {_q(dst_local)}"
+        if dry_run:
+            print(cmd, file=out)
+        else:
+            log(f"Copying LocalSettings.php to new version")
+            shutil.copy2(str(src_local), str(dst_local))
     else:
-        print(f"Warning: No {src_localsettings} found to copy", file=sys.stderr)
+        logger.warning("No %s found to copy", src_local)
+
+    # === EXTENSIONS HANDLING ===
+    if dry_run:
+        print("# Checking extensions...", file=out)
+    else:
+        log("Checking extensions...")
+    ext_total, ext_new = _handle_component(
+        src / "extensions",
+        dst / "extensions",
+        "extensions",
+        dry_run,
+        out,
+        logger,
+    )
+    if dry_run:
+        print(f"# Processed {ext_total}, would copy {ext_new} new.", file=out)
+    else:
+        log(f"Processed {ext_total}, copied {ext_new} new.")
+
+    # === SKINS HANDLING ===
+    if dry_run:
+        print("# Checking skins...", file=out)
+    else:
+        log("Checking skins...")
+    skin_total, skin_new = _handle_component(
+        src / "skins",
+        dst / "skins",
+        "skins",
+        dry_run,
+        out,
+        logger,
+    )
+    if dry_run:
+        print(f"# Processed {skin_total}, would copy {skin_new} new.", file=out)
+    else:
+        log(f"Processed {skin_total}, copied {skin_new} new.")
 
     # Update symlink
     if www_dir.exists():
-        try:
-            www_dir.unlink()
-        except OSError as e:
-            raise WikiUpError(f"Failed to remove existing {www_dir}: {e}", 7) from e
+        cmd = f"rm -f {_q(www_dir)}"
+        if dry_run:
+            print(cmd, file=out)
+        else:
+            log(f"Removing existing symlink: {www_dir}")
+            try:
+                www_dir.unlink()
+            except OSError as e:
+                raise WikiUpError(f"Failed to remove {www_dir}: {e}", 7) from e
 
-    try:
-        www_dir.symlink_to(dst)
-        print(f"* Made {www_dir} a symlink to {dst}.")
-    except OSError as e:
-        raise WikiUpError(f"Failed to create symlink {www_dir} -> {dst}: {e}", 7) from e
+    cmd = f"ln -s {_q(dst)} {_q(www_dir)}"
+    if dry_run:
+        print(cmd, file=out)
+    else:
+        log(f"Creating symlink: {www_dir} to {dst}")
+        try:
+            www_dir.symlink_to(dst)
+        except OSError as e:
+            raise WikiUpError(f"Failed to create symlink {www_dir} to {dst}: {e}", 7) from e
 
     # Final instructions
-    print("\nNext steps:")
-    print(f"  - If $wgUploadDirectory is customized, manually move it from {src} to {dst}.")
-    print(f"  - Then run: cd {dst}/maintenance && php update.php  (use correct PHP version)")
-    print("  - Upgrade extensions alongside the core.")
+    instructions = [
+        "",
+        f"# If you have set a custom $wgUploadDirectory (default is false),",
+        f"# you must move it from {src} to {dst} manually now.",
+        "#",
+        "# After you have transferred any custom upload directory",
+        "# ($wgUploadDirectory), deleted file archives, and any custom skins,",
+        "# run the database upgrade script with the correct PHP version:",
+        "#",
+        "#   cd maintenance",
+        "#   php7.3 update.php",
+        "#",
+        "# Extensions and skins usually need to be upgraded at the same time as the MediaWiki core.",
+    ]
+    for line in instructions:
+        if dry_run:
+            print(line, file=out)
+        else:
+            log(line.lstrip("# ").strip() or "")
+
+    if dry_run:
+        print("\n# [DRY RUN] Script generated successfully.", file=out)
 
 
-def main() -> NoReturn:
+def main() -> int:
+    """Parse arguments and run upgrade."""
+    # Configure logger
+    logger = get_logger()
+    handler = logging.StreamHandler(sys.stderr)
+    formatter = logging.Formatter("%(levelname)s: %(message)s")
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+    logger.setLevel(logging.INFO)
+
     parser = argparse.ArgumentParser(
-        description="Upgrade MediaWiki by moving images and LocalSettings.php from source to destination, "
-                    "and updating the WWW_DIR symlink.",
-        epilog="""
-* If you have set a custom $wgUploadDirectory (default is false), you must back move it from src to dst manually now.
-* After you have transferred any custom upload directory, deleted file archives, and any custom skins,
-  run the database upgrade script in the destination directory with the correct PHP version, e.g.:
-    cd maintenance
-    php7.3 update.php
-* Extensions usually need to be upgraded at the same time as the MediaWiki core.
-        """,
+        description=(
+            "Upgrade MediaWiki by moving images and LocalSettings.php from "
+            "source to destination, and updating the WWW_DIR symlink."
+        ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument("src", help="Source MediaWiki directory (current version)")
     parser.add_argument("dst", help="Destination MediaWiki directory (new version)")
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Output bash script to stdout instead of performing actions",
+    )
 
     args = parser.parse_args()
 
@@ -131,13 +326,19 @@ def main() -> NoReturn:
     dst = Path(args.dst).resolve()
     www_dir = Path(os.getenv("WWW_DIR", "public_html")).resolve()
 
+    if args.dry_run:
+        print("#!/bin/bash")
+        print("# Generated by wikiup --dry-run")
+        print("# Run this script to perform the upgrade")
+        print()
+
     try:
-        perform_wiki_upgrade(src, dst, www_dir)
-        sys.exit(0)
+        perform_wiki_upgrade(src, dst, www_dir, dry_run=args.dry_run)
+        return 0
     except WikiUpError as e:
-        print(f"Error: {e}", file=sys.stderr)
-        sys.exit(e.exit_code)
+        logger.error("%s", e)
+        return e.exit_code
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
