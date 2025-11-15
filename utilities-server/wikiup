@@ -45,6 +45,21 @@ def get_logger():
     return logging.getLogger(name)
 
 
+def echo0(*args, **kwargs):
+    """Print to stderr without INFO prefix.
+
+    Args:
+        *args: Positional arguments for print().
+        **kwargs: Keyword arguments for print().
+
+    Returns:
+        bool: Always True.
+    """
+    kwargs['file'] = sys.stderr
+    print(*args, **kwargs)
+    return True
+
+
 def _q(path):
     """Return shell-quoted path."""
     return f'"{path}"'
@@ -52,10 +67,10 @@ def _q(path):
 
 def _print_undo(undo_commands):
     """Print undo commands as comments and commands."""
-    print("# undo partial upgrade:")
+    echo0("# undo partial upgrade:")
     for cmd in undo_commands:
         if cmd:
-            print(cmd)
+            echo0(cmd)
 
 
 def _copy_config_file(src_file, dst_file, dst_backup, dry_run, out, logger, undo_list):
@@ -87,13 +102,13 @@ def _copy_config_file(src_file, dst_file, dst_backup, dry_run, out, logger, undo
                 logger.info("Backing up %s to %s", dst_file.name, dst_backup.name)
                 shutil.copy2(str(dst_file), str(dst_backup))
                 undo_list.append(undo)
-    # If dst_file does not exist, skip backup — it's a new install
+    # If dst_file does not exist, skip backup
 
     if src_file.exists():
         cmd = f"cp -a {_q(src_file)} {_q(dst_file)}"
         undo = f"rm -f {_q(dst_file)}"
         if dst_file.exists():
-            undo = f"mv {_q(dst_backup)} {_q(dst_file)}"  # Restore backup if exists
+            undo = f"mv {_q(dst_backup)} {_q(dst_file)}"
         if dry_run:
             print(cmd, file=out)
         else:
@@ -294,7 +309,7 @@ def perform_wiki_upgrade(src, dst, www_dir, dry_run=False, skip_permissions=Fals
         undo_commands,
     )
 
-    # Copy LocalSettings.php (no longer requires dst version)
+    # Copy LocalSettings.php
     _copy_config_file(
         src / "LocalSettings.php",
         dst / "LocalSettings.php",
@@ -393,8 +408,7 @@ def perform_wiki_upgrade(src, dst, www_dir, dry_run=False, skip_permissions=Fals
         "# ($wgUploadDirectory), deleted file archives, and any custom skins,",
         "# run the database upgrade script with the correct PHP version:",
         "#",
-        "#   cd maintenance",
-        "#   php7.3 update.php",
+        f"#   php {_q(www_dir)}/maintenance/update.php",
         "#",
         "# Extensions and skins usually need to be upgraded at the same time as the MediaWiki core.",
     ]
@@ -402,7 +416,7 @@ def perform_wiki_upgrade(src, dst, www_dir, dry_run=False, skip_permissions=Fals
         if dry_run:
             print(line, file=out)
         else:
-            log(line.lstrip("# ").strip() or "")
+            echo0(line.lstrip("# ").strip() or "")
 
     if dry_run:
         print("\n# [DRY RUN] Script generated successfully.", file=out)

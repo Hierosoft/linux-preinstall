@@ -197,3 +197,13 @@ I never said I wanted src to be a symlink. I want WWW_DIR, public_html in curren
 Do not require localsettings.php to exist in the destination.
 
 - A stock LocalSettings.php does not exist in the base directory of MediaWiki 1.35.14.
+
+To avoid showing "INFO: " before printed instructions, make an echo function:
+```
+
+def echo0(*args, **kwargs):
+    kwargs['file'] = sys.stderr
+    print(*args, **kwargs)
+    return True
+```
+Also, change the 2-line db upgrade instructions to use the correct directory, not assume the os has a php7.4 exe, and one line: `"php {_q(www_dir)}/maintenance/upgrade.php"`
