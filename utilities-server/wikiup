@@ -71,7 +71,7 @@ def _copy_config_file(src_file, dst_file, dst_backup, dry_run, out, logger, undo
         undo_list: List to append undo commands.
 
     Raises:
-        WikiUpError: If backup exists or no stock file.
+        WikiUpError: If backup exists.
     """
     if dst_file.exists():
         if dst_backup.exists():
@@ -87,14 +87,13 @@ def _copy_config_file(src_file, dst_file, dst_backup, dry_run, out, logger, undo
                 logger.info("Backing up %s to %s", dst_file.name, dst_backup.name)
                 shutil.copy2(str(dst_file), str(dst_backup))
                 undo_list.append(undo)
-    else:
-        logger.error("No stock %s: %s", dst_file.name, dst_file)
-        _print_undo(undo_list[::-1])
-        raise WikiUpError("No stock config file", 6)
+    # If dst_file does not exist, skip backup — it's a new install
 
     if src_file.exists():
         cmd = f"cp -a {_q(src_file)} {_q(dst_file)}"
-        undo = f"rm -f {_q(dst_file)} && mv {_q(dst_backup)} {_q(dst_file)}"
+        undo = f"rm -f {_q(dst_file)}"
+        if dst_file.exists():
+            undo = f"mv {_q(dst_backup)} {_q(dst_file)}"  # Restore backup if exists
         if dry_run:
             print(cmd, file=out)
         else:
@@ -295,7 +294,7 @@ def perform_wiki_upgrade(src, dst, www_dir, dry_run=False, skip_permissions=Fals
         undo_commands,
     )
 
-    # Copy LocalSettings.php
+    # Copy LocalSettings.php (no longer requires dst version)
     _copy_config_file(
         src / "LocalSettings.php",
         dst / "LocalSettings.php",

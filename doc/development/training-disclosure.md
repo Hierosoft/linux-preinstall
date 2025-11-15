@@ -193,3 +193,7 @@ ERROR: /home/staging/mediawiki-1.34.4 exists but is not a symlink. This script a
 ERROR: WWW_DIR not a symlink
 ```
 I never said I wanted src to be a symlink. I want WWW_DIR, public_html in current directory by default, to be a symlink. Maybe calling `www_dir = Path(os.getenv("WWW_DIR", "public_html")).resolve()` is mucking things up  (it should generally be a symlink pointing to src and remain as such).
+
+Do not require localsettings.php to exist in the destination.
+
+- A stock LocalSettings.php does not exist in the base directory of MediaWiki 1.35.14.
