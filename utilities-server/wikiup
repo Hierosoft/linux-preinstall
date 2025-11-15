@@ -1,0 +1,143 @@
+#!/usr/bin/env python3
+"""
+wikiup - Upgrade MediaWiki by moving images and LocalSettings.php from source to destination,
+         and updating the WWW_DIR symlink.
+
+Usage:
+    wikiup <mediawiki-version.a> <mediawiki-version.b>
+"""
+
+import argparse
+import os
+import shutil
+import sys
+from pathlib import Path
+from typing import NoReturn
+
+
+class WikiUpError(RuntimeError):
+    """Custom exception for expected operational errors during wiki upgrade."""
+    def __init__(self, message: str, exit_code: int = 1):
+        super().__init__(message)
+        self.exit_code = exit_code
+
+
+def perform_wiki_upgrade(src: Path, dst: Path, www_dir: Path) -> None:
+    """
+    Perform the MediaWiki upgrade from src to dst.
+
+    Args:
+        src: Path to the current MediaWiki installation.
+        dst: Path to the new MediaWiki installation.
+        www_dir: Path to the public symlink (default: public_html or $WWW_DIR).
+
+    Raises:
+        WikiUpError: On any validation or operational failure.
+    """
+    # Validate directories
+    if not src.is_dir():
+        raise WikiUpError(f"Source directory does not exist or is not a directory: {src}", 1)
+    if not dst.is_dir():
+        raise WikiUpError(f"Destination directory does not exist or is not a directory: {dst}", 1)
+
+    # Check WWW_DIR symlink assumption
+    if www_dir.exists() and not www_dir.is_symlink():
+        raise WikiUpError(
+            f"{www_dir} exists but is not a symlink. This script assumes it is the symlink to the latest version. "
+            f"Set WWW_DIR to a different path or remove/rename the existing {www_dir}.",
+            1
+        )
+
+    src_images = src / "images"
+    dst_images = dst / "images"
+    dst_images_1st = dst / "images.1st"
+
+    if not src_images.is_dir():
+        raise WikiUpError(f"Already moved: {src_images}", 2)
+
+    if dst_images.is_dir():
+        if dst_images_1st.exists():
+            raise WikiUpError(f"Already backed up stock images: {dst_images_1st}", 3)
+        else:
+            shutil.move(str(dst_images), str(dst_images_1st))
+            print(f"Moved {dst_images} to {dst_images_1st}")
+    else:
+        raise WikiUpError(f"No stock images directory: {dst_images}", 4)
+
+    # Move images
+    shutil.move(str(src_images), str(dst))
+    print(f"Moved {src_images} to {dst}/")
+
+    # Handle LocalSettings.php
+    dst_localsettings = dst / "LocalSettings.php"
+    dst_localsettings_1st = dst / "LocalSettings.php.1st"
+    src_localsettings = src / "LocalSettings.php"
+
+    if dst_localsettings.exists():
+        if dst_localsettings_1st.exists():
+            raise WikiUpError(f"Backup already exists: {dst_localsettings_1st}", 5)
+        else:
+            shutil.copy2(str(dst_localsettings), str(dst_localsettings_1st))
+            print(f"Backed up stock {dst_localsettings} to {dst_localsettings_1st}")
+    else:
+        raise WikiUpError(f"No stock LocalSettings.php: {dst_localsettings}", 6)
+
+    if src_localsettings.exists():
+        shutil.copy2(str(src_localsettings), str(dst_localsettings))
+        print(f"Copied {src_localsettings} to {dst_localsettings}")
+    else:
+        print(f"Warning: No {src_localsettings} found to copy", file=sys.stderr)
+
+    # Update symlink
+    if www_dir.exists():
+        try:
+            www_dir.unlink()
+        except OSError as e:
+            raise WikiUpError(f"Failed to remove existing {www_dir}: {e}", 7) from e
+
+    try:
+        www_dir.symlink_to(dst)
+        print(f"* Made {www_dir} a symlink to {dst}.")
+    except OSError as e:
+        raise WikiUpError(f"Failed to create symlink {www_dir} -> {dst}: {e}", 7) from e
+
+    # Final instructions
+    print("\nNext steps:")
+    print(f"  - If $wgUploadDirectory is customized, manually move it from {src} to {dst}.")
+    print(f"  - Then run: cd {dst}/maintenance && php update.php  (use correct PHP version)")
+    print("  - Upgrade extensions alongside the core.")
+
+
+def main() -> NoReturn:
+    parser = argparse.ArgumentParser(
+        description="Upgrade MediaWiki by moving images and LocalSettings.php from source to destination, "
+                    "and updating the WWW_DIR symlink.",
+        epilog="""
+* If you have set a custom $wgUploadDirectory (default is false), you must back move it from src to dst manually now.
+* After you have transferred any custom upload directory, deleted file archives, and any custom skins,
+  run the database upgrade script in the destination directory with the correct PHP version, e.g.:
+    cd maintenance
+    php7.3 update.php
+* Extensions usually need to be upgraded at the same time as the MediaWiki core.
+        """,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    parser.add_argument("src", help="Source MediaWiki directory (current version)")
+    parser.add_argument("dst", help="Destination MediaWiki directory (new version)")
+
+    args = parser.parse_args()
+
+    src = Path(args.src).resolve()
+    dst = Path(args.dst).resolve()
+    www_dir = Path(os.getenv("WWW_DIR", "public_html")).resolve()
+
+    try:
+        perform_wiki_upgrade(src, dst, www_dir)
+        sys.exit(0)
+    except WikiUpError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(e.exit_code)
+
+
+if __name__ == "__main__":
+    main()

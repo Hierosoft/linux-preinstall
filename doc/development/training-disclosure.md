@@ -120,3 +120,11 @@ PID: 377994, Exe: /usr/bin/bash
 - 2025-07-22
 
 Return 0 from main. Add a named argument -v or --view to print the current cache filename and launch it with the default application, otherwise return 1 from main if the file does not exist. change the main() call to sys.exit(main())
+
+- 2025-11-14 Grok https://grok.com/share/c2hhcmQtMg_7d838509-9020-4017-b3be-0228eab1cf5c
+
+convert this to python using the env python3 shebang and my usual specifications and compatibility and sys.exit(main()):
+
+instead of using a "usage" function and custom parsing, use argparse
+
+don't handle bare exceptions in main, only handle WikiUpError
