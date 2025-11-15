@@ -64,7 +64,7 @@ if [ -e "$WWW_DIR" ]; then
   echo "* Made $WWW_DIR a symlink to $dst."
 fi
 
-echo "* If you have set a custom $wgUploadDirectory (default is false), you must back move it from $src to $dst manually now."
+echo "* If you have set a custom $wgUploadDirectory (default is false), you must move it from $src to $dst manually now."
 echo "* After you have transferred any custom upload directory ($wgUploadDirectory), deleted file archives, and any custom skins, run the database upgrade script that is included in $dst with the correct php version such as via (replace php with the correct php version!):"
 echo "  cd maintenance"
 echo "  php7.3 update.php"
