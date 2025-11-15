@@ -172,3 +172,14 @@ Show undo in the case of each error in the form of separate print statements. Fo
 - 2025-11-14
 
 Another undo line after the images error should appear if dst/images.1st exists: mv dst/images.1st dst/images
+
+- 2025-11-14
+
+Also copy .htaccess, showing an error if already exists in dest, all same logic as LocalSettings.php so use a reusable function which can be called for each file. Before making the symlink, also do:
+```
+chmod 644 index.php api.php
+find . -type f -name "*.php" -exec chmod 644 {} \;
+find . -type d -exec chmod 755 {} \;
+```
+Except in python, and do not do it if "--skip-permissions"
+

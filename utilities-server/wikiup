@@ -2,11 +2,12 @@
 """wikiup - Upgrade MediaWiki by moving images and LocalSettings.php.
 
 This script migrates a MediaWiki installation from one version to another by
-moving user-uploaded images, copying LocalSettings.php, copying missing
-extensions and skins, and updating the public symlink (public_html or $WWW_DIR).
+moving user-uploaded images, copying LocalSettings.php, .htaccess, copying
+missing extensions and skins, setting permissions, and updating the public
+symlink (public_html or $WWW_DIR).
 
 Usage:
-    wikiup <src> <dst> [--dry-run]
+    wikiup <src> <dst> [--dry-run] [--skip-permissions]
 
 When --dry-run is used, the script outputs a bash-compatible script to stdout.
 Otherwise, it performs the actions and prints progress to stderr via logger.
@@ -55,6 +56,90 @@ def _print_undo(undo_commands):
     for cmd in undo_commands:
         if cmd:
             print(cmd)
+
+
+def _copy_config_file(src_file, dst_file, dst_backup, dry_run, out, logger, undo_list):
+    """Copy a config file with backup logic.
+
+    Args:
+        src_file: Source file path.
+        dst_file: Destination file path.
+        dst_backup: Backup file path (e.g. LocalSettings.php.1st).
+        dry_run: Whether to simulate.
+        out: Output stream (for dry-run).
+        logger: Logger instance.
+        undo_list: List to append undo commands.
+
+    Raises:
+        WikiUpError: If backup exists or no stock file.
+    """
+    if dst_file.exists():
+        if dst_backup.exists():
+            logger.error("Backup already exists: %s", dst_backup)
+            _print_undo([f"mv {_q(dst_backup)} {_q(dst_file)}"])
+            raise WikiUpError("Config backup exists", 5)
+        else:
+            cmd = f"cp -a {_q(dst_file)} {_q(dst_backup)}"
+            undo = f"mv {_q(dst_backup)} {_q(dst_file)}"
+            if dry_run:
+                print(cmd, file=out)
+            else:
+                logger.info("Backing up %s to %s", dst_file.name, dst_backup.name)
+                shutil.copy2(str(dst_file), str(dst_backup))
+                undo_list.append(undo)
+    else:
+        logger.error("No stock %s: %s", dst_file.name, dst_file)
+        _print_undo(undo_list[::-1])
+        raise WikiUpError("No stock config file", 6)
+
+    if src_file.exists():
+        cmd = f"cp -a {_q(src_file)} {_q(dst_file)}"
+        undo = f"rm -f {_q(dst_file)} && mv {_q(dst_backup)} {_q(dst_file)}"
+        if dry_run:
+            print(cmd, file=out)
+        else:
+            logger.info("Copying %s to new version", src_file.name)
+            shutil.copy2(str(src_file), str(dst_file))
+            undo_list.append(undo)
+    else:
+        logger.warning("No %s found to copy", src_file)
+
+
+def _set_permissions(dst, dry_run, out, logger, undo_list):
+    """Set standard MediaWiki permissions on PHP files and directories.
+
+    Args:
+        dst: Destination MediaWiki directory.
+        dry_run: Whether to simulate.
+        out: Output stream (for dry-run).
+        logger: Logger instance.
+        undo_list: List to append undo commands (not used for chmod).
+    """
+    if dry_run:
+        print(f"# Setting permissions in {_q(dst)}", file=out)
+        print(f"chmod 644 {_q(dst / 'index.php')} {_q(dst / 'api.php')}", file=out)
+        print(f"find {_q(dst)} -type f -name \"*.php\" -exec chmod 644 {{}} \\;", file=out)
+        print(f"find {_q(dst)} -type d -exec chmod 755 {{}} \\;", file=out)
+    else:
+        logger.info("Setting permissions in %s", dst)
+        try:
+            (dst / "index.php").chmod(0o644)
+            (dst / "api.php").chmod(0o644)
+        except Exception as e:
+            logger.error("Failed to chmod index.php/api.php: %s", e)
+
+        for php_file in dst.rglob("*.php"):
+            try:
+                php_file.chmod(0o644)
+            except Exception as e:
+                logger.error("Failed to chmod %s: %s", php_file, e)
+
+        for dir_path in dst.rglob("*"):
+            if dir_path.is_dir():
+                try:
+                    dir_path.chmod(0o755)
+                except Exception as e:
+                    logger.error("Failed to chmod %s: %s", dir_path, e)
 
 
 def _handle_component(src_dir, dst_dir, name, dry_run, out, logger, undo_list):
@@ -113,7 +198,7 @@ def _handle_component(src_dir, dst_dir, name, dry_run, out, logger, undo_list):
     return total_count, new_count
 
 
-def perform_wiki_upgrade(src, dst, www_dir, dry_run=False):
+def perform_wiki_upgrade(src, dst, www_dir, dry_run=False, skip_permissions=False):
     """Perform the MediaWiki upgrade from src to dst.
 
     Args:
@@ -121,6 +206,7 @@ def perform_wiki_upgrade(src, dst, www_dir, dry_run=False):
         dst: Path to new MediaWiki installation.
         www_dir: Path to public symlink (public_html or $WWW_DIR).
         dry_run: If True, output bash script instead of modifying filesystem.
+        skip_permissions: If True, skip setting file permissions.
 
     Raises:
         WikiUpError: On validation or operational failure.
@@ -199,41 +285,27 @@ def perform_wiki_upgrade(src, dst, www_dir, dry_run=False):
         shutil.move(str(src_images), str(dst))
         undo_commands.append(undo)
 
-    # Handle LocalSettings.php
-    dst_local = dst / "LocalSettings.php"
-    dst_local_1st = dst / "LocalSettings.php.1st"
-    src_local = src / "LocalSettings.php"
+    # Copy .htaccess
+    _copy_config_file(
+        src / ".htaccess",
+        dst / ".htaccess",
+        dst / ".htaccess.1st",
+        dry_run,
+        out,
+        logger,
+        undo_commands,
+    )
 
-    if dst_local.exists():
-        if dst_local_1st.exists():
-            logger.error("Backup already exists: %s", dst_local_1st)
-            _print_undo([f"mv {_q(dst_local_1st)} {_q(dst_local)}"])
-            raise WikiUpError("LocalSettings backup exists", 5)
-        else:
-            cmd = f"cp -a {_q(dst_local)} {_q(dst_local_1st)}"
-            undo = f"mv {_q(dst_local_1st)} {_q(dst_local)}"
-            if dry_run:
-                print(cmd, file=out)
-            else:
-                log("Backing up stock LocalSettings.php to %s" % dst_local_1st)
-                shutil.copy2(str(dst_local), str(dst_local_1st))
-                undo_commands.append(undo)
-    else:
-        logger.error("No stock LocalSettings.php: %s", dst_local)
-        _print_undo(undo_commands[::-1])
-        raise WikiUpError("No stock LocalSettings.php", 6)
-
-    if src_local.exists():
-        cmd = f"cp -a {_q(src_local)} {_q(dst_local)}"
-        undo = f"rm -f {_q(dst_local)} && mv {_q(dst_local_1st)} {_q(dst_local)}"
-        if dry_run:
-            print(cmd, file=out)
-        else:
-            log("Copying LocalSettings.php to new version")
-            shutil.copy2(str(src_local), str(dst_local))
-            undo_commands.append(undo)
-    else:
-        logger.warning("No %s found to copy", src_local)
+    # Copy LocalSettings.php
+    _copy_config_file(
+        src / "LocalSettings.php",
+        dst / "LocalSettings.php",
+        dst / "LocalSettings.php.1st",
+        dry_run,
+        out,
+        logger,
+        undo_commands,
+    )
 
     # === EXTENSIONS HANDLING ===
     if dry_run:
@@ -272,6 +344,10 @@ def perform_wiki_upgrade(src, dst, www_dir, dry_run=False):
         print("# Processed %d, would copy %d new." % (skin_total, skin_new), file=out)
     else:
         log("Processed %d, copied %d new." % (skin_total, skin_new))
+
+    # Set permissions
+    if not skip_permissions:
+        _set_permissions(dst, dry_run, out, logger, undo_commands)
 
     # Update symlink
     old_link = None
@@ -358,6 +434,11 @@ def main():
         action="store_true",
         help="Output bash script to stdout instead of performing actions",
     )
+    parser.add_argument(
+        "--skip-permissions",
+        action="store_true",
+        help="Skip setting file/directory permissions",
+    )
 
     args = parser.parse_args()
 
@@ -372,7 +453,13 @@ def main():
         print()
 
     try:
-        perform_wiki_upgrade(src, dst, www_dir, dry_run=args.dry_run)
+        perform_wiki_upgrade(
+            src,
+            dst,
+            www_dir,
+            dry_run=args.dry_run,
+            skip_permissions=args.skip_permissions,
+        )
         return 0
     except WikiUpError as e:
         logger.error("%s", e)
