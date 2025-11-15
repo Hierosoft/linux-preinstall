@@ -310,3 +310,5 @@ NameError: name 'Path' is not defined
 ```
 
 Show the entire script, including the fix.
+
+You've botched the quotes in `php "/home/staging/public_html"/maintenance/update.php` so fix the print command, and also improve _q to leave off the quotes if there are no escapable characters (make a function to check for os-specific bad characters. If there isn't a way in Python 3.6, make a nested dictionary like bad_characters[platform.system()] = "" where "" contains the bad characters for that os that require quotes.

@@ -60,9 +60,32 @@ def echo0(*args, **kwargs):
     return True
 
 
+# Shell quoting: only quote if necessary
+BAD_CHARS = {
+    'Linux': ' \t\n\r\'"\\$`<>|;&()#*?[]{}!',
+    'Darwin': ' \t\n\r\'"\\$`<>|;&()#*?[]{}!',
+    'Windows': ' \t\n\r"%^&|<>',
+}
+
 def _q(path):
-    """Return shell-quoted path."""
-    return f'"{path}"'
+    """Return shell-quoted path only if it contains unsafe characters.
+
+    Args:
+        path: Path to quote.
+
+    Returns:
+        str: Quoted path if needed, otherwise raw.
+    """
+    path_str = str(path)
+    platform = sys.platform
+    if platform.startswith('win'):
+        bad = BAD_CHARS['Windows']
+    else:
+        bad = BAD_CHARS.get('Linux', '')  # fallback
+    if any(c in bad for c in path_str):
+        # Escape single quotes by closing, inserting \', reopening
+        return "'" + path_str.replace("'", "'\\''") + "'"
+    return path_str
 
 
 def _print_undo(undo_commands):
@@ -410,7 +433,7 @@ def perform_wiki_upgrade(src, dst, www_dir, dry_run=False, skip_permissions=Fals
     if not skip_permissions:
         if not dry_run:
             if not www_dir.resolve().samefile(dst):
-                logger.warning("Symlink %s does not point to %s. Skipping permissions", www_dir, dst)
+                logger.warning("Symlink %s does not point to %s — skipping permissions", www_dir, dst)
             else:
                 _set_permissions(www_dir, dry_run, out, logger)
         else:
@@ -426,7 +449,7 @@ def perform_wiki_upgrade(src, dst, www_dir, dry_run=False, skip_permissions=Fals
         "# ($wgUploadDirectory), deleted file archives, and any custom skins,",
         "# run the database upgrade script with the correct PHP version:",
         "#",
-        f"#   php {_q(www_dir)}/maintenance/update.php",
+        "#   php %s/maintenance/update.php" % _q(www_dir),
         "#",
         "# Extensions and skins usually need to be upgraded at the same time as the MediaWiki core.",
     ]
