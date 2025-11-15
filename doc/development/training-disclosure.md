@@ -164,3 +164,7 @@ Traceback (most recent call last):
 
 TypeError: 'type' object is not subscriptable
 ```
+
+- 2025-11-14
+
+Show undo in the case of each error in the form of separate print statements. For example, after "ERROR: Already moved: %s" add print("# undo partial upgrade:") then print("mv %s %s") where the first arg printed is dst/images and second is "%s/src/" % src 

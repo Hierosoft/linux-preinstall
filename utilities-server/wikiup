@@ -49,7 +49,14 @@ def _q(path):
     return f'"{path}"'
 
 
-def _handle_component(src_dir, dst_dir, name, dry_run, out, logger):
+def _print_undo(undo_commands):
+    """Print undo commands as comments and commands."""
+    print("# undo partial upgrade:")
+    for cmd in undo_commands:
+        print(cmd)
+
+
+def _handle_component(src_dir, dst_dir, name, dry_run, out, logger, undo_list):
     """Handle copying missing extensions or skins.
 
     Args:
@@ -59,6 +66,7 @@ def _handle_component(src_dir, dst_dir, name, dry_run, out, logger):
         dry_run: Whether to simulate.
         out: Output stream (for dry-run).
         logger: Logger instance.
+        undo_list: List to append undo commands.
 
     Returns:
         Tuple of (total_count, new_count).
@@ -72,11 +80,13 @@ def _handle_component(src_dir, dst_dir, name, dry_run, out, logger):
 
     if not dst_dir.exists():
         cmd = f"mkdir -p {_q(dst_dir)}"
+        undo = f"rmdir {_q(dst_dir)} 2>/dev/null || true"
         if dry_run:
             print(cmd, file=out)
         else:
             logger.info("Creating %s directory: %s", name, dst_dir)
             dst_dir.mkdir(parents=True, exist_ok=True)
+            undo_list.append(undo)
 
     for item in src_dir.iterdir():
         if item.is_dir():
@@ -84,6 +94,7 @@ def _handle_component(src_dir, dst_dir, name, dry_run, out, logger):
             dst_sub = dst_dir / item.name
             if not dst_sub.exists():
                 cmd = f"rsync -a {_q(item)}/ {_q(dst_sub)}/"
+                undo = f"rm -rf {_q(dst_sub)}"
                 if dry_run:
                     print(cmd, file=out)
                     new_count += 1
@@ -92,6 +103,7 @@ def _handle_component(src_dir, dst_dir, name, dry_run, out, logger):
                         logger.info("Copying %s: %s", name[:-1], item.name)
                         shutil.copytree(str(item), str(dst_sub))
                         new_count += 1
+                        undo_list.append(undo)
                     except Exception as e:
                         logger.error(
                             "Failed to copy %s %s: %s", name[:-1], item.name, e
@@ -114,6 +126,7 @@ def perform_wiki_upgrade(src, dst, www_dir, dry_run=False):
     """
     logger = get_logger()
     out = sys.stdout if dry_run else None
+    undo_commands = []
 
     def log(msg):
         """Log to stderr or stdout with # prefix in dry-run."""
@@ -124,51 +137,61 @@ def perform_wiki_upgrade(src, dst, www_dir, dry_run=False):
 
     # Validate source and destination
     if not src.is_dir():
-        raise WikiUpError(
-            "Source directory does not exist or is not a directory: %s" % src, 1
-        )
+        logger.error("Source directory does not exist or is not a directory: %s", src)
+        _print_undo([])
+        raise WikiUpError("Invalid source directory", 1)
     if not dst.is_dir():
-        raise WikiUpError(
-            "Destination directory does not exist or is not a directory: %s" % dst,
-            1,
-        )
+        logger.error("Destination directory does not exist or is not a directory: %s", dst)
+        _print_undo([])
+        raise WikiUpError("Invalid destination directory", 1)
 
     # Validate WWW_DIR symlink
     if www_dir.exists() and not www_dir.is_symlink():
-        raise WikiUpError(
+        logger.error(
             "%s exists but is not a symlink. This script assumes it is "
             "the symlink to the latest version. Set WWW_DIR to a different "
-            "path or remove/rename the existing %s." % (www_dir, www_dir),
-            1,
+            "path or remove/rename the existing %s.", www_dir, www_dir
         )
+        _print_undo([])
+        raise WikiUpError("WWW_DIR not a symlink", 1)
 
     src_images = src / "images"
     dst_images = dst / "images"
     dst_images_1st = dst / "images.1st"
 
     if not src_images.is_dir():
-        raise WikiUpError("Already moved: %s" % src_images, 2)
+        logger.error("Already moved: %s", src_images)
+        _print_undo([f"mv {_q(dst_images)} {_q(src_images)}" if dst_images.exists() else ""])
+        raise WikiUpError("Images already moved", 2)
 
     if dst_images.is_dir():
         if dst_images_1st.exists():
-            raise WikiUpError("Already backed up stock images: %s" % dst_images_1st, 3)
+            logger.error("Already backed up stock images: %s", dst_images_1st)
+            _print_undo([f"mv {_q(dst_images_1st)} {_q(dst_images)}"])
+            raise WikiUpError("Stock images already backed up", 3)
         else:
             cmd = f"mv {_q(dst_images)} {_q(dst_images_1st)}"
+            undo = f"mv {_q(dst_images_1st)} {_q(dst_images)}"
             if dry_run:
                 print(cmd, file=out)
             else:
                 log("Moving stock images: %s to %s" % (dst_images, dst_images_1st))
                 shutil.move(str(dst_images), str(dst_images_1st))
+                undo_commands.append(undo)
     else:
-        raise WikiUpError("No stock images directory: %s" % dst_images, 4)
+        logger.error("No stock images directory: %s", dst_images)
+        _print_undo([])
+        raise WikiUpError("No stock images", 4)
 
     # Move user images
     cmd = f"mv {_q(src_images)} {_q(dst)}/"
+    undo = f"mv {_q(dst / 'images')} {_q(src_images)}"
     if dry_run:
         print(cmd, file=out)
     else:
         log("Moving user images: %s to %s/" % (src_images, dst))
         shutil.move(str(src_images), str(dst))
+        undo_commands.append(undo)
 
     # Handle LocalSettings.php
     dst_local = dst / "LocalSettings.php"
@@ -177,24 +200,32 @@ def perform_wiki_upgrade(src, dst, www_dir, dry_run=False):
 
     if dst_local.exists():
         if dst_local_1st.exists():
-            raise WikiUpError("Backup already exists: %s" % dst_local_1st, 5)
+            logger.error("Backup already exists: %s", dst_local_1st)
+            _print_undo([f"mv {_q(dst_local_1st)} {_q(dst_local)}"])
+            raise WikiUpError("LocalSettings backup exists", 5)
         else:
             cmd = f"cp -a {_q(dst_local)} {_q(dst_local_1st)}"
+            undo = f"mv {_q(dst_local_1st)} {_q(dst_local)}"
             if dry_run:
                 print(cmd, file=out)
             else:
                 log("Backing up stock LocalSettings.php to %s" % dst_local_1st)
                 shutil.copy2(str(dst_local), str(dst_local_1st))
+                undo_commands.append(undo)
     else:
-        raise WikiUpError("No stock LocalSettings.php: %s" % dst_local, 6)
+        logger.error("No stock LocalSettings.php: %s", dst_local)
+        _print_undo(undo_commands[::-1])
+        raise WikiUpError("No stock LocalSettings.php", 6)
 
     if src_local.exists():
         cmd = f"cp -a {_q(src_local)} {_q(dst_local)}"
+        undo = f"rm -f {_q(dst_local)} && mv {_q(dst_local_1st)} {_q(dst_local)}"
         if dry_run:
             print(cmd, file=out)
         else:
             log("Copying LocalSettings.php to new version")
             shutil.copy2(str(src_local), str(dst_local))
+            undo_commands.append(undo)
     else:
         logger.warning("No %s found to copy", src_local)
 
@@ -210,6 +241,7 @@ def perform_wiki_upgrade(src, dst, www_dir, dry_run=False):
         dry_run,
         out,
         logger,
+        undo_commands,
     )
     if dry_run:
         print("# Processed %d, would copy %d new." % (ext_total, ext_new), file=out)
@@ -228,6 +260,7 @@ def perform_wiki_upgrade(src, dst, www_dir, dry_run=False):
         dry_run,
         out,
         logger,
+        undo_commands,
     )
     if dry_run:
         print("# Processed %d, would copy %d new." % (skin_total, skin_new), file=out)
@@ -235,26 +268,40 @@ def perform_wiki_upgrade(src, dst, www_dir, dry_run=False):
         log("Processed %d, copied %d new." % (skin_total, skin_new))
 
     # Update symlink
+    old_link = None
     if www_dir.exists():
+        try:
+            old_link = www_dir.readlink()
+        except Exception:
+            pass
         cmd = f"rm -f {_q(www_dir)}"
+        undo = f"ln -s {_q(old_link)} {_q(www_dir)}" if old_link else ""
         if dry_run:
             print(cmd, file=out)
         else:
             log("Removing existing symlink: %s" % www_dir)
             try:
                 www_dir.unlink()
+                if undo:
+                    undo_commands.append(undo)
             except OSError as e:
-                raise WikiUpError("Failed to remove %s: %s" % (www_dir, e), 7)
+                logger.error("Failed to remove %s: %s", www_dir, e)
+                _print_undo(undo_commands[::-1])
+                raise WikiUpError("Failed to remove symlink", 7)
 
     cmd = f"ln -s {_q(dst)} {_q(www_dir)}"
+    undo = f"rm -f {_q(www_dir)} && ln -s {_q(old_link)} {_q(www_dir)}" if old_link else f"rm -f {_q(www_dir)}"
     if dry_run:
         print(cmd, file=out)
     else:
         log("Creating symlink: %s to %s" % (www_dir, dst))
         try:
             www_dir.symlink_to(dst)
+            undo_commands.append(undo)
         except OSError as e:
-            raise WikiUpError("Failed to create symlink %s to %s: %s" % (www_dir, dst, e), 7)
+            logger.error("Failed to create symlink %s to %s: %s", www_dir, dst, e)
+            _print_undo(undo_commands[::-1])
+            raise WikiUpError("Failed to create symlink", 7)
 
     # Final instructions
     instructions = [
