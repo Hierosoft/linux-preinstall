@@ -312,3 +312,29 @@ NameError: name 'Path' is not defined
 Show the entire script, including the fix.
 
 You've botched the quotes in `php "/home/staging/public_html"/maintenance/update.php` so fix the print command, and also improve _q to leave off the quotes if there are no escapable characters (make a function to check for os-specific bad characters. If there isn't a way in Python 3.6, make a nested dictionary like bad_characters[platform.system()] = "" where "" contains the bad characters for that os that require quotes.
+
+## utilities-developer/getmyrepo.py
+- 2025-11-17
+
+Convert this to python using argparse:
+
+- paste getmyrepo shell script
+
+it is not that standardized if you call sys.exit manually. Use sys.exit(main())
+
+Add this case to the which function:
+```
+    if (sys.version_info.major >= 3) and (sys.version_info.minor >= 3):
+        return shutil.which("git")  # auto-adds extension on Windows
+```
+But, make a wrapper function called which_nearby_cmd, and if return of which is not truthy, the wrapper function also checks in SCRIPTS_DIR = os.path.dirname(os.path.realpath(__file__))
+
+which and which_nearby_cmd should return the actual path, then main should set a global GETREPO_PATH variable to the result, but if not truthy show error and return 1. Similarly to Python 3.3's builtin shutil.which, which_nearby_cmd after getting a falsey result from which should also check the following (in order of highest priority first): ["", ".sh", ".py"] where "" is no extesion, but if platform.system() is "Windows", the following list should be used instead: [".bat", ".ps1", ".py", ".pyw"]
+
+For compatibility use "{}" substitution instead of f strings, use from future import print_function, and do not use pathlib but rather os.path.join, and do not use wierd unicode characters like "→", and start with `# -*- coding: utf-8 -*-`. As per PEP8 reduce lines to 79 characters, 72 for comments, using PEP8-recommended line continuations etc. if necessary.
+
+getcwd is *not* analogous to the original script's use of `$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )"`! In fact, SCRIPTS_DIR = os.path.dirname(os.path.realpath(__file__)); setcwd(SCRIPTS_DIR) is! But instead, just make a full path when/if necessary, simplifying code wherever possible. It should be the responsibility of which_nearby_cmd not hard-coded stuff to get paths of related scripts, and the cwd of called scripts should not matter, they should manage their own state.
+
+I was very specific about what order and extensions should be used. Don't try to simplify the list construction, use the exact two separate extensions I gave, in the exact order I gave.
+
+Better just not use argparse. The arguments are used in a very specific way, as a list which can be modified, so it will be much more readable if you just use sys.argv and take another look at the original shell script and translate the argument handling more directly.
