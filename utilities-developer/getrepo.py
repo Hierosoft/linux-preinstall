@@ -31,6 +31,7 @@ EXAMPLES
 
 from __future__ import print_function
 import os
+import shutil
 import sys
 import argparse
 import subprocess
@@ -47,9 +48,12 @@ SITES = {
 
 def check_git_installed():
     """Check if git is installed."""
+    if (sys.version_info.major >= 3) and (sys.version_info.minor >= 3):
+        return shutil.which("git")  # auto-adds extension on Windows
     if not subprocess.call(['which', 'git'], stdout=subprocess.DEVNULL) == 0:
         print("Error: git is not installed.")
         sys.exit(1)
+    return True
 
 
 def construct_url(website, user, repo_name):
@@ -123,7 +127,8 @@ def main():
     repo_name_or_url = args.repo_name_or_url
 
     repos_dir = args.repos_dir if args.repos_dir else "~/Downloads/git"
-    repos_dir = os.path.expanduser(repos_dir)
+    repos_dir = os.path.normpath(os.path.expanduser(repos_dir))
+
 
     remote_git_user = args.user
     website = None
