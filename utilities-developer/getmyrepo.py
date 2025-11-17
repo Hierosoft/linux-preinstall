@@ -86,6 +86,14 @@ def main():
             print("Error: getrepo not found.", file=sys.stderr)
             return 1
         cmd[0] = getrepo_path
+        py_cmd = []
+        if sys.platform.startswith("win"):
+            py_cmd = ["py", "-3"]
+            if not shutil.which(py_cmd[0]):
+                py_cmd = ["python3"]
+            if not shutil.which(py_cmd[0]):
+                py_cmd = ["python"]
+        cmd = py_cmd + cmd
 
         print("Trying {0}...".format(username))
         print('calling: {}'.format(cmd))
