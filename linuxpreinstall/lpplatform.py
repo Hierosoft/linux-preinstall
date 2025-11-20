@@ -8,6 +8,8 @@ import platform
 import sys
 import subprocess
 
+# import linuxpreinstall  # sets list_installed_parts
+
 from linuxpreinstall import (
     list_installed_parts,
     SCRIPT_DIRS,
@@ -18,6 +20,8 @@ from linuxpreinstall.lplogging import (  # noqa: E402
 from linuxpreinstall.logging2 import (  # noqa: E402
     getLogger,
 )
+
+assert list_installed_parts is not None
 
 logger = getLogger(__name__)
 
