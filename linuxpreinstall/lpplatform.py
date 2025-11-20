@@ -219,6 +219,7 @@ def which(program_name, more_paths=[]):
 
 
 def get_installed():
+    echo0("[get_installed] using {}".format(" ".join(list_installed_parts)))
     assert linuxpreinstall.is_initialized()
     out = None
     if list_installed_parts is not None:
