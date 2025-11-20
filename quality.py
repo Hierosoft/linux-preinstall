@@ -8,7 +8,7 @@ if __name__ == "__main__":
 
 # import linuxpreinstall.logging2 as logging
 # from linuxpreinstall.logging2 import getLogger
-from linuxpreinstall import (
+from linuxpreinstall.lplogging import (
     echo0,
 )
 

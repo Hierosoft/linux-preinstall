@@ -6,7 +6,7 @@ import sys
 import select
 import json
 
-from linuxpreinstall import (  # noqa F401
+from linuxpreinstall.lplogging import (  # noqa F401
     echo0,
     get_verbosity,
 )

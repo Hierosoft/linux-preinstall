@@ -14,7 +14,7 @@ if __name__ == "__main__":
     SCRIPTS_DIR = os.path.dirname(os.path.realpath(__file__))
     sys.path.insert(0, os.path.dirname(SCRIPTS_DIR))
 
-from linuxpreinstall import (
+from linuxpreinstall.lplogging import (
     echo0,
 )
 

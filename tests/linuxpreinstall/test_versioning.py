@@ -1,7 +1,7 @@
 import unittest
 import sys
 
-from linuxpreinstall import (
+from linuxpreinstall.lplogging import (
     echo0,
 )
 

@@ -1,0 +1,15 @@
+#!/usr/bin/env python3
+import os
+import sys
+
+SCRIPTS_DIR = os.path.dirname(os.path.realpath(__file__))
+REPO_DIR = os.path.dirname(SCRIPTS_DIR)
+
+if os.path.isfile(os.path.join(REPO_DIR, "linuxpreinstall", "__init__.py")):
+    # Make sure we are running the nearby version
+    sys.path.insert(0, REPO_DIR)
+
+from linuxpreinstall.getrepo import main
+
+if __name__ == "__main__":
+    sys.exit(main())

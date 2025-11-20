@@ -41,8 +41,10 @@ import shlex
 
 from find_linuxpreinstall import linuxpreinstall
 
-from linuxpreinstall import (
+from linuxpreinstall.lplogging import (  # noqa: E402
     echo0,
+)
+from linuxpreinstall.lpplatform import (
     which,
     run_and_get_lists,
 )

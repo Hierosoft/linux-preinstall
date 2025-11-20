@@ -25,7 +25,7 @@ if __name__ == "__main__":
     MODULE_DIR = os.path.dirname(os.path.dirname(SUBMODULE_DIR))
     sys.path.insert(0, os.path.dirname(MODULE_DIR))
 
-from linuxpreinstall import (
+from linuxpreinstall.lplogging import (
     echo0,
 )
 from linuxpreinstall.logging2 import getLogger

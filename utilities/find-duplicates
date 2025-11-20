@@ -11,11 +11,12 @@ import sys
 
 from find_linuxpreinstall import linuxpreinstall
 
-from linuxpreinstall import (
+from linuxpreinstall.lplogging import (
     echo0,
 )
 
 from linuxpreinstall.dupset import DupSet
+
 
 def main():
     if len(sys.argv) < 2:

@@ -15,7 +15,7 @@ import os
 # import linuxpreinstall
 from find_linuxpreinstall import linuxpreinstall
 
-from linuxpreinstall import (
+from linuxpreinstall.lplogging import (
     echo0,
 )
 

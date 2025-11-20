@@ -12,8 +12,11 @@ if __name__ == "__main__":
     sys.path.insert(0, REPO_DIR)
 
 from linuxpreinstall import (
-    echo0,
     profile,
+)
+
+from linuxpreinstall.lplogging import (
+    echo0,
 )
 
 import linuxpreinstall.logging2 as logging

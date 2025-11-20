@@ -29,7 +29,7 @@ if __name__ == "__main__":
 from linuxpreinstall.mate.gsettings import (  # noqa: E402
     GSettings,
 )
-from linuxpreinstall import (  # noqa: E402
+from linuxpreinstall.lplogging import (  # noqa: E402
     echo0,
 )
 

@@ -1,4 +1,6 @@
 #!/bin/bash
+>&2 echo "Warning: this script is deprecated. Try 'getrepo'."
+
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 GETREPO_PY="$SCRIPT_DIR/getrepo.py"
 if [ ! -f "$GETREPO_PY" ]; then

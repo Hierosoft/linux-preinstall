@@ -56,7 +56,7 @@ if os.path.isfile(os.path.join(REPO_DIR, "linuxpreinstall", "__init__.py")):
     sys.path.insert(0, REPO_DIR)
 
 
-from linuxpreinstall import (  # noqa: F401, E402
+from linuxpreinstall.lplogging import (  # noqa: F401, E402
     echo0,
 )
 from linuxpreinstall.sysdirs import (  # noqa: F401, E402

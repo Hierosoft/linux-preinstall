@@ -41,6 +41,11 @@ fi
 echo "Installing `pwd`..."
 python3 -m pip install --user `pwd`
 ```
+Linux:
+```
+sudo apt install python3-gi libgirepository1.0-dev
+```
+- Then set `include-system-site-packages = true` in pyvenv.cfg
 
 ## Overview
 There are some things that are for everyone that Linux distros don't provide for various reasons such as:

@@ -32,9 +32,10 @@ import platform
 
 from linuxpreinstall import (
     profile,
+)
+from linuxpreinstall.lplogging import (  # noqa: E402
     echo0,
 )
-
 
 mvCmd = "mv -f"
 if platform.system() == "Windows":

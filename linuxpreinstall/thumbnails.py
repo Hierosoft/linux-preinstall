@@ -53,7 +53,7 @@ if __name__ == "__main__":
     MODULE_DIR = os.path.dirname(os.path.realpath(__file__))
     sys.path.insert(0, os.path.dirname(MODULE_DIR))
 
-from linuxpreinstall import (  # noqa: E402
+from linuxpreinstall.lplogging import (  # noqa: E402
     echo0,
 )
 

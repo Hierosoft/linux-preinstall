@@ -29,7 +29,7 @@ if __name__ == "__main__":
     MODULE_PATH = os.path.dirname(os.path.realpath(__file__))
     sys.path.insert(0, os.path.dirname(MODULE_PATH))
 
-from linuxpreinstall import (
+from linuxpreinstall.lplogging import (  # noqa: E402
     echo0,
 )
 

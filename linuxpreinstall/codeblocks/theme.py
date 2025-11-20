@@ -21,9 +21,10 @@ if __name__ == "__main__":
 
 from linuxpreinstall import (
     myAppData,
+)
+from linuxpreinstall.lplogging import (  # noqa: E402
     echo0,
 )
-
 from linuxpreinstall.logging2 import (
     getLogger,
 )

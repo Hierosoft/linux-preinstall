@@ -11,8 +11,10 @@ if __name__ == "__main__":
 
 # TODO: Require nopackage and use the version feature from it instead?
 from linuxpreinstall import (
-    human_readable,
     sorted_versions,
+)
+from linuxpreinstall.lplogging import (
+    human_readable,
 )
 import linuxpreinstall.logging2 as logging
 

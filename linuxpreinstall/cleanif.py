@@ -22,11 +22,9 @@ import sys
 # good = "/run/media/owner/BLACK16/"
 # oops = "/run/media/owner/JGustafsonExt/"
 
-from linuxpreinstall import echo0
-
 
 def usage():
-    echo0(__doc__)
+    print(__doc__, file=sys.stderr)
 
 
 def del_if(delPath, readPath, readRoot=None):

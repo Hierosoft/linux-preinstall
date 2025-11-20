@@ -35,7 +35,7 @@ from linuxpreinstall.more_rsnapshot import (
 from linuxpreinstall.logging2 import (
     getLogger,
 )
-from linuxpreinstall import (
+from linuxpreinstall.lplogging import (
     echo0,
 )
 

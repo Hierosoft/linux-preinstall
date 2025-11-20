@@ -24,8 +24,7 @@ from linuxpreinstall.readonlydict import ReadOnlyDict
 from linuxpreinstall.logging2 import (
     getLogger,
 )
-
-from linuxpreinstall import (
+from linuxpreinstall.lplogging import (  # noqa: E402
     echo0,
 )
 

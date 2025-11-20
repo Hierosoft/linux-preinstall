@@ -1,4 +1,5 @@
 #!/bin/bash
+>&2 echo "Warning: this script is deprecated. Try 'getmyrepo'."
 if [ ! -f "`command -v git`" ]; then
     echo "Error: git is not installed."
     exit 1

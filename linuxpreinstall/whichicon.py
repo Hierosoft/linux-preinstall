@@ -48,11 +48,20 @@ for argI in range(1, len(sys.argv)):
 from linuxpreinstall import (  # noqa: E402
     profile,
     AppData,
-    which,
     endsWithAny,
-    echo0,
+)
+
+from linuxpreinstall.lpgrep import (
     is_like_any,
     any_contains,
+)
+
+from linuxpreinstall.lplogging import (  # noqa: E402
+    echo0,
+)
+
+from linuxpreinstall.lpplatform import (  # noqa: E402
+    which,
 )
 
 

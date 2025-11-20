@@ -11,7 +11,7 @@ REPO_DIR = os.path.dirname(SCRIPTS_DIR)
 if __name__ == "__main__":
     sys.path.insert(0, REPO_DIR)
 
-from linuxpreinstall import (  # noqa: E402
+from linuxpreinstall.lplogging import (
     echo0,
 )
 

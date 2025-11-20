@@ -3,12 +3,13 @@ import unittest
 import sys
 
 from linuxpreinstall import (
-    echo0,
     find_not_decimal,
     rfind_not_decimal,
     split_package_parts,
 )
-
+from linuxpreinstall.lplogging import (  # noqa: E402
+    echo0,
+)
 from linuxpreinstall.logging2 import logging
 
 # from linuxpreinstall.phpversion import (

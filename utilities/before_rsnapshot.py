@@ -21,7 +21,7 @@ if __name__ == "__main__":
 
 from generate_exclude import main as generate_exclude_main
 
-from linuxpreinstall import (
+from linuxpreinstall.lplogging import (
     echo0,
 )
 

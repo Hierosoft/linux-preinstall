@@ -12,12 +12,17 @@ import sys
 # import os
 
 from linuxpreinstall import (  # noqa F401
-    echo0,
     get_installed,
     split_package_parts,
     is_decimal,
     install_parts,
     remove_parts,
+)
+
+from linuxpreinstall.lplogging import (  # noqa: E402
+    echo0,
+)
+from linuxpreinstall.lpplatform import (
     which,
 )
 

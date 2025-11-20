@@ -22,9 +22,12 @@ if not hasattr(shlex, "join"):
 
 from collections import OrderedDict
 
-from linuxpreinstall import (
-    echo0,
+from linuxpreinstall.lplogging import (
     human_readable,
+)
+
+from linuxpreinstall.lplogging import (
+    echo0,
 )
 
 from linuxpreinstall.bash import compare_files
