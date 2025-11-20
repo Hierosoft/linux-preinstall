@@ -8,7 +8,7 @@ import platform
 import sys
 import subprocess
 
-# import linuxpreinstall  # sets list_installed_parts
+import linuxpreinstall
 
 from linuxpreinstall import (
     list_installed_parts,
@@ -20,8 +20,6 @@ from linuxpreinstall.lplogging import (  # noqa: E402
 from linuxpreinstall.logging2 import (  # noqa: E402
     getLogger,
 )
-
-assert list_installed_parts is not None
 
 logger = getLogger(__name__)
 
@@ -221,6 +219,7 @@ def which(program_name, more_paths=[]):
 
 
 def get_installed():
+    assert linuxpreinstall.is_initialized()
     out = None
     if list_installed_parts is not None:
         out, err, code = run_and_get_lists(list_installed_parts)
@@ -237,3 +236,4 @@ def get_installed():
         if code != 0:
             return None
     return out
+

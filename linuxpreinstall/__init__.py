@@ -110,7 +110,7 @@ upgrade_parts = None
 package_type = None
 install_bin = None
 packageInfos = None
-
+_is_initialized = False
 
 class InstallManager:
     def __init__(self, os_name, desired_os_version):
@@ -163,6 +163,7 @@ def _init_commands():
     global upgrade_parts
     global package_type
     global install_bin
+    global _is_initialized
 
     if bin_exists("dnf"):
         package_type = "rpm"
@@ -229,7 +230,11 @@ def _init_commands():
             logger.info("* linuxpreinstall is not refreshing the package list"
                   " since you are not a superuser.")
     logger.info("  * done _init_commands")
+    _is_initialized = True
 
+
+def is_initialized():
+    return _is_initialized
 
 
 def find_not_decimal(s, start=None, step=1):
