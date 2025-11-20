@@ -138,9 +138,9 @@ def main():
         arg = sys.argv[argI]
         if arg.startswith("--"):
             if arg == "--verbose":
-                logging.basicConfig(logging.INFO)
+                logging.basicConfig(level=logging.INFO)
             elif arg == "--debug":
-                logging.basicConfig(logging.DEBUG)
+                logging.basicConfig(level=logging.DEBUG)
             elif arg == "--view":
                 mode = "view"
             else:

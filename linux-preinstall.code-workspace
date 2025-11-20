@@ -42,8 +42,6 @@
 				]
 			}
 		},
-		"python.testing.unittestEnabled": false,
-		"python.testing.pytestEnabled": true,
 		"files.trimFinalNewlines": true,
 		"editor.wordWrapColumn": 79,
 		"rewrap.wrappingColumn": 72,

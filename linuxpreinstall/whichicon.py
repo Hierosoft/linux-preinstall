@@ -40,9 +40,9 @@ for argI in range(1, len(sys.argv)):
     arg = sys.argv[argI]
     if arg.startswith("--"):
         if arg == "--verbose":
-            logging.basicConfig(logging.INFO)
+            logging.basicConfig(level=logging.INFO)
         elif arg == "--debug":
-            logging.basicConfig(logging.DEBUG)
+            logging.basicConfig(level=logging.DEBUG)
 
 
 from linuxpreinstall import (  # noqa: E402

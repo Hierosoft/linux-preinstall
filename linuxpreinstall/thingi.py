@@ -181,9 +181,9 @@ def main():
         arg = sys.argv[argI]
         if arg.startswith("--"):
             if arg == "--verbose":
-                logging.basicConfig(logging.INFO)
+                logging.basicConfig(level=logging.INFO)
             elif arg == "--debug":
-                logging.basicConfig(logging.DEBUG)
+                logging.basicConfig(level=logging.DEBUG)
             else:
                 logger.error('The argument "{}" is invalid.'.format(arg))
                 return 2

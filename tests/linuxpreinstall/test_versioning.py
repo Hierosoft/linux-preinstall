@@ -16,7 +16,7 @@ from linuxpreinstall.versioning import (
 # TODO: Require nopackage and use the version feature from it instead?
 
 
-logging.basicConfig(logging.INFO)
+logging.basicConfig(level=logging.INFO)
 
 
 class TestStringMethods(unittest.TestCase):

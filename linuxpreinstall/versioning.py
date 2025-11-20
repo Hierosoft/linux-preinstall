@@ -8,6 +8,7 @@ import json
 
 from linuxpreinstall.lplogging import (  # noqa F401
     echo0,
+    write0,
     get_verbosity,
 )
 
@@ -139,12 +140,12 @@ def splitNestedVersion(s, verbose=False):
             verbose = False
         else:
             verbose = verbose > 0
-    write1('  * running splitVersion({})...'
+    write0('  * running splitVersion({})...'
            ''.format(json.dumps(s)))
     parts, version = splitVersion(s)
-    write1('got ({}, {})\n'
+    write0('got ({}, {})\n'
            ''.format(json.dumps(parts), json.dumps(version)))
-    write1('  * running splitVersion({}, {})...'
+    write0('  * running splitVersion({}, {})...'
            ''.format(json.dumps(version), True))
     if version is None:
         version = ""
@@ -152,7 +153,7 @@ def splitNestedVersion(s, verbose=False):
         suffix = None
     else:
         number, suffix = splitVersion(version, onlyNumeric=True)
-    write1('got ({}, {})\n'.format(
+    write0('got ({}, {})\n'.format(
         json.dumps(number),
         json.dumps(suffix),
     ))

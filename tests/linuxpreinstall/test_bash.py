@@ -14,7 +14,7 @@ if __name__ == "__main__":
 from linuxpreinstall.bash import compare_files  # noqa: E402
 import linuxpreinstall.logging2 as logging  # noqa: E402
 
-logging.basicConfig(logging.INFO)
+logging.basicConfig(level=logging.INFO)
 
 TESTS_DIR = os.path.join(REPO_DIR, "tests")
 TEST_DATA_DIR = os.path.join(TESTS_DIR, "data")
