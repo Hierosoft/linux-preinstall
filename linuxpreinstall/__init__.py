@@ -231,24 +231,6 @@ def _init_commands():
     logger.info("  * done _init_commands")
 
 
-def get_installed():
-    out = None
-    if list_installed_parts is not None:
-        out, err, code = run_and_get_lists(list_installed_parts)
-        msg_prefix = "[linuxpreinstall] Warning"
-        if code != 0:
-            msg_prefix = "[linuxpreinstall] Error"
-        if len(err) > 0:
-            echo0("{} (code {}) running {}:"
-                  "".format(msg_prefix, code, " ".join(list_installed_parts)))
-            for line in err:
-                echo0(line)
-        elif code != 0:
-            echo0("Error code {}".format(code))
-        if code != 0:
-            return None
-    return out
-
 
 def find_not_decimal(s, start=None, step=1):
     if s is None:

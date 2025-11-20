@@ -9,6 +9,7 @@ import sys
 import subprocess
 
 from linuxpreinstall import (
+    list_installed_parts,
     SCRIPT_DIRS,
 )
 from linuxpreinstall.lplogging import (  # noqa: E402
@@ -97,6 +98,7 @@ def run_and_get_lists(cmd_parts, collect_stderr=True):
     #         errs.append(line.rstrip("\n\r"))
 
     return outs, errs, sp.returncode
+
 
 WIN_EXECUTABLE_DOT_EXTS = [".exe", ".ps1", ".bat", ".com"]
 
@@ -212,3 +214,22 @@ def which(program_name, more_paths=[]):
             result = fallback_path
     return result
 # endregion from hierosoft and relicensed by author for linux-preinstall
+
+
+def get_installed():
+    out = None
+    if list_installed_parts is not None:
+        out, err, code = run_and_get_lists(list_installed_parts)
+        msg_prefix = "[linuxpreinstall] Warning"
+        if code != 0:
+            msg_prefix = "[linuxpreinstall] Error"
+        if len(err) > 0:
+            echo0("{} (code {}) running {}:"
+                  "".format(msg_prefix, code, " ".join(list_installed_parts)))
+            for line in err:
+                echo0(line)
+        elif code != 0:
+            echo0("Error code {}".format(code))
+        if code != 0:
+            return None
+    return out
