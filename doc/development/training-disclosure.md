@@ -338,3 +338,77 @@ getcwd is *not* analogous to the original script's use of `$( cd -- "$( dirname 
 I was very specific about what order and extensions should be used. Don't try to simplify the list construction, use the exact two separate extensions I gave, in the exact order I gave.
 
 Better just not use argparse. The arguments are used in a very specific way, as a list which can be modified, so it will be much more readable if you just use sys.argv and take another look at the original shell script and translate the argument handling more directly.
+
+- 2025-11-21 Grok
+
+Make a pytest file, assuming the following method is in linuxpreinstall/**init**.py:
+- paste split_package_parts
+Assuming the following function is in Python submodule linuxpreinstall/phpversion.py, write another pytest file for it:
+- paste get_php_package_groups
+In the test file, make dummy function get_installed_dummy which returns a list containing the following strings:
+```
+- ea-php54-php-zip-5.4.45-81.82.2.cpanel.x86_64
+- ea-php55-pear-1.10.16-4.8.19.cpanel.noarch
+- ea-php55-php-pdo-5.5.38-64.65.2.cpanel.x86_64
+- ea-php72-php-xml-7.2.34-11.13.2.cpanel.x86_64
+- alt-php-internal-cli-8.2.28-6.el7.x86_64
+- cpanel-php81-date-holidays-croatia-0.1.1-1.cp110~el7.noarch
+```
+The versioned modules would be all but "alt-php-internal-cli" which would be an unversioned module and cpanel-php81-date-holidays-croatia which would be other modules (not a php version, just a cpanel plugin--no special code necessary, already falls under other. Only tests are necessary, not changes to the code I've provided).
+
+Integrate it with the existing tests/linuxpreinstall/test_phpversion.py code, and translate the existing code from unittest to pytest:
+- paste tests/linuxpreinstall/test_phpversion.py
+
+As I said, tests for split_package_parts should be in a separate file since that is for the module not the submodule, so such tests not requiring submodules should be in a file called tests/linuxpreinstall/test_module.py, but convert the old code to pytest and only add test(s) if not already covered by the existing test_module.py file:
+- paste tests/linuxpreinstall/test_module.py
+
+human_readable needs to be imported like:
+```
+from linuxpreinstall.lplogging import (
+    human_readable,
+)
+```
+alt-php-internal-cli should be split like `assert split_package_parts("alt-php-internal-cli") == ["alt-php", "internal-cli"] # no version digits`. Also, rfind_not_decimal is a reverse find (starting from the end) so fix that. Fix any other tests as necessary considering the code:
+```
+def find_not_decimal(s, start=None, step=1):
+    if s is None:
+        raise ValueError("s is None.")
+    if len(s) == 0:
+        raise ValueError("s is blank.")
+    if step not in [-1, 1]:
+        raise ValueError("step must be 1 or -1 (rfind_not_decimal)")
+    if not isinstance(s, str):
+        raise ValueError("s must be a str but is {}".format(s))
+    if start is None:
+        if step < 0:
+            start = -1
+        else:
+            start = 0
+    if start < 0:
+        start = len(s) + start  # + since negative
+    if step < 0:
+        i = start + 1  # +1 since decremented before use
+    else:
+        i = start - 1  # -1 since incremented before use
+    while True:
+        i += step
+        if step < 0:
+            if i < 0:
+                break
+        else:
+            if i >= len(s):
+                break
+        if s[i] not in digit_or_dot:
+            return i
+    return -1
+
+
+def rfind_not_decimal(s, start=None):
+    return find_not_decimal(s, start=start, step=-1)
+```
+
+"But current find_not_decimal has a bug in negative index handling."? I think not. It starts at the end, it is simple. It makes start positive. I don't think I'm wrong, and on the other hand you're wrong, in fact, `assert rfind_not_decimal(s) == 11 # position of 'l' in -pgsql (index 11)`
+
+Now you're just not trying very hard. `assert rfind_not_decimal("version9") == 7 # 'n' in "version9"`should be 6. [0] is 'v', [6] is 'n'
+
+- I fixed additional test cases manually such as using my PackageVersion class.

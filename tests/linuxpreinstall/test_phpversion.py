@@ -1,52 +1,66 @@
-from __future__ import print_function
-import unittest
-import sys
+# tests/linuxpreinstall/test_phpversion.py
+import json
 
-from linuxpreinstall import (
-    find_not_decimal,
-    rfind_not_decimal,
-    split_package_parts,
-)
-from linuxpreinstall.lplogging import (  # noqa: E402
-    echo0,
-)
-import linuxpreinstall.logging2 as logging
-
-# from linuxpreinstall.phpversion import (
-# )
-
-# TODO: Require nopackage and use the version feature from it instead?
-
-logging.basicConfig(level=logging.INFO)
+from linuxpreinstall.phpversion import get_php_package_groups
 
 
-class TestPackageStringMethods(unittest.TestCase):
+def get_installed_dummy():
+    return [
+        "ea-php54-php-zip-5.4.45-81.82.2.cpanel.x86_64",
+        "ea-php55-pear-1.10.16-4.8.19.cpanel.noarch",
+        "ea-php55-php-pdo-5.5.38-64.65.2.cpanel.x86_64",
+        "ea-php72-php-xml-7.2.34-11.13.2.cpanel.x86_64",
+        "alt-php-internal-cli-8.2.28-6.el7.x86_64",
+        "cpanel-php81-date-holidays-croatia-0.1.1-1.cp110~el7.noarch",
+    ]
 
-    def test_version_detection(self):
-        good_parts = ["php", "7.3", "pgsql"]
-        test_name = "php7.3-pgsql"
-        echo0("* test_version_detection: find_not_decimal, rfind_not_decimal, split_package_parts")
-        echo0("  * test_name is '{}'".format(test_name))
-        parts = test_name.split("-")
 
-        self.assertEqual(rfind_not_decimal(parts[0]), 2)
-        self.assertEqual(rfind_not_decimal(test_name, 3), 2)
-        self.assertEqual(find_not_decimal(parts[0]), 0)
-        good_i = 6
-        echo0("  * character at {} is '{}'".format(good_i, test_name[good_i]))
-        self.assertEqual(find_not_decimal(test_name, 3), 6)
-        # ^ 6 is -
-        # Therefore it should also stop at start if starts at 6 since
-        #   6 is not part of a float number:
-        self.assertEqual(find_not_decimal(test_name, 6), 6)
-        got_parts = split_package_parts(test_name)
-        echo0("  * parts: {}".format(got_parts))
-        self.assertEqual(got_parts, good_parts)
+def test_get_php_package_groups_with_dummy_data():
+    groups = get_php_package_groups(get_installed_fn=get_installed_dummy)
 
-        self.assertEqual(split_package_parts("php7.4"), ["php", "7.4"])
+    for key, group in groups.items():
+        assert group == sorted(group), f"Group '{key}' is not sorted"
 
-        self.assertEqual(split_package_parts("php"), ["php"])
+    assert groups["unversioned_modules"] == [
+        "alt-php-internal-cli-8.2.28-6.el7.x86_64",
+    ]
 
-        test_lib_name = "libapache2-mod-php7.3"
-        good_lib_parts = ["libapache2-mod-php", "7.3"]
-        self.assertEqual(split_package_parts(test_lib_name), good_lib_parts)
+    assert set(groups["versioned_modules"]) == {
+        "ea-php54-php-zip-5.4.45-81.82.2.cpanel.x86_64",
+        "ea-php55-pear-1.10.16-4.8.19.cpanel.noarch",
+        "ea-php55-php-pdo-5.5.38-64.65.2.cpanel.x86_64",
+        "ea-php72-php-xml-7.2.34-11.13.2.cpanel.x86_64",
+    }
+
+    assert groups["versions"] == []
+    assert groups["other_versioned"] == []
+    assert groups["other"] == [
+        "cpanel-php81-date-holidays-croatia-0.1.1-1.cp110~el7.noarch",
+    ]
+
+
+def test_get_php_package_groups_edge_cases():
+    def edge_dummy():
+        return [
+            "php7.4-json",
+            "php8.1",
+            "php-cli",
+            "libapache2-mod-php8.2",
+            "ea-php83-php-mysqli",
+            "alt-php80",
+            "alt-php80-mysqli",
+            "some-random-php-thing",
+        ]
+
+    groups = get_php_package_groups(get_installed_fn=edge_dummy)
+
+    assert "php7.4-json" in groups["versioned_modules"]
+    assert "php8.1" in groups["versions"]
+    assert "php-cli" in groups["unversioned_modules"]
+    assert "libapache2-mod-php8.2" in groups["other_versioned"]
+    assert "ea-php83-php-mysqli" in groups["versioned_modules"]
+    assert "alt-php80-mysqli" in groups["versioned_modules"], \
+        "{}".format(json.dumps(groups, indent=2))
+    assert "alt-php80" in groups["versions"], \
+        "{}".format(json.dumps(groups, indent=2))
+    assert "some-random-php-thing" in groups["other"]
