@@ -259,7 +259,12 @@ def main():
                 remove_modules.append(name)
     # del name
     if len(remove_modules) > 0:
-        print(" ".join(remove_parts)+" "+" ".join(remove_modules))
+        try:
+            print(" ".join(remove_parts)+" "+" ".join(remove_modules))
+        except TypeError:
+            print("remove_modules={}".format(remove_modules),
+                  file=sys.stderr)
+            raise
     else:
         print("# There are no modules from other versions installed.")
     new_versioned_modules = []
