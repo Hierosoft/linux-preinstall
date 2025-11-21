@@ -11,7 +11,8 @@ import sys
 from csv import reader
 
 MODULE_DIR = os.path.dirname(os.path.realpath(__file__))
-
+HYPHENATED_PHP_NAMES = ["alt-php", "ea-php"]
+PHP_NAMES = ["php"] + HYPHENATED_PHP_NAMES
 
 if __name__ == "__main__":
     sys.path.insert(0, os.path.dirname(MODULE_DIR))
@@ -111,6 +112,16 @@ package_type = None
 install_bin = None
 packageInfos = None
 _is_initialized = False
+
+
+class PackageVersion:
+    def __init__(self, original=None, modified=None):
+        self.original = original
+        self.modified = modified
+
+    def __eq__(self, value):
+        return (self.original == value.original) and (self.modified == value.modified)
+
 
 class InstallManager:
     def __init__(self, os_name, desired_os_version):
@@ -278,19 +289,39 @@ def rfind_not_decimal(s, start=None):
 
 
 def is_decimal(s):
+    if isinstance(s, PackageVersion):
+        return True
     if len(s) == 0:
         raise ValueError("s is blank.")
     return rfind_not_decimal(s) < 0
 
 
-def split_package_parts(s):
+def split_package_parts(s: str):
     '''Split a GNU/Linux-style package name into parts.
 
     Returns:
         list[str]: such as `["php", "8.0", "fpm"]`
-            or `["ea-php", "8.0", "fpm"]`
+            or `["ea-php", "80", "fpm"]`
     '''
-    parts = s.split("-")
+    hyphenated_names = HYPHENATED_PHP_NAMES
+    parts = None
+    for h_name in hyphenated_names:
+        if s.startswith(h_name):
+            # split starting at the *second* hyphen
+            #   if a hyphen is part of the name.
+            part2_idx = s.find("-", len(h_name))
+            if part2_idx < 1:
+                # such as alt-php80 (no version details--odd distro/package)
+                parts = s[len(h_name):].split("-")
+                parts[0] = h_name + parts[0]  # re-add hyphenate part
+            else:
+                parts = [s[:part2_idx]] + s[part2_idx+1:].split("-")
+            # ^ parts[0] may be something like ea-php74,
+            #   but that is split below using rfind_not_decimal
+            #   (reverse find starting at 4)
+            print("parts={}".format(parts))
+    if parts is None:
+        parts = s.split("-")
 
     if parts[:2] == ['libapache2', 'mod']:
         # versionize using the number after libapache2-mod-php
@@ -298,10 +329,14 @@ def split_package_parts(s):
         # echo0("parts: {}".format(parts))
 
     name_last_index = rfind_not_decimal(parts[0], -1)
-    group_prefixes = ['python', 'alt-php', 'ea-php', 'php', 'apt', 'ruby']
+    group_prefixes = hyphenated_names + ['python', 'php', 'apt', 'ruby']
     # ea-php*: cPanel provides these via EasyApache.
     # alt-php*: CloudLinux provides these via PHP Selector
-
+    print("  split = [{}, {}] + {}".format(
+        repr(parts[0][:name_last_index+1]),
+        repr(parts[0][name_last_index+1:]),
+        parts[1:]
+    ))
     if name_last_index < len(parts[0])-1:
         # If the first '-' is preceded by a number, split it further.
         version_i = name_last_index + 1
@@ -317,6 +352,17 @@ def split_package_parts(s):
         # else:
         #     parts = [new_part0, new_part1] + parts[1:]
         #     such as ["php", "symphony", "service", "contracts"]
+        print("    split further={}".format(parts))
+        if len(parts) > 1:
+            if (("." not in parts[1]) and (len(parts[1]) > 1)
+                    and ("php" in parts[0])):
+                version = PackageVersion()
+                version.original = parts[1]
+                # PHP always has 1 minor digit as of 8.3 so:
+                version.modified = parts[1][:-1] + "." + parts[1][-1:]
+                print("Warning, no decimal, generating PackageVersion {}"
+                      .format(version.modified))
+                parts[1] = version
     else:
         if parts[0] in group_prefixes:
             if len(parts) > 1:

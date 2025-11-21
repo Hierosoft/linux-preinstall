@@ -12,6 +12,7 @@ import sys
 # import os
 
 from linuxpreinstall import (  # noqa F401
+    PHP_NAMES,
     split_package_parts,
     is_decimal,
     install_parts,
@@ -56,10 +57,15 @@ except ImportError:
 # ^ use get_installed (cross-distro) from linuxpreinstall instead.
 
 
-def get_php_package_groups():
+def get_php_package_groups(get_installed_fn=None):
     '''Split packages including the term "php" into named sets.
     For info on dependency managers supported, see get_installed in
     linuxpreinstall.
+
+    Args:
+        get_installed_fn (Callable): The function to use
+            to get packages (Such as for dummy data for tests). Defaults
+            to `get_installed (crossplatform function in this module).
 
     Returns:
         A dictionary of lists where each list is a type of php package:
@@ -76,7 +82,9 @@ def get_php_package_groups():
     # name = mypkg.name
     # if cache[name].is_installed:
     # packaged_names.append(name)
-    packaged_names = get_installed()
+    if get_installed_fn is None:
+        get_installed_fn = get_installed
+    packaged_names = get_installed_fn()
     # echo0("names:")
     for raw_name in packaged_names:
         name = raw_name.split("/")[0]
@@ -103,9 +111,10 @@ def get_php_package_groups():
         elif len(parts) == 2:
             if parts[0] == "libapache2-mod-php" and is_decimal(parts[1]):
                 groups['other_versioned'].append(name)
-            elif parts[0] == "php" and is_decimal(parts[1]):
+            elif (parts[0] in PHP_NAMES) and is_decimal(parts[1]):
                 groups['versions'].append(name)
             else:
+                print("is_decimal({})={}".format(parts[1], is_decimal(parts[1])))
                 groups['unversioned_modules'].append(name)
         else:
             groups['versioned_modules'].append(name)
