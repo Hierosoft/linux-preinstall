@@ -13,6 +13,7 @@ import sys
 
 from linuxpreinstall import (  # noqa F401
     PHP_NAMES,
+    PackageVersion,
     split_package_parts,
     is_decimal,
     install_parts,
@@ -248,9 +249,14 @@ def main():
                 ' such as ["php", "8.0", "fpm"]'
             )
         parts = split_package_parts(name)
-        if parts[1] != new_version:
-            # Only uninstall packages not for new_version.
-            remove_modules.append(name)
+        if isinstance(parts[1], PackageVersion):
+            if parts[1].canonized != new_version:
+                # Only uninstall packages not for new_version.
+                remove_modules.append(name)
+        else:
+            if parts[1] != new_version:
+                # Only uninstall packages not for new_version.
+                remove_modules.append(name)
     # del name
     if len(remove_modules) > 0:
         print(" ".join(remove_parts)+" "+" ".join(remove_modules))

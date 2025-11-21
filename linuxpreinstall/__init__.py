@@ -117,10 +117,10 @@ _is_initialized = False
 class PackageVersion:
     def __init__(self, original=None, modified=None):
         self.original = original
-        self.modified = modified
+        self.canonized = modified
 
     def __eq__(self, value):
-        return (self.original == value.original) and (self.modified == value.modified)
+        return (self.original == value.original) and (self.canonized == value.canonized)
 
 
 class InstallManager:
@@ -359,9 +359,9 @@ def split_package_parts(s: str):
                 version = PackageVersion()
                 version.original = parts[1]
                 # PHP always has 1 minor digit as of 8.3 so:
-                version.modified = parts[1][:-1] + "." + parts[1][-1:]
+                version.canonized = parts[1][:-1] + "." + parts[1][-1:]
                 print("Warning, no decimal, generating PackageVersion {}"
-                      .format(version.modified))
+                      .format(version.canonized))
                 parts[1] = version
     else:
         if parts[0] in group_prefixes:
