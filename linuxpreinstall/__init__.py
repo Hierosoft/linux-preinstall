@@ -284,9 +284,11 @@ def is_decimal(s):
 
 
 def split_package_parts(s):
-    '''
-    Split a GNU/Linux-style package name into parts such as
+    '''Split a GNU/Linux-style package name into parts.
 
+    Returns:
+        list[str]: such as `["php", "8.0", "fpm"]`
+            or `["ea-php", "8.0", "fpm"]`
     '''
     parts = s.split("-")
 
@@ -296,7 +298,9 @@ def split_package_parts(s):
         # echo0("parts: {}".format(parts))
 
     name_last_index = rfind_not_decimal(parts[0], -1)
-    group_prefixes = ['python', 'php', 'apt', 'ruby']
+    group_prefixes = ['python', 'alt-php', 'ea-php', 'php', 'apt', 'ruby']
+    # ea-php*: cPanel provides these via EasyApache.
+    # alt-php*: CloudLinux provides these via PHP Selector
 
     if name_last_index < len(parts[0])-1:
         # If the first '-' is preceded by a number, split it further.
