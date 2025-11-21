@@ -264,6 +264,8 @@ def main():
         except TypeError:
             print("remove_modules={}".format(remove_modules),
                   file=sys.stderr)
+            print("remove_parts={}".format(remove_parts),
+                  file=sys.stderr)
             raise
     else:
         print("# There are no modules from other versions installed.")
