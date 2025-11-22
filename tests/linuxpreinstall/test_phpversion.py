@@ -50,17 +50,24 @@ def test_get_php_package_groups_edge_cases():
             "alt-php80",
             "alt-php80-mysqli",
             "some-random-php-thing",
+            "ea-php71-7.1.33-6.6.4.cpanel.x86_64",
         ]
 
     groups = get_php_package_groups(get_installed_fn=edge_dummy)
 
-    assert "php7.4-json" in groups['versioned_modules']
-    assert "php8.1" in groups['versions']
-    assert "php-cli" in groups['unversioned_modules']
+    assert "some-random-php-thing" in groups['other']
+
     assert "libapache2-mod-php8.2" in groups['other_versioned']
+
+    assert "php-cli" in groups['unversioned_modules']
+
+    assert "php7.4-json" in groups['versioned_modules']
     assert "ea-php83-php-mysqli" in groups['versioned_modules']
     assert "alt-php80-mysqli" in groups['versioned_modules'], \
         "{}".format(json.dumps(groups, indent=2))
+
+    assert "ea-php71" in groups['versions']
+    assert "php8.1" in groups['versions']
     assert "alt-php80" in groups['versions'], \
         "{}".format(json.dumps(groups, indent=2))
-    assert "some-random-php-thing" in groups['other']
+

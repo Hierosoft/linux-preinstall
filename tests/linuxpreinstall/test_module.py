@@ -53,6 +53,10 @@ def test_split_package_parts_hyphenated_prefixes():
     assert split_package_parts("alt-php82-xml") == ["alt-php", version82, "xml"]
     assert split_package_parts("alt-php-internal-cli") == ["alt-php", "internal-cli"]
 
+    parts = split_package_parts("ea-php71-7.1.33-6.6.4.cpanel.x86_64")
+    version71 = PackageVersion(original="71", canonized="7.1")
+    assert parts == ["ea-php", version71]
+
 
 def test_rfind_not_decimal_is_correct():
     # "php7.3-pgsql"
