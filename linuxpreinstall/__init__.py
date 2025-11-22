@@ -212,9 +212,19 @@ def _init_commands():
         pkg_search_parts = [install_bin, "search"]
     elif package_type == "rpm":
         install_parts = [install_bin, "install", "-y"]
+        remove_parts = [install_bin, "remove", "-y"]
+        upgrade_parts = [install_bin, "update"]
+        refresh_parts = ["echo", "yum_does_not_require_refresh"]
         list_installed_parts = ["rpm", "-qa"]
+        pkg_search_parts = [install_bin, "search"]
+        # [install_bin, "search", "all"]  # also look in description etc.
 
+    assert install_parts is not None
+    assert remove_parts is not None
+    assert upgrade_parts is not None
+    assert refresh_parts is not None
     assert list_installed_parts is not None
+    assert pkg_search_parts is not None
 
     # if bin_exists("apt"):
     #     refresh_result = subprocess.run(["apt", "refresh"])
