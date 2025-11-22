@@ -329,7 +329,7 @@ def split_package_parts(s: str):
             # ^ parts[0] may be something like ea-php74,
             #   but that is split below using rfind_not_decimal
             #   (reverse find starting at 4)
-            print("parts={}".format(parts))
+            logger.info("parts={}".format(parts))
     if parts is None:
         parts = s.split("-")
 
@@ -342,7 +342,7 @@ def split_package_parts(s: str):
     group_prefixes = hyphenated_names + ['python', 'php', 'apt', 'ruby']
     # ea-php*: cPanel provides these via EasyApache.
     # alt-php*: CloudLinux provides these via PHP Selector
-    print("  split = [{}, {}] + {}".format(
+    logger.info("  split = [{}, {}] + {}".format(
         repr(parts[0][:name_last_index+1]),
         repr(parts[0][name_last_index+1:]),
         parts[1:]
@@ -362,7 +362,7 @@ def split_package_parts(s: str):
         # else:
         #     parts = [new_part0, new_part1] + parts[1:]
         #     such as ["php", "symphony", "service", "contracts"]
-        print("    split further={}".format(parts))
+        logger.info("    split further={}".format(parts))
         if len(parts) > 1:
             if (("." not in parts[1]) and (len(parts[1]) > 1)
                     and ("php" in parts[0])):
@@ -370,8 +370,9 @@ def split_package_parts(s: str):
                 version.original = parts[1]
                 # PHP always has 1 minor digit as of 8.3 so:
                 version.canonized = parts[1][:-1] + "." + parts[1][-1:]
-                print("Warning, no decimal, generating PackageVersion {}"
-                      .format(version.canonized))
+                logger.info(
+                    "Warning, no decimal, generating PackageVersion {}"
+                    .format(version.canonized))
                 parts[1] = version
     else:
         if parts[0] in group_prefixes:
