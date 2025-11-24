@@ -1,0 +1,76 @@
+#!/bin/bash
+# Purpose: Alert sysadmin/developer about the TLS/SSL cert expiry date in advance
+# Author: Vivek Gite {https://www.cyberciti.biz/} under GPL v2.x+
+# <https://www.cyberciti.biz/faq/find-check-tls-ssl-certificate-expiry-date-from-linux-unix/>
+# -------------------------------------------------------------------------------
+CRT_DIR=/etc/cups/ssl
+ls $CRT_DIR > /dev/null
+if [ $? -ne 0 ]; then
+    echo "You do not have access to $CRT_DIR."
+    echo "You must run this script with sudo."
+    exit 1
+fi
+# Colors: See Shakiba Moshiri on <https://stackoverflow.com/a/28938235>
+Color_Off='\033[0m'       # Text Reset
+# Regular Colors
+Black='\033[0;30m'
+Red='\033[0;31m'
+Green='\033[0;32m'
+Yellow='\033[0;33m'
+Blue='\033[0;34m'
+Purple='\033[0;35m'
+Cyan='\033[0;36m'
+White='\033[0;37m'
+# High Intensity
+IBlack='\033[0;90m'       # Gray
+IRed='\033[0;91m'
+IGreen='\033[0;92m'
+IYellow='\033[0;93m'
+IBlue='\033[0;94m'
+IPurple='\033[0;95m'
+ICyan='\033[0;96m'
+IWhite='\033[0;97m'
+
+check_crt(){
+    PEM=$1
+    # 7 days in seconds
+    DAYS="604800"
+
+    # Email settings
+    _sub="$PEM will expire within $DAYS (7 days)."
+    _from="system-account@your-dommain"
+    _to="sysadmin@your-domain"
+    _openssl="/usr/bin/openssl"
+    printf "$IBlack"
+    echo $_openssl x509 -enddate -noout -in "$PEM"  -checkend "$DAYS"
+    $_openssl x509 -enddate -noout -in "$PEM"  -checkend "$DAYS" | grep -v "Certificate will"
+    # ^ Show all lines *except* expire/not expire line
+    printf "$Green"
+    $_openssl x509 -enddate -noout -in "$PEM"  -checkend "$DAYS" | grep "Certificate will not"
+    printf "$Red"
+    $_openssl x509 -enddate -noout -in "$PEM"  -checkend "$DAYS" | grep "Certificate will expire"
+    $_openssl x509 -enddate -noout -in "$PEM"  -checkend "$DAYS" | grep -q 'Certificate will expire'
+
+    # Send email and push message to my mobile
+    if [ $? -eq 0 ]
+    then
+        echo "${_sub}"
+        # mail -s "$_sub" -r "$_from" "$_to" <<< "Warning: The TLS/SSL certificate ($PEM) will expire soon on $HOSTNAME [$(date)]"
+        echo "Warning: The TLS/SSL certificate ($PEM) will expire soon on $HOSTNAME [$(date)]"
+        echo "$0" "$_sub. See $_to email for detailed log. -- $HOSTNAME "
+    fi
+    # echo "AllowExpiredCerts Yes" | sudo tee /etc/cups/client.conf
+    # NOTE: Even if doesn't expire, cups-pki-invalid can still occur!
+    # "Turned out I had to download drivers from the manufacturers website, it works now."
+    #   -[ubuntu noob](https://askubuntu.com/users/1639557/ubuntu-noob) <https://askubuntu.com/a/1441624>
+}
+
+check_crt /etc/cups/ssl/birdo.local.crt
+check_crt /etc/cups/ssl/ET788C77D6F536.local.crt
+check_crt /etc/cups/ssl/pgs.crt
+printf "$Color_Off"
+echo "If you get cups-pki-invalid in Printer Settings still, delete the certs manually to regenerate them (long-unresolved bug on multiple distros):"
+find /etc/cups/ssl
+echo
+echo "Such as (for Lexmark):"
+echo "sudo rm /etc/cups/ssl/ET788C77D6F536.local.crt"
