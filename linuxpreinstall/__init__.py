@@ -123,7 +123,8 @@ class PackageVersion:
         self.canonized = modified
 
     def __eq__(self, value):
-        return (self.original == value.original) and (self.canonized == value.canonized)
+        return ((self.original == value.original)
+                and (self.canonized == value.canonized))
 
 
 class InstallManager:
@@ -243,7 +244,6 @@ def _init_commands():
         pkg_search_parts = [install_bin, "search"]
         # [install_bin, "search", "all"]  # also look in description etc.
 
-
     assert install_parts is not None
     assert remove_parts is not None
     assert upgrade_parts is not None
@@ -276,8 +276,9 @@ def _init_commands():
                 result_msg = "OK"
             logger.info("* refreshing package list..." + result_msg)
         else:
-            logger.info("* linuxpreinstall is not refreshing the package list"
-                  " since you are not a superuser.")
+            logger.info(
+                "* linuxpreinstall is not refreshing the package list"
+                " since you are not a superuser.")
     logger.info("  * done _init_commands")
     _is_initialized = True
 
@@ -533,6 +534,7 @@ def _init_packagenames():
 
 
 QUIET = False
+
 
 def compare_versions(item1, item2, quiet=QUIET):
     args = [item1, item2]
