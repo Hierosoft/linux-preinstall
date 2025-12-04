@@ -44,6 +44,9 @@ SCRIPT_DIRS = (
 )
 
 
+def formatted_ex(ex):
+    return "{}: {}".format(type(ex), ex)
+
 
 def endsWithAny(haystack, needles, CS=True):
     '''
@@ -163,6 +166,17 @@ class InstallManager:
         raise NotImplementedError("install_ported_package")
 
 
+def is_admin():
+    if platform.system() == "Windows":
+        import ctypes
+        try:
+            return ctypes.windll.shell32.IsUserAnAdmin()
+        except Exception as ex:
+            print("[is_admin] {}".format(formatted_ex(ex)))
+            return False
+    return os.geteuid() == 0
+
+
 def _init_commands():
     logger.info("* _init_commands...")
     global refresh_parts
@@ -176,7 +190,10 @@ def _init_commands():
     global install_bin
     global _is_initialized
 
-    if bin_exists("dnf"):
+    if platform.system() == "Windows":
+        package_type = "chocolatey"
+        install_bin = "choco"
+    elif bin_exists("dnf"):
         package_type = "rpm"
         install_bin = "dnf"
     elif bin_exists("yum"):
@@ -202,8 +219,15 @@ def _init_commands():
         # ^ Qe lists packages explicitly installed (see pacman -Q --help)
         pkg_search_parts = [install_bin, "-Ss"]
         echo0("WARNING: GTK3_DEV_PKG is unknown for pacman")
-
-    if package_type == "deb":
+    if package_type == "chocolatey":
+        install_parts = [install_bin, "install", "-y"]
+        remove_parts = [install_bin, "uninstall", "-y"]
+        upgrade_parts = [install_bin, "upgrade", "-y"]
+        refresh_parts = ["echo", "no_package_list_refresh_necessary"]
+        # list_installed_parts = ["choco", "list", "--installed"]  # deprecated
+        list_installed_parts = ["choco", "list"]
+        pkg_search_parts = ["choco", "search"]
+    elif package_type == "deb":
         install_parts = [install_bin, "install", "-y"]
         remove_parts = [install_bin, "remove", "-y"]
         upgrade_parts = [install_bin, "upgrade"]
@@ -219,6 +243,7 @@ def _init_commands():
         pkg_search_parts = [install_bin, "search"]
         # [install_bin, "search", "all"]  # also look in description etc.
 
+
     assert install_parts is not None
     assert remove_parts is not None
     assert upgrade_parts is not None
@@ -231,7 +256,7 @@ def _init_commands():
     # elif bin_exists("apt-get"):
     #     refresh_result = subprocess.run(["apt-get", "refresh"])
     if refresh_parts is not None:
-        if os.geteuid() == 0:
+        if is_admin():
             # refresh_result = subprocess.run(refresh_parts,
             #                                 stdout=sys.stderr.buffer)
             # returncode = refresh_result.returncode
