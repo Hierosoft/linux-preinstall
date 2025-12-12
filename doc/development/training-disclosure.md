@@ -412,3 +412,67 @@ def rfind_not_decimal(s, start=None):
 Now you're just not trying very hard. `assert rfind_not_decimal("version9") == 7 # 'n' in "version9"`should be 6. [0] is 'v', [6] is 'n'
 
 - I fixed additional test cases manually such as using my PackageVersion class.
+
+## linuxpreinstall/update_discord_tk.py
+- https://chatgpt.com/share/693b6ec6-ec34-8009-b54f-c585b9b1ed42
+Lets make an updater for the tar.gz linux distribution of discord. Make an object called UpdateState to handle the download. It should be a tkinter program with a progress bar that shows the download progress and has dialog boxes when there is an error. instantiate it from main. its constructor should  set load ~/.config/nopackage/local_machine.json with expanduser into self.local_machine using json.load then call a method called self.set_program(self, name) like self.set_program('discord'). The method should set self.program_name = name and set self.programs = localmachine.get('programs'). if self.programs set self.program to self.programs.get(self.program_name). if self.program set self.program_version = self.program.get('version') main should call a method called load_url and load set local Next download https://discord.com/api/download?platform=linux&format=tar.gz but get the actual filename presented by the protocol (typically set by the server's php code in the case of a php-programmed download), get just the version part such as "0.0.71" from "discord-0.0.71.tar.gz" by removing tar.gz then splitting by "-" and taking the last part, and if the version is the same, cancel the download and return 0. Otherwise the download must complete, or if fails, raise exception. The final filename should be the filename obtained from the protocol earlier. First show ok or cancel dialog and if cancel, exit the program, and if ok, terminate all instances of self.program_name using psutil and mention that and show the dialog only if 1 or more instances are running. Set a boolean was_running to True or False. if self.program, call the subprocess ["nopackage", "remove", self.program_name]. Then regardless of that, call subprocess ["nopackage", "install", download_path]. if self.was_running, run the process [self.program_name] asynchronously (do not wait) and exit, but call the program in a way that it will not exit when the updater program exits. Exit in any case when all this is done
+
+for compatibility, add python shebang, from __future__ import print_function, if sys.version_info.major >= 3 from shutil import which else define a which(name) function that will split os.environ['PATH'] by os.pathsep and iterate them and see if name isfile inside any of the resulting directories and return the first found. After the loop return None. Use percent substitution instead of f interpolation.
+
+for compatibility with python 2, urllib2 instead of requests.
+
+Try to use only builtins and avoid psutil
+￼
+```for cross-compatibility with python 2 and 3, use these imports for urllib instead, and use them instead in the code: 
+if sys.version_info.major >= 3:
+    import urllib.request
+    request = urllib.request
+    from urllib.error import (
+        HTTPError,
+        URLError,
+    )
+
+    html_is_missing_a_submodule = False
+    try:
+        from html.parser import HTMLParser
+    except ModuleNotFoundError as ex:
+        html_is_missing_a_submodule = True
+    if html_is_missing_a_submodule:
+        import html
+        # ^ Doesn't fix issue #3, but provides tracing info below.
+        print("", file=sys.stderr)
+        raise ModuleNotFoundError(
+            "The html module is incomplete: {}"
+            " If not using PyInstaller, ensure there is no extra"
+            " html module (html directory or html.py file)"
+            " that is not Python's builtin html/__init__.py"
+            "\n\nIf using PyInstaller, you must add the following to"
+            " your main py file (the file that is the first argument"
+            " of the Analysis call in your spec file): "
+            "\nimport html.parser\nimport html.entities"
+            "".format(html.__file__)
+        )
+        # INFO:
+        # - Adding 'parser' and 'entities' to __all__ in
+        #   html/__init__.py did not solve the issue.
+
+    from urllib.parse import urlparse, parse_qs
+    from urllib.parse import quote as urllib_quote
+    from urllib.parse import quote_plus as urllib_quote_plus
+    from urllib.parse import urlencode
+else:
+    # Python 2
+    import urllib2 as urllib  # type: ignore
+    request = urllib
+    from urllib2 import (  # type: ignore
+        HTTPError,
+        URLError,
+    )
+    from HTMLParser import HTMLParser  # noqa: F401 # type: ignore
+    print("HTMLParser imported.", file=sys.stderr)
+    from urlparse import urlparse, parse_qs  # noqa: F401 # type: ignore
+    from urllib import quote as urllib_quote  # noqa: F401 # type: ignore
+    from urllib import quote_plus as urllib_quote_plus  # noqa: F401,E501 # type: ignore
+    from urllib import urlencode  # noqa: F401 # type: ignore
+```
+
