@@ -476,3 +476,12 @@ else:
     from urllib import urlencode  # noqa: F401 # type: ignore
 ```
 
+
+## linuxpreinstall/moreprinters.py
+- 2025-12-11 Grok
+Complete a certificate update GUI starting with linuxpreinstall/moreprinters.py:
+- paste the imports area of the Discord update script.
+Using the logic from:
+- paste the CLI version
+Except run an elevated copy of self in order to list the files in /etc/cups/ssl/ and instead of hard-coded output and hard-coded cert paths, just say "Clear:" on a label, then for each button, the label should be the file name (just name, not path or any other text), and clicking it should delete the file.
+Make sure you use os.path.realpath(**file**) when relaunching, and ensure that it will launch correctly (no missing $DISPLAY variable, etc).
