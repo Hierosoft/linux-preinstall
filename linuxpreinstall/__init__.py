@@ -256,25 +256,34 @@ def _init_commands():
     # elif bin_exists("apt-get"):
     #     refresh_result = subprocess.run(["apt-get", "refresh"])
     if refresh_parts is not None:
-        if is_admin():
+        if refresh_parts and refresh_parts[0] == "echo":
+            print(" ".join(refresh_parts[1:]))
+        elif is_admin():
             # refresh_result = subprocess.run(refresh_parts,
             #                                 stdout=sys.stderr.buffer)
             # returncode = refresh_result.returncode
             # "run" returns an object but "call" only returns the code:
             # returncode = subprocess.call(refresh_parts,
             #                              stdout=sys.stderr.buffer)
-            returncode = subprocess.call(refresh_parts,
-                                         stdout=sys.stderr.fileno())
-            # ^ fileno() is Python 2 compatible
-            #   https://stackoverflow.com/a/11495784/4541104
-            #   (redirect stderr so stdout isn't flooded such as when
-            #   using the sortversion command (which uses main from
-            #   linuxpreinstall.versioning).
-            result_msg = ("FAILED ({} didn't succeed with your privileges)"
-                          "".format(refresh_parts))
+            try:
+                returncode = subprocess.call(refresh_parts,
+                                             stdout=sys.stderr.fileno())
+                # ^ fileno() is Python 2 compatible
+                #   https://stackoverflow.com/a/11495784/4541104
+                #   (redirect stderr so stdout isn't flooded such as when
+                #   using the sortversion command (which uses main from
+                #   linuxpreinstall.versioning).
+                result_msg = ("FAILED ({} didn't succeed with your privileges)"
+                              "".format(refresh_parts))
+            except FileNotFoundError as ex:
+                result_msg = ("`" + " ".join(refresh_parts) + "` "
+                              + formatted_ex(ex))
+                returncode = 1
             if returncode == 0:
                 result_msg = "OK"
-            logger.info("* refreshing package list..." + result_msg)
+                logger.info("* refreshing package list..." + result_msg)
+            else:
+                logger.warning("* refreshing package list..." + result_msg)
         else:
             logger.info(
                 "* linuxpreinstall is not refreshing the package list"
