@@ -149,7 +149,11 @@ def resolve_local_dir(this_config):
                 ' otherwise set it to "static".'
             )
     else:
-        this_config['local_dir'] = os.path.realpath(this_config['local_dir'])
+        if isinstance(this_config['local_dir'], list):
+            for idx in range(len(this_config['local_dir'])):
+                this_config['local_dir'][idx] = os.path.realpath(this_config['local_dir'][idx])
+        else:
+            this_config['local_dir'] = os.path.realpath(this_config['local_dir'])
 
 
 def load_config():
@@ -165,6 +169,7 @@ def load_config():
 
     echo0("Using {}".format(repr(config_path)))
     resolve_local_dir(this_config)
+    echo0("local_dir={}".format(repr(this_config['local_dir'])))
     return this_config
 
 def usage():
@@ -192,7 +197,7 @@ def main():
     for argi in range(1, len(sys.argv)):
         arg = sys.argv[argi]
         if key is not None:
-            if isinstance(config.get('key'), list):
+            if isinstance(config.get(key), list):
                 raise ValueError("Setting a list isn't implemented.")
             config[key] = arg
             print("let \"{} = {}\"".format(key, repr))
@@ -213,15 +218,49 @@ def main():
             logger.error("{} is not a valid option.".format(arg))
             return 1
 
-    echo0('Pushing "{}"'.format(config['local_dir']))
+    echo0('Processing local folder(s): {}'.format(repr(config['local_dir'])))
     remote_dir = require('remote_dir')
+    remote_dirs = [remote_dir]
+    if isinstance(remote_dir, list):
+        remote_dirs = remote_dir
     local_dir = require('local_dir')
+    local_dirs = [local_dir]
+    if isinstance(local_dir, list):
+        local_dirs = local_dir
+        if not isinstance(remote_dir, list):
+            echo0("Error: local_dir is a list, but remote_dir is not."
+                  " Supply path for each, or list for each.")
+            return 1
+        elif len(local_dir) != len(remote_dir):
+            echo0("Error: local_dir list is {} but remote_dir list is {}"
+                  "\n(List lengths do not match)!"
+                  .format(local_dir, remote_dir))
+            return 2
+    del remote_dir
+    del local_dir
+    code = 0
+    failures = 0
+    require_assets = True
+    for idx, local_dir in enumerate(local_dirs):
+        this_code = upload_local_dir(local_dir, remote_dirs[idx],
+                                     require_assets=require_assets)
+        require_assets = False
+        if this_code != 0:
+            code = this_code
+            failures += 1
+    if failures > 0:
+        echo0("{} operation(s) failed. See above.".format(failures))
+    return code
+
+
+def upload_local_dir(local_dir, remote_dir, require_assets=True):
     image_extensions = ["png", "jpg", "gif"]  # "mp4"
     image_dot_exts = ["." + ext for ext in image_extensions]
-    if to_bool(config.get("images")):
+    if require_assets and to_bool(config.get("images")):
         for rel_dir in require("image_dirs"):  # DIRNAME
             echo0("* processing \"/{}\"...".format(rel_dir))
             local_sub_path = os.path.join(local_dir, rel_dir)
+            # ^ such as ./assets/images
             for sub_sub in os.listdir(local_sub_path):
                 sub_sub_path = os.path.join(local_sub_path, sub_sub)
                 sub_sub_no_ext, sub_sub_dot_ext = os.path.splitext(sub_sub)
@@ -234,14 +273,29 @@ def main():
 
             # The remote dir: See ./website.rc
             cmd_fmt = (
-                'rsync -rtvP --dirs --prune-empty-dirs --include="/{rel_dir}"'
+                'rsync -rtvP --prune-empty-dirs --include="{rel_dir}"'
             )
+            # ^ NOTE: removed `--dirs` since that is to prevent recursion,
+            #   but we are doing the images dir(s) using filters.
+            # *Must* add parent, or recursion won't occur:
+            parentPart = rel_dir
+            while True:
+                parentPart, subPart = os.path.split(parentPart)
+                if not subPart:
+                    break
+                cmd_fmt += ' --include="{}"'.format(parentPart)
+
             for extension in image_extensions:
-                cmd_fmt += ' --include="*.{}"'.format(extension)
-            cmd_fmt += ' --exclude="*" {local_sub_path} {remote_dir}'
-            # ^ exclude / at end of first path to create it in the dest.
+                rsync_rel_dir = rel_dir
+                if not rsync_rel_dir.startswith(os.path.sep):
+                    rsync_rel_dir = os.path.sep + rsync_rel_dir
+                cmd_fmt += ' --include="{}/*.{}"'.format(rsync_rel_dir, extension)
+            # cmd_fmt += ' --exclude="*" {local_sub_path}/ {remote_dir}'
+            cmd_fmt += ' --exclude="*" {local_dir}/ {remote_dir}'
+            # ^ / at end of first path to create it in the dest.
             cmd = cmd_fmt.format(
-                local_sub_path=local_sub_path,
+                # local_sub_path=local_sub_path,  # WRONG (use include instead)
+                local_dir=local_dir,
                 remote_dir=remote_dir,
                 rel_dir=rel_dir,  # required for include (see further up)
             )
@@ -268,7 +322,7 @@ def main():
     # ^ -r (recursive) is only necessary for html_dir(s) than "/" :
     html_dirs = config.get("html_dirs")
     if html_dirs is None:
-        html_dirs = "/"
+        html_dirs = ["/"]
     for html_dir in html_dirs:
         cmd_fmt += ' --include="{}"'.format(html_dir)
     cmd_fmt += ' --include="*.html" --exclude="*" {local_dir}/ {remote_dir}'
@@ -330,7 +384,7 @@ def main():
               "".format(known_pairs.keys()))
 
     if not to_bool(config.get("images")):
-        echo0("* not processing imgsite: For images and data,"
+        echo0("* not processing images: For images and data,"
               " set _IMAGES=true or specify --images")
         echo0()
 
