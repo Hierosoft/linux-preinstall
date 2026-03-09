@@ -341,7 +341,8 @@ def is_decimal(s):
     return rfind_not_decimal(s) < 0
 
 
-def split_package_parts(s: str):
+def split_package_parts(s):
+    # type: (str) -> list(str)
     '''Split a GNU/Linux-style package name into parts.
 
     Returns:
