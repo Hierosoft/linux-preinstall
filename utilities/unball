@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
-"""Extract archives supported by the Python standard library.
+"""
+Extract archives supported by the Python standard library without
+redundant subdirectories or multiple subdirectories (output multiple
+under a new directory, otherwise extract directly but do not place under
+existing directory if present).
 
 Options:
 --overwrite             Allow overwriting files in the destination.
 """
-
+from __future__ import print_function
 from collections import OrderedDict
 import logging
 import os
@@ -47,6 +51,7 @@ def get_extractor(archive_path):
         return extract_tar
     raise ValueError("Unsupported archive type: {}".format(archive_path))
 
+
 def move_as(src, dst, overwrite=False):
     """shutil.move wrapped to avoid nested directories
     (similar to rsync --remove-source-files)"""
@@ -58,7 +63,7 @@ def move_as(src, dst, overwrite=False):
             return
         raise TypeError(
             "Expected directory or new directory path, got file {}."
-            "Specify --overwrite to allow overwriting with {}"
+            "Enable overwrite to allow overwriting with {}"
             .format(repr(dst), repr(src)))
     if os.path.islink(dst):
         if not os.path.exists(dst):
@@ -82,7 +87,26 @@ def move_as(src, dst, overwrite=False):
 def extract_archive(this_archive_path, output_dir=None,
                     overwrite=False):
     """Extract one archive via a temporary directory,
-    then move the result."""
+    then move the result.
+
+    Extract archives supported by the Python standard library.
+
+    Avoid redundant subdirectories or multiple subdirectories (output
+    multiple under a new directory, or one under output_dir).
+
+    Args:
+        this_archive_path (str): source
+        output_dir (str, optional): _description_. Defaults to None.
+        overwrite (bool, optional): _description_. Defaults to False.
+
+    Returns:
+        OrderedDict(str, str): Destination stats
+            - 'destination' (str): where extracted
+            - 'depth' (str): 0 if only 1 file/folder in archive
+              (extracted as dst, so no depth added to dst), 1 if
+              multiple files/folders were placed under dst (depth of dst
+              increased by 1)
+    """
     if output_dir is None:
         base_name = os.path.split(this_archive_path)[1]
         output_dir = os.path.join(
@@ -94,17 +118,16 @@ def extract_archive(this_archive_path, output_dir=None,
     extractor(this_archive_path, tmp_path)
 
     tmp_subs = list(os.listdir(tmp_path))
-    depth = 1
+    results = OrderedDict()
+    results["depth"] = 1
     if len(tmp_subs) == 1:
         move_as(os.path.join(tmp_path, tmp_subs[0]), output_dir,
                 overwrite=overwrite)
-        depth = 0
+        results["depth"] = 0
         os.rmdir(tmp_path)
     else:
         move_as(tmp_path, output_dir, overwrite=overwrite)
-    results = OrderedDict()
     results["destination"] = output_dir
-    results["depth"] = depth
     return results
 
 
@@ -114,7 +137,10 @@ def dumpDict(d):
 
 
 def usage():
-    print(__doc__)
+    print()
+    print("unball")
+    print("------")
+    print(__doc__.lstrip())
 
 
 def main():
@@ -138,23 +164,27 @@ def main():
                 return 1
             del args[i]
 
-    if len(args) > 1:
-        last_arg = args[-1]
-        if os.path.isfile(last_arg):
-            logger.error(
-                "When more than one argument is given, the last must be "
-                "a directory (existing or not), not a file: %s",
-                last_arg,
-            )
-            return 1
-        output_dir = last_arg
-        for archive_path in args[:-1]:
-            results = extract_archive(archive_path, output_dir,
-                                      overwrite=overwrite)
+    try:
+        if len(args) > 1:
+            last_arg = args[-1]
+            if os.path.isfile(last_arg):
+                logger.error(
+                    "When more than one argument is given, the last must be "
+                    "a directory (existing or not), not a file: %s",
+                    last_arg,
+                )
+                return 1
+            output_dir = last_arg
+            for archive_path in args[:-1]:
+                results = extract_archive(archive_path, output_dir,
+                                        overwrite=overwrite)
+                dumpDict(results)
+        else:
+            results = extract_archive(args[0], overwrite=overwrite)
             dumpDict(results)
-    else:
-        results = extract_archive(args[0], overwrite=overwrite)
-        dumpDict(results)
+    except Exception:
+        usage()
+        raise
 
     return 0
 
