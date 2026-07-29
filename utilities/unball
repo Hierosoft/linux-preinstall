@@ -65,17 +65,32 @@ def move_as(src, dst, overwrite=False):
             "Expected directory or new directory path, got file {}."
             "Enable overwrite to allow overwriting with {}"
             .format(repr(dst), repr(src)))
+    # removed = False
+    if os.path.realpath(src) == os.path.realpath(dst):
+        # and not removed):
+
+        # NOTE: This even handles src=dst if dangling symlink as long as
+        #   both are dangling, because realpath returns the path to the
+        #   link itself if dangling.
+        raise ValueError("src and dst are the same: {}"
+                         .format(repr(dst)))
     if os.path.islink(dst):
         if not os.path.exists(dst):
-            raise TypeError(
-                "dst is a bad symlink {}"
-                .format(repr(dst)))
-    if os.path.realpath(src) == os.path.realpath(dst):
-        raise ValueError("src and dst are the same: {}"
-                         .format(dst))
+            if overwrite:
+                logger.warning(
+                    "overwriting bad symlink {}"
+                    .format(repr(dst)))
+                os.remove(dst)
+                # removed = True
+            else:
+                raise TypeError(
+                    "dst is a bad symlink: {}."
+                    "Enable overwrite to allow overwrite with {}"
+                    .format(repr(dst), repr(src)))
+
     if not os.path.exists(dst):
         shutil.move(src, dst)
-        return
+        return  # Already done *the easy way*
     # else avoid moving it into the dst
     # (unexpected extra nesting level):
     for sub in os.listdir(src):
