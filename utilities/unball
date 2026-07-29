@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Extract archives supported by the Python standard library."""
+"""Extract archives supported by the Python standard library.
+
+Options:
+--overwrite             Allow overwriting files in the destination.
+"""
 
 from collections import OrderedDict
 import logging
@@ -43,9 +47,42 @@ def get_extractor(archive_path):
         return extract_tar
     raise ValueError("Unsupported archive type: {}".format(archive_path))
 
+def move_as(src, dst, overwrite=False):
+    """shutil.move wrapped to avoid nested directories
+    (similar to rsync --remove-source-files)"""
+    if os.path.isfile(dst):
+        if os.path.isfile(src) and overwrite:
+            logger.warning("Overwriting {}".format(repr(dst)))
+            os.remove(dst)
+            shutil.move(src, dst)
+            return
+        raise TypeError(
+            "Expected directory or new directory path, got file {}."
+            "Specify --overwrite to allow overwriting with {}"
+            .format(repr(dst), repr(src)))
+    if os.path.islink(dst):
+        if not os.path.exists(dst):
+            raise TypeError(
+                "dst is a bad symlink {}"
+                .format(repr(dst)))
+    if os.path.realpath(src) == os.path.realpath(dst):
+        raise ValueError("src and dst are the same: {}"
+                         .format(dst))
+    if not os.path.exists(dst):
+        shutil.move(src, dst)
+        return
+    # else avoid moving it into the dst
+    # (unexpected extra nesting level):
+    for sub in os.listdir(src):
+        move_as(os.path.join(src, sub), os.path.join(dst, sub),
+                overwrite=overwrite)
+    os.rmdir(src)
 
-def extract_archive(this_archive_path, output_dir=None):
-    """Extract one archive via a temporary directory, then move the result."""
+
+def extract_archive(this_archive_path, output_dir=None,
+                    overwrite=False):
+    """Extract one archive via a temporary directory,
+    then move the result."""
     if output_dir is None:
         base_name = os.path.split(this_archive_path)[1]
         output_dir = os.path.join(
@@ -59,11 +96,12 @@ def extract_archive(this_archive_path, output_dir=None):
     tmp_subs = list(os.listdir(tmp_path))
     depth = 1
     if len(tmp_subs) == 1:
-        shutil.move(os.path.join(tmp_path, tmp_subs[0]), output_dir)
+        move_as(os.path.join(tmp_path, tmp_subs[0]), output_dir,
+                overwrite=overwrite)
         depth = 0
         os.rmdir(tmp_path)
     else:
-        shutil.move(tmp_path, output_dir)
+        move_as(tmp_path, output_dir, overwrite=overwrite)
     results = OrderedDict()
     results["destination"] = output_dir
     results["depth"] = depth
@@ -73,6 +111,10 @@ def extract_archive(this_archive_path, output_dir=None):
 def dumpDict(d):
     for key, value in d.items():
         print("{}={}".format(key, repr(value)))
+
+
+def usage():
+    print(__doc__)
 
 
 def main():
@@ -85,6 +127,17 @@ def main():
         logger.error("No archive paths provided")
         return 1
 
+    overwrite = False
+    for i in reversed(range(1, len(args))):
+        if args[i].startswith("--"):
+            if args[i] == "--overwrite":
+                overwrite = True
+            else:
+                usage()
+                logger.fatal("unrecognized option: {}".format(args[i]))
+                return 1
+            del args[i]
+
     if len(args) > 1:
         last_arg = args[-1]
         if os.path.isfile(last_arg):
@@ -96,10 +149,11 @@ def main():
             return 1
         output_dir = last_arg
         for archive_path in args[:-1]:
-            results = extract_archive(archive_path, output_dir)
+            results = extract_archive(archive_path, output_dir,
+                                      overwrite=overwrite)
             dumpDict(results)
     else:
-        results = extract_archive(args[0])
+        results = extract_archive(args[0], overwrite=overwrite)
         dumpDict(results)
 
     return 0
@@ -107,4 +161,3 @@ def main():
 
 if __name__ == "__main__":
     sys.exit(main())
-
