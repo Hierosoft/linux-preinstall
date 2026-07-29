@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Extract archives supported by the Python standard library."""
 
+from collections import OrderedDict
 import logging
 import os
 import shutil
@@ -56,11 +57,22 @@ def extract_archive(this_archive_path, output_dir=None):
     extractor(this_archive_path, tmp_path)
 
     tmp_subs = list(os.listdir(tmp_path))
+    depth = 1
     if len(tmp_subs) == 1:
         shutil.move(os.path.join(tmp_path, tmp_subs[0]), output_dir)
+        depth = 0
         os.rmdir(tmp_path)
     else:
         shutil.move(tmp_path, output_dir)
+    results = OrderedDict()
+    results["destination"] = output_dir
+    results["depth"] = depth
+    return results
+
+
+def dumpDict(d):
+    for key, value in d.items():
+        print("{}={}".format(key, repr(value)))
 
 
 def main():
@@ -84,9 +96,11 @@ def main():
             return 1
         output_dir = last_arg
         for archive_path in args[:-1]:
-            extract_archive(archive_path, output_dir)
+            results = extract_archive(archive_path, output_dir)
+            dumpDict(results)
     else:
-        extract_archive(args[0])
+        results = extract_archive(args[0])
+        dumpDict(results)
 
     return 0
 
