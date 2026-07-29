@@ -1,0 +1,7 @@
+Pillow
+python-magic
+pykeepass
+-e ../pycodetool --no-deps
+-e ../hierosoft --no-deps
+psutil
+tinytag
