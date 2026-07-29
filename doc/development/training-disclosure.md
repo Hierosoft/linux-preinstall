@@ -485,3 +485,8 @@ Using the logic from:
 - paste the CLI version
 Except run an elevated copy of self in order to list the files in /etc/cups/ssl/ and instead of hard-coded output and hard-coded cert paths, just say "Clear:" on a label, then for each button, the label should be the file name (just name, not path or any other text), and clicking it should delete the file.
 Make sure you use os.path.realpath(**file**) when relaunching, and ensure that it will launch correctly (no missing $DISPLAY variable, etc).
+
+
+## utilities/unball
+- 2026-07-29 Grok https://grok.com/share/c2hhcmQtMg_2f9d7e93-8732-4907-8cc6-3ab716f5dc3a
+Make a python script that can extract any archive(s) that can be extracted with builtin python modules. if **name** == "**main**": return sys.exit(main()). Do not add any try statements--fail hard and fast. Follow PEP8. Make a separate function for extraction that is called by main for each argument, except the last argument which is assumed to be a directory (return 1 after logger.error if there is more than one argument and last argument is a file; it is allowed to not exist, or to be an existing directory). The default outputDir is os.path.join(os.getcwd(), os.path.splitext(os.path.split(thisArchivePath)[1])[0]). Make separate functions the main extract function can call. Individuate functions by python module used, not by format per se, so tar.bz2 and tar.gz and tar may be in the same function if they share a module. However, initially extract to a temporary directory. Set tmpSubs = list(os.listdir(tmpPath)). If len(tmpSubs) == 1, shutil.move(os.path.join(tmpPath, tmpSubs[0]), outputDir), else shutil.move(os.path.join(tmpPath), outputDir).
