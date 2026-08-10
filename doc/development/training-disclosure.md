@@ -490,3 +490,130 @@ Make sure you use os.path.realpath(**file**) when relaunching, and ensure that i
 ## utilities/unball
 - 2026-07-29 Grok https://grok.com/share/c2hhcmQtMg_2f9d7e93-8732-4907-8cc6-3ab716f5dc3a
 Make a python script that can extract any archive(s) that can be extracted with builtin python modules. if **name** == "**main**": return sys.exit(main()). Do not add any try statements--fail hard and fast. Follow PEP8. Make a separate function for extraction that is called by main for each argument, except the last argument which is assumed to be a directory (return 1 after logger.error if there is more than one argument and last argument is a file; it is allowed to not exist, or to be an existing directory). The default outputDir is os.path.join(os.getcwd(), os.path.splitext(os.path.split(thisArchivePath)[1])[0]). Make separate functions the main extract function can call. Individuate functions by python module used, not by format per se, so tar.bz2 and tar.gz and tar may be in the same function if they share a module. However, initially extract to a temporary directory. Set tmpSubs = list(os.listdir(tmpPath)). If len(tmpSubs) == 1, shutil.move(os.path.join(tmpPath, tmpSubs[0]), outputDir), else shutil.move(os.path.join(tmpPath), outputDir).
+
+## utilities/tarcheck
+- https://grok.com/project/2f45eb35-c488-4cdc-a6bb-ad8092f98012?tab=conversations&chat=4a208a22-4692-440d-afd7-ada8a90d3947
+
+Make a Python script. For backward compatibility, instead of logging include the following for warnings. This function is only for warnings, not FAILED messages, because stdout must capture all OK, FAILED, and other messages containing the state of each file checked.
+
+```
+def echo0(*args, **kwargs):
+    kwargs['file'] = sys.stderr
+    print(*args, **kwargs)
+```
+
+It should also contain a main that has state = TraversalState() and returns len(state.errorPaths), if __name__ == "__main__": sys.exit(main()); and a TraversalState class used to search recursively search in the current directory (or given directory or directories specified as argument(s) via argparse) for tgz, tar.gz, and any other valid tar archives, but first cache a list of md5 files in each current parent directory and if there is an md5 file named like f"{subPath}.md5" where subPath = os.path.join(parent, sub), perform a checksum of the archive using the checksum in the file (The file contains a single line in the format "3a2def7fc9be2bdecbbb65f6cae386f4 *laccloud-opt-other-250909.tgz" otherwise show a descriptive warning but fall back to checking the archive validity using the tar command (["tar", "tf", f"{os.path.join()}") if a checksum is not on the first line or the md5 file is not present. If the md5 file is present, remove it from the list. At the end of iterating archive files, successively print any remaining items in the precached list of md5 files like f"FOUND UNUSED md5 file with no corresponding file: {subPath}" Append subPath to self.errorPaths (and show f"FAILED md5 test: {subPath}" or in the fallback case, f"FAILED tar test: {subPath}" immediately) in the case that the checksum is present and the test fails, or we fall back to tar and that test fails. If the md5 file is present, the md5 feature of Python should be used for simplicity. If a checksum passes, append subPath to self.okPaths, and print (regular print, to stdout) f"PASSED md5 test: {subPath}" or f"PASSED tar test: {subPath}" in the fallback case. Make the script backward-compatible with Python 2. It will be named tarcheck (set __author__ to Poikilos). Include Google-style Sphinx docstrings and a module docstring. Before the module docstring place a python shebang then the utf-8 magic comment.
+
+Fix the subprocess.call hang using subprocess.Popen and communicate()
+
+Try to integrate these features without wiping out existing features and fixes:
+```
+def process_directory(state, root_dir):
+    """Process one directory tree recursively: find archives and matching .md5 files."""
+    if not os.path.isdir(root_dir):
+        echo0("Warning: Not a directory: {}".format(repr(root_dir)))
+        return
+
+    for dirpath, dirnames, filenames in os.walk(root_dir):
+        # Cache .md5 files in this directory
+        md5_files = {}
+        for item in filenames:
+            if item.lower().endswith('.md5'):
+                full_md5 = os.path.join(dirpath, item)
+                base_name = item[:-4]  # remove .md5
+                md5_files[base_name] = full_md5
+
+        # Now scan for tar archives in this directory
+        for item in filenames:
+            if is_tar_archive(item):
+                full_path = os.path.join(dirpath, item)
+
+                # Get file size in MB with 2 decimal places
+                try:
+                    size_bytes = os.path.getsize(full_path)
+                    size_in_mb = size_bytes / (1024.0 * 1024.0)
+                    size_str = "{:.2f}".format(size_in_mb)
+                except Exception:
+                    size_str = "?.??"
+
+                # Determine check type
+                has_md5 = item in md5_files or os.path.exists(os.path.join(dirpath, item + ".md5"))
+                if has_md5:
+                    check_type = "md5"
+                    msg = "Running md5 check on {} ({} mb)...".format(repr(full_path), size_str)
+                else:
+                    check_type = "tar"
+                    msg = "Running tar check on {} ({} mb)...".format(repr(full_path), size_str)
+
+                # Show progress on same line using stderr
+                sys.stderr.write(msg)
+                sys.stderr.flush()
+
+                # Record start time
+                start_time = datetime.now()
+
+                # Perform the check
+                success = False
+                method = check_type
+
+                if check_type == "md5":
+                    md5_path = md5_files.pop(item, None)
+                    if md5_path and os.path.isfile(md5_path):
+                        expected = get_md5_from_file(md5_path)
+                        if expected:
+                            actual = compute_md5(full_path)
+                            if actual and actual == expected:
+                                success = True
+                            else:
+                                echo0("Warning: MD5 mismatch for {}".format(repr(full_path)))
+                        else:
+                            echo0("Warning: Invalid or empty .md5 file: {}".format(repr(md5_path)))
+                            # Fall back to tar test
+                            sys.stderr.write("\rRunning tar check on {} ({} mb)...".format(repr(full_path), size_str))
+                            sys.stderr.flush()
+                            start_time = datetime.now()  # reset timer
+                            method = "tar"
+                            success = check_tar_with_command(full_path)
+                    else:
+                        # Fallback
+                        sys.stderr.write("\rRunning tar check on {} ({} mb)...".format(repr(full_path), size_str))
+                        sys.stderr.flush()
+                        start_time = datetime.now()
+                        method = "tar"
+                        success = check_tar_with_command(full_path)
+                else:
+                    # Pure tar check
+                    success = check_tar_with_command(full_path)
+
+                # Calculate elapsed time
+                elapsed = datetime.now() - start_time
+                total_seconds = int(elapsed.total_seconds())
+                hours = total_seconds // 3600
+                minutes = (total_seconds % 3600) // 60
+                seconds = total_seconds % 60
+                time_str = "{}h{}m{}s".format(hours, minutes, seconds)
+
+                # Output PASSED / FAILED (without repeating filename) + time
+                if success:
+                    if method == "md5":
+                        print("PASSED md5 test (took {})".format(time_str))
+                    else:
+                        print("PASSED tar test (took {})".format(time_str))
+                else:
+                    if method == "md5":
+                        print("FAILED md5 test (took {})".format(time_str))
+                    else:
+                        print("FAILED tar test (took {})".format(time_str))
+
+        # Report any remaining .md5 files with no matching archive
+        for base_name, md5_path in md5_files.items():
+            state.add_unused_md5(md5_path)
+```
+
+Make the data in the lists in the old format:
+- paste the old add_ok method
+and make md5 parsing messages more explicit like:
+- paste human-edited get_md5_from_file with improved error handling and messages
+for brevity:
+from datetime import datetime
+Conform to PEP8 such as 72-length max comments and 79-max for other lines.

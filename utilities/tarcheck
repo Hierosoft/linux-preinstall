@@ -1,0 +1,318 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# Based on https://grok.com/project/2f45eb35-c488-4cdc-a6bb-ad8092f98012?tab=conversations&chat=4a208a22-4692-440d-afd7-ada8a90d3947
+"""
+tarcheck - Recursively check tar archives (.tgz, .tar.gz, .tar, etc.)
+with optional .md5 checksum verification.
+
+This script walks the given directory tree(s) looking for tar archives.
+For each archive it prefers to verify using a corresponding .md5 file
+in the same directory. If no .md5 file exists or it is malformed,
+it falls back to running `tar tf` to check validity.
+
+Features:
+- Progress messages on stderr (overwritten on same line)
+- File size in MB shown during checks
+- Timing information for each check (hms format)
+- Full recursive traversal using os.walk
+- MD5 preference with graceful fallback
+- Unused .md5 detection
+
+Usage:
+    tarcheck [directory1 [directory2 ...]]
+
+Exit code is the number of errors encountered.
+
+This script is part of linux-preinstall.
+
+License: MIT License
+"""
+
+from __future__ import print_function
+
+import os
+import sys
+import argparse
+import hashlib
+import subprocess
+
+from datetime import datetime
+
+__author__ = "Poikilos"
+__version__ = "1.1.1"
+
+
+def echo0(*args, **kwargs):
+    """Print to stderr (for warnings only)."""
+    kwargs['file'] = sys.stderr
+    print(*args, **kwargs)
+
+
+class TraversalState(object):
+    """State holder for tar archive traversal and verification results."""
+
+    def __init__(self):
+        self.okPaths = []
+        self.errorPaths = []
+        self.unusedMd5 = []
+
+    def add_ok(self, path, method="md5"):
+        """Record a successful verification."""
+        self.okPaths.append(path)
+        if method == "md5":
+            print("PASSED md5 test: {}".format(path))
+        else:
+            print("PASSED tar test: {}".format(path))
+
+    def add_error(self, path, method="md5"):
+        """Record a failed verification."""
+        self.errorPaths.append(path)
+        if method == "md5":
+            print("FAILED md5 test: {}".format(path))
+        else:
+            print("FAILED tar test: {}".format(path))
+
+    def add_unused_md5(self, path):
+        """Record an .md5 file without a matching archive."""
+        self.unusedMd5.append(path)
+        print("FOUND UNUSED md5 file with no corresponding file: {}".format(path))
+
+
+def get_md5_from_file(md5_path):
+    """Read the expected MD5 checksum from a .md5 file.
+
+    The file should contain a line like:
+        3a2def7fc9be2bdecbbb65f6cae386f4 *something.tgz
+    (including "*" which is a non-mandatory file mode marker)
+
+    Returns the hex digest string or None if invalid.
+    """
+    try:
+        with open(md5_path, 'r') as f:
+            line = f.readline().strip()
+        if not line:
+            echo0("Warning: md5 file is empty: {}".format(repr(md5_path)))
+            return None
+
+        # Split on first whitespace or asterisk
+        parts = line.split(None, 1)
+        if len(parts) < 1:
+            echo0("Warning: no checksum found on first line of md5 file: {}".format(repr(md5_path)))
+            return None
+
+        checksum = parts[0].strip().lower()
+        if len(checksum) != 32:
+            echo0("Warning: hex in first column of first line of "
+                  "md5 file is not 32 characters long in {}: {}".format(
+                      repr(md5_path), repr(checksum)))
+            return None
+        if not all(c in '0123456789abcdef' for c in checksum):
+            echo0("Warning: character that is not lowercase hex in "
+                  "first column of first line of md5 file {}: {}".format(
+                      repr(md5_path), repr(checksum)))
+            return None
+        return checksum
+    except Exception as e:
+        echo0("Warning: Could not read md5 file {}: {}".format(
+            repr(md5_path), e))
+        return None
+
+
+def compute_md5(file_path, block_size=65536):
+    """Compute MD5 hash of a file."""
+    md5 = hashlib.md5()
+    try:
+        with open(file_path, 'rb') as f:
+            while True:
+                data = f.read(block_size)
+                if not data:
+                    break
+                md5.update(data)
+        return md5.hexdigest().lower()
+    except Exception as e:
+        echo0("Warning: Could not compute MD5 for {}: {}".format(
+            repr(file_path), e))
+        return None
+
+
+def is_tar_archive(filename):
+    """Check if filename has a tar-related extension."""
+    name = filename.lower()
+    return (name.endswith('.tar') or
+            name.endswith('.tgz') or
+            name.endswith('.tar.gz') or
+            name.endswith('.tar.bz2') or
+            name.endswith('.tar.xz') or
+            name.endswith('.tbz2') or
+            name.endswith('.txz'))
+
+
+def check_tar_with_command(archive_path):
+    """Check archive validity using `tar tf` with Popen + communicate().
+
+    Prevents hanging on large archives by consuming output.
+    """
+    try:
+        proc = subprocess.Popen(
+            ["tar", "tf", archive_path],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            universal_newlines=True  # Python 2/3 compatible text mode
+        )
+        stdout, stderr = proc.communicate()
+
+        if proc.returncode == 0:
+            return True
+        else:
+            echo0("Warning: tar tf failed for {} (code {}): {}".format(
+                repr(archive_path), proc.returncode, stderr.strip()))
+            return False
+    except Exception as e:
+        echo0("Warning: Failed to run tar command on {}: {}".format(
+            repr(archive_path), e))
+        return False
+
+
+def process_directory(state, root_dir):
+    """Process one directory tree recursively: find archives and matching .md5 files."""
+    if not os.path.isdir(root_dir):
+        echo0("Warning: Not a directory: {}".format(repr(root_dir)))
+        return
+
+    for dirpath, dirnames, filenames in os.walk(root_dir):
+        # Cache .md5 files in this directory
+        md5_files = {}
+        for item in filenames:
+            if item.lower().endswith('.md5'):
+                full_md5 = os.path.join(dirpath, item)
+                base_name = item[:-4]  # remove .md5
+                md5_files[base_name] = full_md5
+
+        # Scan for tar archives in this directory
+        for item in filenames:
+            if is_tar_archive(item):
+                full_path = os.path.join(dirpath, item)
+
+                # Get file size in MB with 2 decimal places
+                try:
+                    size_bytes = os.path.getsize(full_path)
+                    size_in_mb = size_bytes / (1024.0 * 1024.0)
+                    size_str = "{:.2f}".format(size_in_mb)
+                except Exception:
+                    size_str = "?.??"
+
+                # Determine check type
+                has_md5 = (item in md5_files or
+                           os.path.exists(os.path.join(dirpath, item + ".md5")))
+                if has_md5:
+                    check_type = "md5"
+                    msg = "Running md5 check on {} ({} mb)...".format(
+                        repr(full_path), size_str)
+                else:
+                    check_type = "tar"
+                    msg = "Running tar check on {} ({} mb)...".format(
+                        repr(full_path), size_str)
+
+                # Show progress on same line using stderr
+                sys.stderr.write(msg)
+                sys.stderr.flush()
+
+                # Record start time
+                start_time = datetime.now()
+
+                # Perform the check
+                success = False
+                method = check_type
+
+                if check_type == "md5":
+                    md5_path = md5_files.pop(item, None)
+                    if md5_path and os.path.isfile(md5_path):
+                        expected = get_md5_from_file(md5_path)
+                        if expected:
+                            actual = compute_md5(full_path)
+                            if actual and actual == expected:
+                                success = True
+                            else:
+                                echo0("Warning: MD5 mismatch for {}".format(
+                                    repr(full_path)))
+                        else:
+                            echo0("Warning: Invalid or empty .md5 file: {}".format(
+                                repr(md5_path)))
+                            # Fall back to tar test
+                            sys.stderr.write("\rRunning tar check on {} "
+                                             "({} mb)...".format(
+                                                 repr(full_path), size_str))
+                            sys.stderr.flush()
+                            start_time = datetime.now()  # reset timer
+                            method = "tar"
+                            success = check_tar_with_command(full_path)
+                    else:
+                        # Fallback
+                        sys.stderr.write("\rRunning tar check on {} "
+                                         "({} mb)...".format(
+                                             repr(full_path), size_str))
+                        sys.stderr.flush()
+                        start_time = datetime.now()
+                        method = "tar"
+                        success = check_tar_with_command(full_path)
+                else:
+                    # Pure tar check
+                    success = check_tar_with_command(full_path)
+
+                # Calculate elapsed time
+                elapsed = datetime.now() - start_time
+                total_seconds = int(elapsed.total_seconds())
+                hours = total_seconds // 3600
+                minutes = (total_seconds % 3600) // 60
+                seconds = total_seconds % 60
+                time_str = "{}h{}m{}s".format(hours, minutes, seconds)
+
+                # Clear the progress line
+                sys.stderr.write("\r" + " " * (len(msg) + 20) + "\r")
+                sys.stderr.flush()
+
+                # Output final result using the restored simple format
+                if success:
+                    state.add_ok(full_path, method)
+                else:
+                    state.add_error(full_path, method)
+
+        # Report any remaining .md5 files with no matching archive
+        for base_name, md5_path in md5_files.items():
+            state.add_unused_md5(md5_path)
+
+
+def main():
+    """Main entry point for tarcheck."""
+    parser = argparse.ArgumentParser(
+        description="Recursively check tar archives with optional .md5 checksums."
+    )
+    parser.add_argument(
+        'directories',
+        nargs='*',
+        default=['.'],
+        help='Directories to scan (default: current directory)'
+    )
+    args = parser.parse_args()
+
+    state = TraversalState()
+
+    for directory in args.directories:
+        abs_dir = os.path.abspath(directory)
+        echo0("Scanning directory tree: {}".format(abs_dir))
+        process_directory(state, abs_dir)
+
+    # Summary
+    total_checked = len(state.okPaths) + len(state.errorPaths)
+    if total_checked > 0:
+        print("\nSummary: {} PASSED, {} FAILED".format(
+            len(state.okPaths), len(state.errorPaths)))
+    if state.unusedMd5:
+        print("Unused .md5 files found: {}".format(len(state.unusedMd5)))
+
+    return len(state.errorPaths)
+
+
+if __name__ == "__main__":
+    sys.exit(main())
+
