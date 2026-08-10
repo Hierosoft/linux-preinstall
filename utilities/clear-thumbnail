@@ -1,0 +1,72 @@
+#!/usr/bin/env python3
+"""
+Based on https://chatgpt.com/c/68577bee-af74-8009-bf1f-424d6e9568a9
+"""
+import os
+import sys
+import argparse
+import hashlib
+import subprocess
+from pathlib import Path
+
+def file_uri_md5(file_path):
+    """
+    Return the MD5 hash of the URI (with only spaces encoded),
+    used by the XDG thumbnail cache.
+    """
+    abs_path = Path(file_path).resolve()
+    uri_path = str(abs_path).replace(' ', '%20')
+    uri = 'file://' + uri_path
+    return hashlib.md5(uri.encode('utf-8')).hexdigest()
+
+def get_thumbnail_paths(file_path):
+    """
+    Return paths to the normal and large thumbnail cache files.
+    """
+    cache_home = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache"))
+    thumb_hash = file_uri_md5(file_path)
+    return [
+        cache_home / 'thumbnails' / 'normal' / (thumb_hash + '.png'),
+        cache_home / 'thumbnails' / 'large' / (thumb_hash + '.png')
+    ]
+
+def clear_thumbnail(file_path, view=False):
+    """
+    Delete or view thumbnail for the given file.
+    Return 0 if any thumbnail found and acted on, else 1.
+    """
+    for thumb_path in get_thumbnail_paths(file_path):
+        if thumb_path.exists():
+            if view:
+                print("Thumbnail path:", thumb_path)
+                subprocess.run(['xdg-open', str(thumb_path)], check=False)
+            else:
+                thumb_path.unlink()
+                print("Deleted:", thumb_path)
+            return 0
+    print("No thumbnail found for:", file_path)
+    return 1
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Clear or view XDG thumbnail cache entries for files."
+    )
+    parser.add_argument(
+        "-v", "--view", action="store_true",
+        help="Print and view matching thumbnail instead of deleting"
+    )
+    parser.add_argument(
+        "files", metavar="FILE", nargs="+",
+        help="Path(s) to file(s) to process"
+    )
+    args = parser.parse_args()
+
+    exit_code = 0
+    for file_path in args.files:
+        result = clear_thumbnail(file_path, view=args.view)
+        if result != 0:
+            exit_code = 1  # If any file fails, overall result is failure
+    return exit_code
+
+if __name__ == "__main__":
+    sys.exit(main())
