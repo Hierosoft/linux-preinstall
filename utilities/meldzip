@@ -1,0 +1,134 @@
+#!/usr/bin/env python3
+from collections import OrderedDict
+import json
+import os
+import shlex
+import shutil
+import subprocess
+import sys
+import time
+
+from logging import getLogger
+
+
+if __name__ == "__main__":
+    logger = getLogger(os.path.basename(__file__))
+else:
+    logger = getLogger(__name__)
+
+settings = OrderedDict()
+settingsPath = "meldzip.json"
+
+def main():
+    if not len(sys.argv) > 1:
+        logger.error(f"expected archive name")
+        return 1
+
+    src_zip = sys.argv[1]
+    options = {}
+    options['overwrite'] = False
+    key = None
+    dstSub = os.path.splitext(src_zip)[0]
+    dstSubExisted = os.path.isdir(dstSub)
+
+    if os.path.isfile(settingsPath):
+        with open(settingsPath, "r") as stream:
+            settings2 = json.load(stream, object_pairs_hook=OrderedDict)
+            for k, v in settings2.items():
+                settings[k] = v
+    for arg in sys.argv[2:]:
+        if arg.startswith("--"):
+            key = arg[2:]
+            if key not in options:
+                logger.error(f"Invalid option: {arg}")
+                return 2
+            if isinstance(options[key], bool):
+                # store_true
+                options[key] = True
+        else:
+            logger.error(f"Invalid option: {arg}")
+            return 3
+
+    dst = os.path.expanduser("~/git/tcs-timeclock")
+
+    previousFile = settings.get('previousFile')
+    removePath = None
+    if previousFile == src_zip:
+        logger.warning(
+            f"Processing same file as last run: {previousFile!r}")
+    elif previousFile:
+        previousDir = os.path.splitext(previousFile)[0]
+        if os.path.isfile(previousFile):
+            print(f"rm {previousFile!r}")
+            os.remove(previousFile)
+        else:
+            print(
+                f"previousFile does not exist: {previousFile!r}.")
+        if os.path.realpath(previousDir) == os.path.realpath(dst):
+            logger.warning(
+                f"previousDir is the base dir {dst!r}! Not removing it.")
+        elif os.path.isdir(previousDir):
+            removePath = previousDir
+        else:
+            print(f"Previous dir {previousDir} does not exist in {os.getcwd()}.")
+
+    code = compare_zip_to(src_zip, dst, options)
+    if code == 0:
+        if not dstSubExisted:
+            settings['previousFile'] = src_zip
+            print(f"Marking {src_zip} for deletion on next run.")
+        else:
+            # Prevent deleting it if it already existed!
+            settings['previousFile'] = None
+            print(f"{dstSub} already existed;"
+                  f" not marking {src_zip} for deletion on next run.")
+        tmp = settingsPath + ".tmp"
+        with open(tmp, "w") as stream:
+            json.dump(settings, stream, indent=2)
+        if os.path.isfile(settingsPath):
+            os.remove(settingsPath)
+        shutil.move(tmp, settingsPath)
+        print(f"Wrote {settingsPath!r}.")
+    else:
+        logger.error(f"compare_zip_to function returned {code}")
+    if removePath:
+        print(f"Removing {removePath!r}...")
+        print("3...")
+        time.sleep(1)
+        print("2...")
+        time.sleep(1)
+        print("1...")
+        time.sleep(1)
+        print(f"rm -rf {removePath!r}")
+        shutil.rmtree(removePath)
+
+    return code
+
+
+def compare_zip_to(src_zip, dst, options):
+    if not os.path.isfile(src_zip):
+       raise FileNotFoundError(src_zip)
+
+    cmd = ["unball", src_zip]
+    if options.get('overwrite'):
+        cmd.append("--overwrite")
+        cmd.append("--quiet")
+    print(f"{shlex.join(cmd)}")
+    p1 = subprocess.Popen(cmd)
+    p1.wait()
+    output = p1.stdout
+    if output:
+        # typically this does not happen
+        print(p1.stdout)
+    if p1.returncode != 0:
+        print(f"'{shlex.join(cmd)}' failed.", file=sys.stderr)
+        return p1.returncode
+    noExt = os.path.splitext(src_zip)[0]
+    cmd = ("meldq", noExt, dst)
+    print(f"{shlex.join(cmd)}")
+    _ = subprocess.Popen(cmd)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
