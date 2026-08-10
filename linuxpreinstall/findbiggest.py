@@ -1,5 +1,8 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+"""List the biggest files.
+See also du-show-biggest.sh.
+"""
 from __future__ import print_function
 from __future__ import division
 import os
