@@ -1,0 +1,34 @@
+code --install-extension appliedengdesign.vscode-gcode-syntax \
+&& code --install-extension bmewburn.vscode-intelephense-client \
+&& code --install-extension charliermarsh.ruff \
+&& code --install-extension civanimal.gimp-python-autocomplete \
+&& code --install-extension emallin.phpunit \
+&& code --install-extension github.vscode-github-actions \
+&& code --install-extension gruntfuggly.todo-tree \
+&& code --install-extension jannchie.ruff-ignore-explainer \
+&& code --install-extension mechatroner.rainbow-csv \
+&& code --install-extension ms-python.debugpy \
+&& code --install-extension ms-python.python \
+&& code --install-extension ms-python.vscode-pylance \
+&& code --install-extension ms-vscode.cmake-tools \
+&& code --install-extension ms-vscode.cpptools-extension-pack \
+&& code --install-extension ms-vscode.cpptools-themes \
+&& code --install-extension ms-vscode.makefile-tools \
+&& code --install-extension njpwerner.autodocstring \
+&& code --install-extension redhat.java \
+&& code --install-extension shardulm94.trailing-spaces \
+&& code --install-extension stkb.rewrap \
+&& code --install-extension streetsidesoftware.code-spell-checker \
+&& code --install-extension tamasfe.even-better-toml \
+&& code --install-extension teamhub.teamhub \
+&& code --install-extension twxs.cmake \
+&& code --install-extension visualstudioexptteam.intellicode-api-usage-examples \
+&& code --install-extension visualstudioexptteam.vscodeintellicode \
+&& code --install-extension vscjava.vscode-gradle \
+&& code --install-extension vscjava.vscode-java-debug \
+&& code --install-extension vscjava.vscode-java-dependency \
+&& code --install-extension vscjava.vscode-java-pack \
+&& code --install-extension vscjava.vscode-java-test \
+&& code --install-extension vscjava.vscode-maven \
+&& code --install-extension bierner.markdown-preview-github-styles \
+;
