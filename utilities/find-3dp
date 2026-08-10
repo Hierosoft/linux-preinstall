@@ -1,0 +1,20 @@
+#!/bin/bash
+# See <https://www.fosslinux.com/46761/recursively-find-list-the-files-by-dat-linux.htm>
+# find "`pwd`" -type f -printf '%T@ %t %p\n' | sort -k 1 -n | cut -d ' ' -f2-
+
+offline_files=$HOME/Meshes/3DPrintable
+if [ "`hostname`" != "pgs" ]; then
+  # We are not on the main PC, so require the network mount.
+  offline_files="/srv/$USER/pgs$offline_files"
+  if [ ! -d "$offline_files" ]; then
+    echo "pgs is not mounted (missing '$offline_files'). Mount using:"
+    echo "  mount-pgs.sh"
+    exit 1
+  fi
+fi
+
+# find ~/Nextcloud/Meshes/3DPrint "$@"
+# find "$offline_files" "$@"
+find ~/Nextcloud/Meshes/3DPrint -iname "*$1*" $2 $3 $4 $5 $6
+find "$offline_files" -iname "*$1*" $2 $3 $4 $5 $6
+
