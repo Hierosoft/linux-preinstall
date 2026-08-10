@@ -7,6 +7,7 @@ existing directory if present).
 
 Options:
 --overwrite             Allow overwriting files in the destination.
+--quiet                 Do not warn on overwriting individual files.
 """
 from __future__ import print_function
 from collections import OrderedDict
@@ -52,12 +53,13 @@ def get_extractor(archive_path):
     raise ValueError("Unsupported archive type: {}".format(archive_path))
 
 
-def move_as(src, dst, overwrite=False):
+def move_as(src, dst, overwrite=False, quiet=False):
     """shutil.move wrapped to avoid nested directories
     (similar to rsync --remove-source-files)"""
     if os.path.isfile(dst):
         if os.path.isfile(src) and overwrite:
-            logger.warning("Overwriting {}".format(repr(dst)))
+            if not quiet:
+                logger.warning("Overwriting {}".format(repr(dst)))
             os.remove(dst)
             shutil.move(src, dst)
             return
@@ -77,9 +79,10 @@ def move_as(src, dst, overwrite=False):
     if os.path.islink(dst):
         if not os.path.exists(dst):
             if overwrite:
-                logger.warning(
-                    "overwriting bad symlink {}"
-                    .format(repr(dst)))
+                if not quiet:
+                    logger.warning(
+                        "overwriting bad symlink {}"
+                        .format(repr(dst)))
                 os.remove(dst)
                 # removed = True
             else:
@@ -95,12 +98,12 @@ def move_as(src, dst, overwrite=False):
     # (unexpected extra nesting level):
     for sub in os.listdir(src):
         move_as(os.path.join(src, sub), os.path.join(dst, sub),
-                overwrite=overwrite)
+                overwrite=overwrite, quiet=quiet)
     os.rmdir(src)
 
 
 def extract_archive(this_archive_path, output_dir=None,
-                    overwrite=False):
+                    overwrite=False, quiet=False):
     """Extract one archive via a temporary directory,
     then move the result.
 
@@ -135,13 +138,17 @@ def extract_archive(this_archive_path, output_dir=None,
     tmp_subs = list(os.listdir(tmp_path))
     results = OrderedDict()
     results["depth"] = 1
+    if os.path.exists(output_dir):
+        if quiet and overwrite:
+            # If quiet, only warn on top level overwrite.
+            logger.warning(f"Overwriting {output_dir}")
     if len(tmp_subs) == 1:
         move_as(os.path.join(tmp_path, tmp_subs[0]), output_dir,
-                overwrite=overwrite)
+                overwrite=overwrite, quiet=quiet)
         results["depth"] = 0
         os.rmdir(tmp_path)
     else:
-        move_as(tmp_path, output_dir, overwrite=overwrite)
+        move_as(tmp_path, output_dir, overwrite=overwrite, quiet=quiet)
     results["destination"] = output_dir
     return results
 
@@ -169,10 +176,13 @@ def main():
         return 1
 
     overwrite = False
+    quiet = False
     for i in reversed(range(1, len(args))):
         if args[i].startswith("--"):
             if args[i] == "--overwrite":
                 overwrite = True
+            if args[i] == "--quiet":
+                quiet = True
             else:
                 usage()
                 logger.fatal("unrecognized option: {}".format(args[i]))
@@ -193,10 +203,15 @@ def main():
             for archive_path in args[:-1]:
                 results = extract_archive(archive_path, output_dir,
                                         overwrite=overwrite)
+                print("Extracted:")
                 dumpDict(results)
+                print()
         else:
-            results = extract_archive(args[0], overwrite=overwrite)
+            results = extract_archive(args[0], overwrite=overwrite,
+                                      quiet=quiet)
+            print("Extracted:")
             dumpDict(results)
+            print()
     except Exception:
         usage()
         raise
