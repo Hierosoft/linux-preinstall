@@ -1,0 +1,100 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+Follow the directory contents until a new sub is created
+(like tail -f, but for directories).
+
+based on https://grok.com/share/c2hhcmQtMg_e5b452ab-e331-47cf-a235-6f16f6f8a790
+"""
+
+from __future__ import print_function
+
+import os
+import time
+import sys
+from datetime import datetime
+
+
+def format_delta(delta):
+    """Format timedelta as XhYmZs (e.g. 0h5m23s)."""
+    total_seconds = int(delta.total_seconds())
+    hours = total_seconds // 3600
+    minutes = (total_seconds % 3600) // 60
+    seconds = total_seconds % 60
+    return "{0}h{1}m{2}s".format(hours, minutes, seconds)
+
+
+def main():
+    # Path to monitor
+    path = "/mnt/backup6/big-undeleted/mtio/"
+
+    if not os.path.exists(path):
+        print("Error: Path {} does not exist.".format(path))
+        sys.exit(1)
+
+    # Record start datetime
+    start_time = datetime.now()
+    print("Program started at: {}".format(start_time))
+
+    # List the subdirectories (compatible with both py2 and py3)
+    subdirs = []
+    for name in os.listdir(path):
+        full_path = os.path.join(path, name)
+        if os.path.isdir(full_path):
+            subdirs.append(full_path)
+
+    initial_count = len(subdirs)
+    print("Found {} subdirectories:".format(initial_count))
+    for d in sorted(subdirs):
+        print("  {}".format(os.path.basename(d)))
+
+    # Record datetime of the newest directory using mtime
+    if initial_count > 0:
+        # Find the directory with the newest mtime
+        newest_dir = max(subdirs, key=lambda d: os.path.getmtime(d))
+        old_dir_time = datetime.fromtimestamp(os.path.getmtime(newest_dir))
+        print("Datetime of newest directory ({}): {}".format(
+            os.path.basename(newest_dir), old_dir_time))
+    else:
+        old_dir_time = start_time
+        print("No directories found initially - using start time as fallback.")
+
+    print("Monitoring every 15 seconds for a new directory...")
+
+    # Loop until the count of directories increases
+    while True:
+        time.sleep(15)
+        current_subdirs = []
+        for name in os.listdir(path):
+            full_path = os.path.join(path, name)
+            if os.path.isdir(full_path):
+                current_subdirs.append(full_path)
+
+        current_count = len(current_subdirs)
+        if current_count > initial_count:
+            # Find the new directory(ies)
+            current_set = set(os.path.basename(d) for d in current_subdirs)
+            initial_set = set(os.path.basename(d) for d in subdirs)
+            new_dirs = current_set - initial_set
+
+            if new_dirs:
+                new_dir_name = sorted(new_dirs)[0]   # take the first one if multiple appear
+                print("New directory detected! '{}'  Count increased to {}.".format(
+                    new_dir_name, current_count))
+            else:
+                print("New directory detected! Count increased to {}.".format(current_count))
+            break
+
+    # After loop exits
+    end_time = datetime.now()
+
+    # Calculate the two requested deltas
+    elapsed_since_start = end_time - start_time
+    elapsed_since_last_dir = end_time - old_dir_time
+
+    print("{} elapsed since the program started.".format(format_delta(elapsed_since_start)))
+    print("{} elapsed since the last directory was created.".format(format_delta(elapsed_since_last_dir)))
+
+
+if __name__ == "__main__":
+    sys.exit(main())
