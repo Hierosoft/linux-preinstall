@@ -181,7 +181,7 @@ def main():
         if args[i].startswith("--"):
             if args[i] == "--overwrite":
                 overwrite = True
-            if args[i] == "--quiet":
+            elif args[i] == "--quiet":
                 quiet = True
             else:
                 usage()
