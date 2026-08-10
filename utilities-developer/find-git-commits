@@ -1,0 +1,49 @@
+#!/bin/bash
+
+# Check if github_user is provided
+if [ -z "$1" ]; then
+  echo "Error: github_user is required" >&2
+  exit 1
+fi
+github_user="$1"
+shift
+
+# Set REPOS_DIR to second argument or current directory if not provided
+REPOS_DIR="${1:-$(pwd)}"
+
+# Check if additional arguments are provided
+if [ $# -gt 1 ]; then
+  echo "Error: Too many arguments provided" >&2
+  exit 2
+fi
+
+# Check if REPOS_DIR exists and is a directory
+if [ ! -d "$REPOS_DIR" ]; then
+  echo "Error: '$REPOS_DIR' is not a directory" >&2
+  exit 1
+fi
+
+# Initialize counter for matching repos
+match_count=0
+
+# Iterate through subdirectories
+for dir in "$REPOS_DIR"/*/ ; do
+  if [ -d "$dir/.git" ]; then
+    cd "$dir" || exit 1
+    # Capture matching lines
+    matches=$(git log | grep -i "$github_user@users")
+    if [ -n "$matches" ]; then
+      echo "Repository: $(basename "$dir")"
+      echo "$matches"
+      ((match_count++))
+    fi
+    cd - > /dev/null || exit 1
+  fi
+done
+
+# Display results
+if [ $match_count -eq 0 ]; then
+  echo "No matching commits found"
+else
+  echo "Found matches in $match_count repositories"
+fi
