@@ -45,6 +45,9 @@ elif [ -d "$1" ]; then
     fi
 fi
 
+mkdir -p ~/.var/log
+LOG=~/.var/log/$COMMAND.log
+
 if [ ! -z "$3" ]; then
     if [ -f "$1" ]; then
         if [ ! -f "$3" ]; then
@@ -57,11 +60,11 @@ if [ ! -z "$3" ]; then
             exit 1
         fi
     fi
-    nohup $COMMAND "$1" "$2" "$3" >& /dev/null & disown
+    nohup $COMMAND "$1" "$2" "$3" >& $LOG & disown
 else
-    nohup $COMMAND "$1" "$2" >& /dev/null & disown
+    nohup $COMMAND "$1" "$2" >& $LOG & disown
 fi
-
+echo "* meldq is logging to '$LOG'"
 
 #Doesn't work, so check for files first:
 #if [ $? -ne 0 ]; then
