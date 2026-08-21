@@ -49,7 +49,19 @@ def main():
             logger.error(f"Invalid option: {arg}")
             return 3
 
-    dst = os.path.expanduser("~/git/tcs-timeclock")
+    tryPaths = []
+    parts = src_zip.split("-")
+    dst = None
+
+    for i in range(len(parts)):
+        name = "-".join(parts[:i+1])
+        tryPaths.append(os.path.expanduser(f"~/git/{name}"))
+        if os.path.isdir(tryPaths[-1]):
+            dst = tryPaths[-1]
+    if dst is None:
+        print("Error: Cannot find any similarly-named destination: {}"
+              .format(tryPaths))
+        return 1
 
     previousFile = settings.get('previousFile')
     removePath = None
